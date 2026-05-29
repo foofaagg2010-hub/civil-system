@@ -1,0 +1,13 @@
+# netlify.toml
+[build]
+  command = "echo 'Build complete'"
+  functions = "netlify/functions"
+
+[dev]
+  framework = "#static"
+  staticServerPort = 4000
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

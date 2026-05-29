@@ -1,0 +1,21 @@
+{
+  "name": "civil-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.106.2",
+    "bcryptjs": "^3.0.3",
+    "jsonwebtoken": "^9.0.3"
+  },
+  "devDependencies": {
+    "netlify-cli": "^26.0.2"
+  }
+}

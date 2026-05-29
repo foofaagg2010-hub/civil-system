@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>الرئيسية - الأحوال المدنية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        /* الشريط العلوي الوطني */
+        .national-bar {
+            background: linear-gradient(90deg, #CE1126 0%, #CE1126 33%, #FFFFFF 33%, #FFFFFF 66%, #212122 66%, #212122 100%);
+            height: 6px;
+        }
+        
+        .navbar {
+            background: rgba(44, 62, 80, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 15px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo i { font-size: 2rem; }
+        .logo-text h2 { font-size: 1.3rem; margin: 0; }
+        .logo-text p { font-size: 0.85rem; opacity: 0.85; margin: 3px 0 0; }
+        
+        .date {
+            background: rgba(255,255,255,0.15);
+            padding: 6px 15px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .hero {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+            animation: fadeInUp 0.8s ease;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .hero p { font-size: 1.2rem; opacity: 0.9; }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .service-card {
+            background: white;
+            border-radius: 28px;
+            padding: 40px 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--accent-color, #3498db);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+        
+        .service-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .service-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 30px 50px rgba(0,0,0,0.2);
+        }
+        
+        .card-icon {
+            width: 90px;
+            height: 90px;
+            background: #3498db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            transition: 0.3s;
+        }
+        
+        .service-card:hover .card-icon {
+            transform: scale(1.05);
+        }
+        
+        .card-icon i { font-size: 42px; color: white; }
+        
+        .service-card:nth-child(1) .card-icon { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .service-card:nth-child(2) .card-icon { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .service-card:nth-child(3) .card-icon { background: linear-gradient(135deg, #27ae60, #1e8449); }
+        
+        .service-card h3 { font-size: 1.6rem; margin-bottom: 12px; color: #2c3e50; }
+        .service-card p { color: #666; line-height: 1.7; margin-bottom: 25px; }
+        
+        .card-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            border-radius: 40px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        
+        .service-card:hover .card-btn {
+            background: #3498db;
+            color: white;
+            transform: translateX(-5px);
+        }
+        
+        /* قسم الاستعلام السريع */
+        .quick-query {
+            background: rgba(255,255,255,0.95);
+            border-radius: 28px;
+            padding: 35px;
+            margin-bottom: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .quick-query h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-right: 4px solid #3498db;
+            padding-right: 15px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 16px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: 0.3s;
+        }
+        
+        .search-box input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+        }
+        
+        .search-box button {
+            padding: 16px 35px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .search-box button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 16px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .result.success {
+            background: linear-gradient(135deg, #d4edda, #c8e6d9);
+            color: #155724;
+            display: block;
+            border-right: 5px solid #27ae60;
+        }
+        
+        .result.error {
+            background: linear-gradient(135deg, #f8d7da, #ffdddd);
+            color: #721c24;
+            display: block;
+            border-right: 5px solid #e74c3c;
+        }
+        
+        .result.loading {
+            background: #e3f2fd;
+            color: #1565c0;
+            display: block;
+            text-align: center;
+        }
+        
+        /* معلومات التواصل */
+        .info-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 24px;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 25px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .contact-icon {
+            width: 50px;
+            height: 50px;
+            background: #3498db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .contact-icon i { font-size: 24px; color: white; }
+        
+        .whatsapp-btn {
+            background: #25D366;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 50px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: bold;
+            transition: 0.3s;
+            font-size: 1rem;
+        }
+        
+        .whatsapp-btn:hover {
+            background: #128C7E;
+            transform: scale(1.03);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85rem;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 1.8rem; }
+            .cards-grid { gap: 20px; }
+            .service-card { padding: 25px 20px; }
+            .info-section { flex-direction: column; text-align: center; }
+            .contact-item { justify-content: center; }
+            .search-box button { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="national-bar"></div>
+    
+    <div class="navbar">
+        <div class="logo">
+            <i class="fas fa-id-card"></i>
+            <div class="logo-text">
+                <h2>الأحوال المدنية</h2>
+                <p>لحج - ردفان</p>
+            </div>
+        </div>
+        <div class="date" id="dateDisplay"></div>
+    </div>
+    
+    <div class="container">
+        <div class="hero">
+            <h1>مرحباً بكم في بوابة الخدمات</h1>
+            <p>الإدارة العامة للأحوال المدنية - فرع محافظة لحج، مديرية ردفان</p>
+        </div>
+        
+        <!-- قسم الاستعلام السريع -->
+        <div class="quick-query">
+            <h2><i class="fas fa-search"></i> الاستعلام عن حالة الطلب</h2>
+            <div class="search-box">
+                <input type="text" id="requestNumber" placeholder="أدخل رقم الطلب" autocomplete="off">
+                <button onclick="searchRequest()"><i class="fas fa-search"></i> بحث</button>
+            </div>
+            <div id="result"></div>
+        </div>
+        
+        <div class="cards-grid">
+            <!-- 1. الاستعلام عن الطلبات -->
+            <div class="service-card" onclick="document.getElementById('requestNumber').focus()">
+                <div class="card-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3>الاستعلام عن الطلبات</h3>
+                <p>يمكنك الاستعلام عن حالة الطلب من خلال ادخال رقم المتابعة الموجود في سند المتابعة الخاص بك في مربع البحث اعلاه ثم اضغط زر البحث</p>
+                <span class="card-btn">استعلام الآن <i class="fas fa-arrow-left"></i></span>
+            </div>
+            
+            <!-- 2. لوحة المشرف -->
+            <div class="service-card" onclick="window.location.href='admin-login.html'">
+                <div class="card-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h3>لوحة المشرفين</h3>
+                <p>الدخول إلى لوحة التحكم لإدارة الطلبات ومتابعة الإحصائيات</p>
+                <span class="card-btn">دخول <i class="fas fa-lock"></i></span>
+            </div>
+            
+            <!-- 3. المعاملات -->
+            <div class="service-card" onclick="window.location.href='transactions.html'">
+                <div class="card-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h3>المعاملات والخدمات</h3>
+                <p>تعرف على المستندات المطلوبة لاستخراج البطاقة الذكية والوثائق</p>
+                <span class="card-btn">عرض الخدمات <i class="fas fa-book"></i></span>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <div class="contact-item">
+                <div class="contact-icon"><i class="fas fa-user-tie"></i></div>
+                <div>
+                    <strong>مدير الفرع:</strong> لطفي نصر أحمد<br>
+                    <small>للإستفسارات الإدارية 777062437 </small>
+                </div>
+            </div>
+            <div class="contact-item">
+                <div class="contact-icon"><i class="fas fa-laptop-code"></i></div>
+                <div>
+                    <strong>الدعم الفني:عبدالله حسين</strong><br>
+                    <small>للمشاكل التقنية 771277759 </small>
+                </div>
+            </div>
+            <a href="https://wa.me/967771277759" class="whatsapp-btn" target="_blank">
+                <i class="fab fa-whatsapp"></i> واتساب الدعم
+            </a>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>© 2025 الإدارة العامة للأحوال المدنية - جميع الحقوق محفوظة</p>
+        <p style="margin-top: 8px;">آخر تحديث: رمضان 1446 هـ</p>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rqpcwyhsaygyrgjpczlr.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcGN3eWhzYXlneXJnanBjemxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjY2MDEsImV4cCI6MjA5NTIwMjYwMX0.yrxJTQZQDVccw9y98y_mzLbCeYnhgjxsP30patcU9rc';
+        
+        async function searchRequest() {
+            const requestNumber = document.getElementById('requestNumber').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!requestNumber) {
+                resultDiv.innerHTML = '<div class="result error">❌ يرجى إدخال رقم الطلب</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result loading">⏳ جاري البحث... <i class="fas fa-spinner fa-pulse"></i></div>';
+            
+            try {
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/requests?${encodeURIComponent('رقم الطلب')}=eq.${encodeURIComponent(requestNumber)}&select=*`,
+                    {
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                    }
+                );
+                
+                const data = await response.json();
+                
+                if (!data || data.length === 0) {
+                    resultDiv.innerHTML = '<div class="result error">❌ رقم الطلب غير موجود في النظام</div>';
+                    return;
+                }
+                
+                const record = data[0];
+                
+                const statusMessages = {
+                    'تم التسليم': '✅ تم تجهيز البطاقة، يرجى الحضور للاستلام',
+                    'تمت الطباعة': '🖨️ تمت طباعة البطاقة، قيد الشحن للفرع',
+                    'مرسل للطباعة': '📤 تمت الموافقة، في انتظار الطباعة',
+                    'تحت المعالجة': '⚙️ طلبك قيد المراجعة والمعالجة',
+                    'جديد': '✅ تم استلام طلبك، قيد المعالجة',
+                    'مرفوض': '❌ عذراً، تم رفض الطلب',
+                    'مرفوض من التصديق': '⚠️ يرجى مراجعة الإدارة للاستفسار',
+                    'مرسل للتصديق': '📋 طلبك قيد التجهيز',
+                    'طلبات تم إلغائها': '🚫 تم إلغاء هذا الطلب'
+                };
+                
+                const status = record['حالة الطلب'] || 'غير محدد';
+                const statusMessage = statusMessages[status] || '📞 يرجى مراجعة الإدارة للاستفسار';
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <h3 style="margin-bottom: 15px;"><i class="fas fa-file-alt"></i> تفاصيل الطلب</h3>
+                        <p><strong>🔢 رقم الطلب:</strong> ${record['رقم الطلب'] || '-----'}</p>
+                        <p><strong>👤 الاسم بالكامل:</strong> ${record['الاسم بالكامل'] || 'غير محدد'}</p>
+                        <p><strong>📌 الحالة:</strong> ${status}</p>
+                        <p><strong>💬 ملاحظة:</strong> ${statusMessage}</p>
+                        <hr style="margin: 12px 0;">
+                        <p style="font-size: 13px; color: #666;">
+                            <i class="far fa-calendar"></i> تاريخ التقديم: ${record['تاريخ التقديم'] || 'غير محدد'}
+                        </p>
+                        <p style="font-size: 13px; color: #666;">
+                            <i class="fas fa-building"></i> وحدة التسجيل: ${record['وحدة التسجيل'] || 'لحج - ردفان'}
+                        </p>
+                    </div>
+                `;
+                
+            } catch (err) {
+                console.error(err);
+                resultDiv.innerHTML = '<div class="result error">⚠️ حدث خطأ في الاتصال. يرجى المحاولة لاحقاً</div>';
+            }
+        }
+        
+        document.getElementById('requestNumber').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchRequest();
+        });
+        
+        const today = new Date();
+        document.getElementById('dateDisplay').innerHTML = `
+            <i class="far fa-calendar-alt"></i> 
+            ${today.toLocaleDateString('ar-EG')}
+        `;
+    </script>
+</body>
+</html>
