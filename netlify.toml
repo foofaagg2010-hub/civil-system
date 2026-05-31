@@ -1,13 +1,39 @@
 # netlify.toml
+
 [build]
-  command = "echo 'Build complete'"
   functions = "netlify/functions"
 
 [dev]
   framework = "#static"
   staticServerPort = 4000
 
+# إعادة التوجيه (Redirects)
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# ========== رأسيات الأمان (Security Headers) ==========
+
+# لجميع الصفحات
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# لصفحات المشرف (حماية إضافية)
+[[headers]]
+  for = "/admin-*.html"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co"
+
+# للـ Functions
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Content-Security-Policy = "default-src 'none'"
