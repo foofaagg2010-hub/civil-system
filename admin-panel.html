@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -210,6 +211,34 @@
             font-weight: bold;
         }
         
+        .upload-section {
+            margin: 25px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 16px;
+            border: 2px dashed #3498db;
+        }
+        
+        .upload-section h4 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .columns-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .column-tag {
+            background: #e0e0e0;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: #2c3e50;
+        }
+        
         .btn { padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; }
         .btn-primary { background: #3498db; color: white; }
         .btn-success { background: #27ae60; color: white; }
@@ -309,6 +338,33 @@
             text-align: center;
         }
         
+        .progress-container {
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 20px;
+            background: #27ae60;
+            transition: width 0.3s;
+        }
+        
+        .result-box {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 12px;
+        }
+        .result-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .result-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
         @media (max-width: 768px) {
             th, td { font-size: 12px; padding: 8px; }
             .tab-btn { padding: 10px 18px; font-size: 13px; }
@@ -355,6 +411,39 @@
                 <div class="filter-buttons" id="filterButtons"></div>
             </div>
             
+            <!-- قسم رفع الملفات -->
+            <div class="upload-section" id="uploadSection">
+                <h4><i class="fas fa-upload"></i> رفع بيانات من ملف (Excel أو CSV)</h4>
+                <div class="columns-list">
+                    <span class="column-tag">رقم الطلب</span>
+                    <span class="column-tag">نوع الطلب</span>
+                    <span class="column-tag">نوع المستند</span>
+                    <span class="column-tag">سبب الطلب</span>
+                    <span class="column-tag">تاريخ التقديم</span>
+                    <span class="column-tag">حالة الطلب</span>
+                    <span class="column-tag">مصدر الطلب</span>
+                    <span class="column-tag">الاسم بالكامل</span>
+                    <span class="column-tag">وحدة التسجيل</span>
+                    <span class="column-tag">مُصدر التسجيل</span>
+                </div>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                    <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 10px;">
+                    <button class="btn btn-primary" onclick="uploadExcelFile()" id="uploadBtn">
+                        <i class="fas fa-cloud-upload-alt"></i> رفع البيانات
+                    </button>
+                    <button class="btn btn-success" onclick="downloadTemplate()" style="background: #27ae60;">
+                        <i class="fas fa-download"></i> تحميل نموذج
+                    </button>
+                </div>
+                <div id="uploadProgress" style="display: none;">
+                    <div class="progress-container">
+                        <div id="uploadProgressBar" class="progress-bar"></div>
+                    </div>
+                    <p id="uploadStatus" style="margin-top: 10px; font-size: 13px;"></p>
+                </div>
+                <div id="uploadResult" style="display: none;"></div>
+            </div>
+            
             <div class="search-box">
                 <input type="text" id="nameInput" placeholder="ابحث بالاسم أو رقم الطلب..." autocomplete="off">
                 <button onclick="searchRequests()"><i class="fas fa-search"></i> بحث</button>
@@ -372,8 +461,8 @@
             </div>
             <div class="branches-stats-container">
                 <table class="branches-table" id="branchesStatsTable">
-                    <thead><tr><th>الفرع</th><th>جديد</th><th>مرسل للتصديق</th><th>مرسل للطباعة</th><th>تمت الطباعة</th><th>تم التسليم</th><th>مرفوض</th><th>مرفوض من التصديق</th><th>تحت المعالجة</th><th>ملغاة</th><th>الإجمالي</th></tr></thead>
-                    <tbody id="branchesStatsBody"><tr><td colspan="11" style="text-align:center;">جاري التحميل......</td></tr></tbody>
+                    <thead><tr><th>الفرع</th><th>جديد</th><th>مرسل للتصديق</th><th>مرسل للطباعة</th><th>تمت الطباعة</th><th>تم التسليم</th><th>مرفوض</th><th>مرفوض من التصديق</th><th>تحت المعالجة</th><th>ملغاة</th><th>الإجمالي</th><tr></thead>
+                    <tbody id="branchesStatsBody"><tr><td colspan="11" style="text-align:center;">جاري التحميل......</div></div></tbody>
                     <tfoot id="branchesStatsFooter"></tfoot>
                 </table>
             </div>
@@ -473,10 +562,16 @@
             const usersTab = document.getElementById('usersTab');
             const logsTab = document.getElementById('logsTab');
             const branchesTab = document.getElementById('branchesTab');
+            const uploadSection = document.getElementById('uploadSection');
             
             if (usersTab) usersTab.style.display = currentUserCanViewUsers ? 'inline-flex' : 'none';
             if (logsTab) logsTab.style.display = currentUserCanViewLogs ? 'inline-flex' : 'none';
             if (branchesTab) branchesTab.style.display = (currentUserRole === 'admin' || currentUserRole === 'supervisor') ? 'inline-flex' : 'none';
+            
+            // إظهار أو إخفاء قسم رفع الملفات حسب صلاحية التعديل
+            if (uploadSection) {
+                uploadSection.style.display = currentUserCanEdit ? 'block' : 'none';
+            }
             
             document.getElementById('adminRole').innerText = getRoleName(currentUserRole);
         }
@@ -538,13 +633,7 @@
             
             showLoading(true);
             try {
-                let url = `${API_URL}/stats`;
-                
-                if (currentUserRole === 'admin') {
-                    url += `?branch=${encodeURIComponent(currentUserBranch)}`;
-                } else {
-                    url += `?branch=${encodeURIComponent(currentUserBranch)}`;
-                }
+                let url = `${API_URL}/stats?branch=${encodeURIComponent(currentUserBranch)}`;
                 
                 const response = await fetch(url, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -588,7 +677,7 @@
                 
                 if (!response.ok) {
                     if (response.status === 403) {
-                        document.getElementById('branchesStatsBody').innerHTML = '<tr><td colspan="11" style="text-align:center;color:red;">غير مصرح لك بمشاهدة هذه البيانات</td></tr>';
+                        document.getElementById('branchesStatsBody').innerHTML = '<tr><td colspan="11" style="text-align:center;color:red;">غير مصرح لك بمشاهدة هذه البيانات</div></div></tr>';
                         return;
                     }
                     throw new Error('Failed to load branches stats');
@@ -612,35 +701,34 @@
                     totalRow.total_count += b.total_count;
                     
                     return `<tr>
-                        <td><strong>${escapeHtml(b.branch)}</strong></td>
-                        <td>${b.new_count.toLocaleString()}</td>
-                        <td>${b.sent_to_auth_count.toLocaleString()}</td>
-                        <td>${b.sent_to_print_count.toLocaleString()}</td>
-                        <td>${b.printed_count.toLocaleString()}</td>
-                        <td>${b.delivered_count.toLocaleString()}</td>
-                        <td>${b.rejected_count.toLocaleString()}</td>
-                        <td>${b.rejected_from_auth_count.toLocaleString()}</td>
-                        <td>${b.under_process_count.toLocaleString()}</td>
-                        <td>${b.cancelled_count.toLocaleString()}</td>
-                        <td><strong>${b.total_count.toLocaleString()}</strong></td>
+                        <td><strong>${escapeHtml(b.branch)}</strong></div>
+                        <td>${b.new_count.toLocaleString()}</div>
+                        <td>${b.sent_to_auth_count.toLocaleString()}</div>
+                        <td>${b.sent_to_print_count.toLocaleString()}</div>
+                        <td>${b.printed_count.toLocaleString()}</div>
+                        <td>${b.delivered_count.toLocaleString()}</div>
+                        <td>${b.rejected_count.toLocaleString()}</div>
+                        <td>${b.rejected_from_auth_count.toLocaleString()}</div>
+                        <td>${b.under_process_count.toLocaleString()}</div>
+                        <td>${b.cancelled_count.toLocaleString()}</div>
+                        <td><strong>${b.total_count.toLocaleString()}</strong></div>
                      </tr>`;
                 }).join('');
                 
                 document.getElementById('branchesStatsFooter').innerHTML = `<tr style="background:#2c3e50;color:white;font-weight:bold;">
-                    <td>الإجمالي العام</td>
-                    <td>${totalRow.new_count.toLocaleString()}</td>
-                    <td>${totalRow.sent_to_auth_count.toLocaleString()}</td>
-                    <td>${totalRow.sent_to_print_count.toLocaleString()}</td>
-                    <td>${totalRow.printed_count.toLocaleString()}</td>
-                    <td>${totalRow.delivered_count.toLocaleString()}</td>
-                    <td>${totalRow.rejected_count.toLocaleString()}</td>
-                    <td>${totalRow.rejected_from_auth_count.toLocaleString()}</td>
-                    <td>${totalRow.under_process_count.toLocaleString()}</td>
-                    <td>${totalRow.cancelled_count.toLocaleString()}</td>
-                    <td>${totalRow.total_count.toLocaleString()}</td>
+                    <td>الإجمالي العام</div>
+                    <td>${totalRow.new_count.toLocaleString()}</div>
+                    <td>${totalRow.sent_to_auth_count.toLocaleString()}</div>
+                    <td>${totalRow.sent_to_print_count.toLocaleString()}</div>
+                    <td>${totalRow.printed_count.toLocaleString()}</div>
+                    <td>${totalRow.delivered_count.toLocaleString()}</div>
+                    <td>${totalRow.rejected_count.toLocaleString()}</div>
+                    <td>${totalRow.rejected_from_auth_count.toLocaleString()}</div>
+                    <td>${totalRow.under_process_count.toLocaleString()}</div>
+                    <td>${totalRow.cancelled_count.toLocaleString()}</div>
+                    <td>${totalRow.total_count.toLocaleString()}</div>
                 </tr>`;
                 
-                // رسم المخطط البياني
                 if (branchesChart) {
                     branchesChart.destroy();
                 }
@@ -668,7 +756,7 @@
                 });
             } catch(err) { 
                 console.error('Branches stats error:', err);
-                document.getElementById('branchesStatsBody').innerHTML = '<tr><td colspan="11" style="text-align:center;color:red;">خطأ في تحميل البيانات</td></tr>';
+                document.getElementById('branchesStatsBody').innerHTML = '<tr><td colspan="11" style="text-align:center;color:red;">خطأ في تحميل البيانات</div></div></tr>';
             }
             finally { showLoading(false); }
         }
@@ -736,11 +824,11 @@
                 const editButton = currentUserCanEdit ? 
                     `<button class="btn btn-primary btn-sm" onclick="editRequestStatus('${escapeHtml(r['رقم الطلب'])}')"><i class="fas fa-edit"></i> تعديل</button>` : '';
                 html += `<tr>
-                    <td><strong>${escapeHtml(r['رقم الطلب'])}</strong></td>
-                    <td>${escapeHtml(r['الاسم بالكامل'] || '-----')}</td>
-                    <td>${escapeHtml(r['نوع الطلب'] || '-----')}</td>
-                    <td>${escapeHtml(r['حالة الطلب'] || '-----')}</td>
-                    <td>${formatDate(r['تاريخ التقديم'])}</div></td>
+                    <td><strong>${escapeHtml(r['رقم الطلب'])}</strong></div>
+                    <td>${escapeHtml(r['الاسم بالكامل'] || '-----')}</div>
+                    <td>${escapeHtml(r['نوع الطلب'] || '-----')}</div>
+                    <td>${escapeHtml(r['حالة الطلب'] || '-----')}</div>
+                    <td>${formatDate(r['تاريخ التقديم'])}</div></div>
                     <td><button class="btn btn-warning btn-sm" onclick='window.showRequestDetails(${JSON.stringify(r).replace(/'/g, "\\'")})'><i class="fas fa-eye"></i> عرض</button> ${editButton}</div>
                 </tr>`; 
             });
@@ -940,6 +1028,139 @@
                 <button class="filter-btn" data-status="مرفوض من التصديق" onclick="filterByStatus('مرفوض من التصديق')">مرفوض من التصديق</button>
                 <button class="filter-btn" data-status="تحت المعالجة" onclick="filterByStatus('تحت المعالجة')">تحت المعالجة</button>
                 <button class="filter-btn" data-status="طلبات تم إلغائها" onclick="filterByStatus('طلبات تم إلغائها')">ملغاة</button>`;
+        }
+        
+        // ============= دوال رفع الملفات =============
+        
+        async function uploadExcelFile() {
+            const fileInput = document.getElementById('excelFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('❌ يرجى اختيار ملف أولاً');
+                return;
+            }
+            
+            if (!currentUserCanEdit) {
+                alert('⚠️ ليس لديك صلاحية لرفع البيانات');
+                return;
+            }
+            
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('uploadProgressBar');
+            const statusText = document.getElementById('uploadStatus');
+            const resultDiv = document.getElementById('uploadResult');
+            
+            progressDiv.style.display = 'block';
+            progressBar.style.width = '30%';
+            statusText.innerText = 'جاري قراءة الملف...';
+            resultDiv.style.display = 'none';
+            
+            try {
+                // قراءة الملف وتحويله إلى Base64
+                const reader = new FileReader();
+                
+                reader.onload = async function(e) {
+                    progressBar.style.width = '60%';
+                    statusText.innerText = 'جاري معالجة البيانات...';
+                    
+                    const base64File = e.target.result.split(',')[1];
+                    const token = sessionStorage.getItem('admin_token');
+                    
+                    const response = await fetch(`${API_URL}/upload-requests`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            file: base64File,
+                            branch: currentUserBranch,
+                            filename: file.name
+                        })
+                    });
+                    
+                    progressBar.style.width = '100%';
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        statusText.innerHTML = '✅ ' + data.message;
+                        resultDiv.style.display = 'block';
+                        resultDiv.className = 'result-box result-success';
+                        resultDiv.innerHTML = `
+                            <strong><i class="fas fa-check-circle"></i> نتيجة الرفع:</strong><br>
+                            📊 إجمالي السجلات في الملف: ${data.stats.total}<br>
+                            ➕ سجلات جديدة تمت إضافتها: ${data.stats.new}<br>
+                            ✏️ سجلات محدثة: ${data.stats.updated}<br>
+                            ⏭️ سجلات مكررة تم تخطيها: ${data.stats.skipped}
+                        `;
+                        await loadAllStats();
+                        await loadRequests();
+                    } else {
+                        statusText.innerHTML = '❌ ' + (data.error || 'حدث خطأ');
+                        resultDiv.style.display = 'block';
+                        resultDiv.className = 'result-box result-error';
+                        resultDiv.innerHTML = `<strong><i class="fas fa-exclamation-triangle"></i> خطأ:</strong><br>${data.error}`;
+                    }
+                };
+                
+                reader.onerror = function() {
+                    statusText.innerHTML = '❌ خطأ في قراءة الملف';
+                    resultDiv.style.display = 'block';
+                    resultDiv.className = 'result-box result-error';
+                    resultDiv.innerHTML = 'حدث خطأ أثناء قراءة الملف';
+                };
+                
+                reader.readAsDataURL(file);
+                
+            } catch (err) {
+                console.error('Upload error:', err);
+                statusText.innerHTML = '❌ خطأ في الاتصال بالخادم';
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result-box result-error';
+                resultDiv.innerHTML = 'حدث خطأ أثناء رفع الملف';
+            }
+            
+            setTimeout(() => {
+                progressDiv.style.display = 'none';
+                progressBar.style.width = '0%';
+                fileInput.value = '';
+            }, 5000);
+        }
+        
+        function downloadTemplate() {
+            const templateData = [
+                {
+                    'رقم الطلب': 'R-001',
+                    'نوع الطلب': 'بطاقة ذكية',
+                    'نوع المستند': 'بطاقة شخصية',
+                    'سبب الطلب': 'إصدار جديد',
+                    'تاريخ التقديم': '2024-01-15',
+                    'حالة الطلب': 'جديد',
+                    'مصدر الطلب': 'خدمة ذاتية',
+                    'الاسم بالكامل': 'أحمد محمد علي',
+                    'وحدة التسجيل': 'لحج - ردفان',
+                    'مُصدر التسجيل': 'نظام إلكتروني'
+                },
+                {
+                    'رقم الطلب': 'R-002',
+                    'نوع الطلب': 'جواز سفر',
+                    'نوع المستند': 'جواز سفر',
+                    'سبب الطلب': 'تجديد',
+                    'تاريخ التقديم': '2024-01-16',
+                    'حالة الطلب': 'مرسل للطباعة',
+                    'مصدر الطلب': 'مركز خدمة',
+                    'الاسم بالكامل': 'خالد عبدالله سالم',
+                    'وحدة التسجيل': 'لحج - ردفان',
+                    'مُصدر التسجيل': 'نظام إلكتروني'
+                }
+            ];
+            
+            const ws = XLSX.utils.json_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'الطلبات');
+            XLSX.writeFile(wb, 'نموذج_رفع_الطلبات.xlsx');
         }
         
         function logout() { sessionStorage.clear(); window.location.href = 'admin-login.html'; }
