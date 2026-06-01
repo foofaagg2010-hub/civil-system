@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>الرئيسية - الأحوال المدنية</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -15,7 +15,6 @@
             min-height: 100vh;
         }
         
-        /* الشريط العلوي الوطني */
         .national-bar {
             background: linear-gradient(90deg, #CE1126 0%, #CE1126 33%, #FFFFFF 33%, #FFFFFF 66%, #212122 66%, #212122 100%);
             height: 6px;
@@ -156,7 +155,6 @@
             transform: translateX(-5px);
         }
         
-        /* قسم الاستعلام السريع */
         .quick-query {
             background: rgba(255,255,255,0.95);
             border-radius: 28px;
@@ -252,7 +250,50 @@
             text-align: center;
         }
         
-        /* معلومات التواصل */
+        .notification-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+            width: 100%;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+        
+        .notification-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .notification-btn:disabled {
+            background: #27ae60;
+            cursor: default;
+            transform: none;
+        }
+        
+        .notification-permission-btn {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
         .info-section {
             background: rgba(255,255,255,0.95);
             border-radius: 24px;
@@ -339,7 +380,6 @@
             <p>الإدارة العامة للأحوال المدنية - فرع محافظة لحج، مديرية ردفان</p>
         </div>
         
-        <!-- قسم الاستعلام السريع -->
         <div class="quick-query">
             <h2><i class="fas fa-search"></i> الاستعلام عن حالة الطلب</h2>
             <div class="search-box">
@@ -350,7 +390,6 @@
         </div>
         
         <div class="cards-grid">
-            <!-- 1. الاستعلام عن الطلبات -->
             <div class="service-card" onclick="document.getElementById('requestNumber').focus()">
                 <div class="card-icon">
                     <i class="fas fa-search"></i>
@@ -360,7 +399,6 @@
                 <span class="card-btn">استعلام الآن <i class="fas fa-arrow-left"></i></span>
             </div>
             
-            <!-- 2. لوحة المشرف -->
             <div class="service-card" onclick="window.location.href='admin-login.html'">
                 <div class="card-icon">
                     <i class="fas fa-user-shield"></i>
@@ -370,7 +408,6 @@
                 <span class="card-btn">دخول <i class="fas fa-lock"></i></span>
             </div>
             
-            <!-- 3. المعاملات -->
             <div class="service-card" onclick="window.location.href='transactions.html'">
                 <div class="card-icon">
                     <i class="fas fa-file-alt"></i>
@@ -401,7 +438,7 @@
             </a>
         </div>
     </div>
-    
+
     <div class="footer">
         <p>© 2025 الإدارة العامة للأحوال المدنية - جميع الحقوق محفوظة</p>
         <p style="margin-top: 8px;">آخر تحديث: رمضان 1446 هـ</p>
@@ -410,6 +447,64 @@
     <script>
         const SUPABASE_URL = 'https://rqpcwyhsaygyrgjpczlr.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcGN3eWhzYXlneXJnanBjemxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjY2MDEsImV4cCI6MjA5NTIwMjYwMX0.yrxJTQZQDVccw9y98y_mzLbCeYnhgjxsP30patcU9rc';
+        
+        let currentRequestRecord = null;
+        let isSubscribed = false;
+        let currentSubscription = null;
+        
+        // تسجيل الـ Service Worker
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator && 'PushManager' in window) {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js');
+                    console.log('Service Worker registered');
+                    return registration;
+                } catch (err) {
+                    console.error('Service Worker registration failed:', err);
+                }
+            }
+            return null;
+        }
+        
+        // طلب إذن الإشعارات
+        async function subscribeToNotifications(registration, requestNumber) {
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    alert('❌ يرجى السماح بالإشعارات لتلقي التنبيهات');
+                    return false;
+                }
+                
+                // الحصول على مفتاح VAPID من الخادم
+                const vapidResponse = await fetch('/.netlify/functions/vapid-public-key');
+                const vapidData = await vapidResponse.json();
+                
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: vapidData.publicKey
+                });
+                
+                // حفظ الاشتراك في قاعدة البيانات
+                const response = await fetch('/.netlify/functions/save-subscription', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subscription: subscription,
+                        requestNumber: requestNumber
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log('Subscription saved successfully');
+                    currentSubscription = subscription;
+                    return true;
+                }
+            } catch (err) {
+                console.error('Subscription error:', err);
+                alert('⚠️ حدث خطأ في تفعيل الإشعارات');
+            }
+            return false;
+        }
         
         async function searchRequest() {
             const requestNumber = document.getElementById('requestNumber').value.trim();
@@ -437,7 +532,8 @@
                     return;
                 }
                 
-                const record = data[0];
+                currentRequestRecord = data[0];
+                const record = currentRequestRecord;
                 
                 const statusMessages = {
                     'تم التسليم': '✅ تم تجهيز البطاقة، يرجى الحضور للاستلام',
@@ -454,6 +550,36 @@
                 const status = record['حالة الطلب'] || 'غير محدد';
                 const statusMessage = statusMessages[status] || '📞 يرجى مراجعة الإدارة للاستفسار';
                 
+                // التحقق من وجود طلب إشعار مسبق
+                const subResponse = await fetch(
+                    `${SUPABASE_URL}/rest/v1/notification_subscriptions?request_number=eq.${encodeURIComponent(record['رقم الطلب'])}&select=*`,
+                    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+                );
+                const subsData = await subResponse.json();
+                const hasSubscription = subsData && subsData.length > 0;
+                const alreadyNotified = hasSubscription && subsData[0].notified === true;
+                
+                let notificationButtonHtml = '';
+                if (status !== 'تم التسليم' && !alreadyNotified) {
+                    notificationButtonHtml = `
+                        <button class="notification-btn" onclick="enableNotifications()">
+                            <i class="fas fa-bell"></i> فعّل الإشعارات لتصلني البطاقة
+                        </button>
+                    `;
+                } else if (alreadyNotified && status === 'تم التسليم') {
+                    notificationButtonHtml = `
+                        <button class="notification-btn" disabled style="background: #27ae60;">
+                            <i class="fas fa-check-circle"></i> تم تفعيل الإشعارات - بطاقتك جاهزة
+                        </button>
+                    `;
+                } else if (status === 'تم التسليم') {
+                    notificationButtonHtml = `
+                        <button class="notification-btn" disabled style="background: #27ae60;">
+                            <i class="fas fa-check-circle"></i> بطاقتك جاهزة للاستلام
+                        </button>
+                    `;
+                }
+                
                 resultDiv.innerHTML = `
                     <div class="result success">
                         <h3 style="margin-bottom: 15px;"><i class="fas fa-file-alt"></i> تفاصيل الطلب</h3>
@@ -468,12 +594,111 @@
                         <p style="font-size: 13px; color: #666;">
                             <i class="fas fa-building"></i> وحدة التسجيل: ${record['وحدة التسجيل'] || 'لحج - ردفان'}
                         </p>
+                        ${notificationButtonHtml}
                     </div>
                 `;
                 
             } catch (err) {
                 console.error(err);
                 resultDiv.innerHTML = '<div class="result error">⚠️ حدث خطأ في الاتصال. يرجى المحاولة لاحقاً</div>';
+            }
+        }
+        
+        async function enableNotifications() {
+            if (!currentRequestRecord) return;
+            
+            const requestNumber = currentRequestRecord['رقم الطلب'];
+            
+            // التحقق من دعم المتصفح
+            if (!('Notification' in window)) {
+                alert('⚠️ متصفحك لا يدعم الإشعارات');
+                return;
+            }
+            
+            // طلب الإذن
+            if (Notification.permission === 'denied') {
+                alert('❌ تم رفض الإشعارات مسبقاً. يرجى تفعيلها من إعدادات المتصفح');
+                return;
+            }
+            
+            if (Notification.permission === 'granted') {
+                // الإذن موجود، نرسل إشعار تجريبي
+                showTestNotification(requestNumber);
+                // تسجيل الاشتراك للإشعارات المستقبلية
+                await registerAndSubscribe(requestNumber);
+            } else {
+                // طلب الإذن
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    showTestNotification(requestNumber);
+                    await registerAndSubscribe(requestNumber);
+                } else {
+                    alert('❌ يرجى السماح بالإشعارات لتلقي التنبيهات');
+                }
+            }
+        }
+        
+        async function registerAndSubscribe(requestNumber) {
+            try {
+                const registration = await registerServiceWorker();
+                if (registration) {
+                    // حفظ معلومات الطلب في localStorage
+                    localStorage.setItem('notify_request_number', requestNumber);
+                    localStorage.setItem('notify_applicant_name', currentRequestRecord['الاسم بالكامل'] || '');
+                    
+                    alert('✅ تم تفعيل الإشعارات! سيتم إشعارك فور وصول بطاقتك.');
+                    
+                    // تحديث الواجهة
+                    const btn = document.querySelector('.notification-btn');
+                    if (btn) {
+                        btn.innerHTML = '<i class="fas fa-check"></i> تم تفعيل الإشعارات - في انتظار وصول البطاقة';
+                        btn.disabled = true;
+                        btn.style.background = '#27ae60';
+                    }
+                }
+            } catch (err) {
+                console.error('Subscription error:', err);
+            }
+        }
+        
+        function showTestNotification(requestNumber) {
+            new Notification('✅ تم تفعيل الإشعارات', {
+                body: `سوف تصلك إشعارات فور وصول بطاقة الطلب رقم ${requestNumber}`,
+                icon: '/favicon.ico',
+                badge: '/favicon.ico',
+                vibrate: [200, 100, 200],
+                silent: false
+            });
+        }
+        
+        // التحقق من الإشعارات المعلقة عند تحميل الصفحة
+        async function checkPendingNotifications() {
+            const pendingRequest = localStorage.getItem('notify_request_number');
+            if (pendingRequest) {
+                // التحقق من حالة الطلب
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/requests?${encodeURIComponent('رقم الطلب')}=eq.${encodeURIComponent(pendingRequest)}&select=*`,
+                    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+                );
+                const data = await response.json();
+                if (data && data.length > 0 && data[0]['حالة الطلب'] === 'تم التسليم') {
+                    showDeliveryNotification(data[0]);
+                    localStorage.removeItem('notify_request_number');
+                }
+            }
+        }
+        
+        function showDeliveryNotification(record) {
+            if (Notification.permission === 'granted') {
+                new Notification('🎉 بطاقتك جاهزة للاستلام!', {
+                    body: `الطلب رقم ${record['رقم الطلب']} - ${record['الاسم بالكامل']}\nيرجى الحضور لاستلام بطاقتك من الفرع.`,
+                    icon: '/favicon.ico',
+                    badge: '/favicon.ico',
+                    vibrate: [200, 100, 200, 100, 200],
+                    silent: false,
+                    requireInteraction: true,
+                    tag: 'card-ready'
+                });
             }
         }
         
@@ -486,6 +711,12 @@
             <i class="far fa-calendar-alt"></i> 
             ${today.toLocaleDateString('ar-EG')}
         `;
+        
+        // تشغيل الخدمات عند تحميل الصفحة
+        if ('serviceWorker' in navigator) {
+            registerServiceWorker();
+        }
+        checkPendingNotifications();
     </script>
 </body>
 </html>

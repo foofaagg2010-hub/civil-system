@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>لوحة التحكم - المشرف</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -13,6 +13,53 @@
         body {
             font-family: 'Tajawal', sans-serif;
             background: #f0f2f5;
+            font-size: 14px;
+        }
+        
+        /* ========== تحسينات للهاتف ========== */
+        @media (max-width: 768px) {
+            body { font-size: 13px; }
+            .navbar { padding: 10px 15px; flex-direction: column; text-align: center; }
+            .logo { justify-content: center; }
+            .user-info { justify-content: center; flex-wrap: wrap; }
+            .user-badge { padding: 5px 12px; font-size: 12px; }
+            .logout-btn { padding: 6px 16px; font-size: 12px; }
+            .container { padding: 0 12px; margin: 15px auto; }
+            .tabs { gap: 8px; justify-content: center; }
+            .tab-btn { padding: 8px 14px; font-size: 12px; }
+            .tab-content { padding: 15px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 12px; }
+            .stat-card .value { font-size: 20px; }
+            .stat-card .label { font-size: 10px; }
+            .filter-buttons { gap: 6px; }
+            .filter-btn { padding: 5px 12px; font-size: 11px; }
+            .search-box { flex-direction: column; gap: 8px; }
+            .search-box input { padding: 10px 12px; }
+            .search-box button { padding: 10px 12px; font-size: 13px; justify-content: center; }
+            .upload-section { padding: 15px; }
+            .upload-section div[style*="display: flex"] { flex-direction: column; }
+            .upload-section input[type="file"] { width: 100%; }
+            .upload-section button { width: 100%; justify-content: center; }
+            .columns-list { gap: 6px; }
+            .column-tag { font-size: 10px; padding: 2px 8px; }
+            .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            th, td { padding: 8px 6px; font-size: 11px; white-space: nowrap; }
+            .btn-sm { padding: 4px 8px; font-size: 10px; }
+            .modal-content { width: 95%; padding: 20px; margin: 10px; }
+            .form-group input, .form-group select { padding: 10px 12px; }
+            .checkbox-group { flex-wrap: wrap; }
+            .pagination { gap: 5px; }
+            .page-btn { padding: 5px 10px; font-size: 12px; }
+            .chart-container { max-width: 100%; max-height: 250px; }
+            .branches-table th, .branches-table td { font-size: 10px; padding: 6px 3px; white-space: nowrap; }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .tab-btn { padding: 6px 12px; font-size: 11px; }
+            th, td { font-size: 10px; padding: 6px 4px; }
+            .branches-table th, .branches-table td { font-size: 9px; padding: 4px 2px; }
         }
         
         .navbar {
@@ -27,10 +74,12 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
         
-        .logo { display: flex; align-items: center; gap: 12px; }
-        .logo i { font-size: 1.8rem; }
+        .logo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .logo i { font-size: 1.5rem; }
+        .logo h3 { font-size: 1rem; }
+        .logo p { font-size: 10px; }
         
-        .user-info { display: flex; align-items: center; gap: 20px; }
+        .user-info { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
         .user-badge {
             background: rgba(255,255,255,0.15);
             padding: 8px 18px;
@@ -38,6 +87,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            font-size: 13px;
         }
         .user-role-badge {
             background: #f39c12;
@@ -69,7 +119,7 @@
             padding: 14px 28px;
             border-radius: 60px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-family: inherit;
             display: inline-flex;
             align-items: center;
@@ -130,10 +180,12 @@
         .branches-stats-container {
             overflow-x: auto;
             margin-top: 20px;
+            -webkit-overflow-scrolling: touch;
         }
         .branches-table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 600px;
         }
         .branches-table th, .branches-table td {
             padding: 12px 8px;
@@ -176,7 +228,7 @@
             border-radius: 40px;
             cursor: pointer;
             transition: 0.3s;
-            font-size: 14px;
+            font-size: 13px;
         }
         .filter-btn:hover, .filter-btn.active {
             background: #3498db;
@@ -194,7 +246,7 @@
             padding: 14px 18px;
             border: 2px solid #e0e0e0;
             border-radius: 12px;
-            font-size: 16px;
+            font-size: 15px;
             font-family: inherit;
         }
         .search-box input:focus {
@@ -222,20 +274,21 @@
         .upload-section h4 {
             margin-bottom: 15px;
             color: #2c3e50;
+            font-size: 1rem;
         }
         
         .columns-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 15px;
         }
         
         .column-tag {
             background: #e0e0e0;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
             color: #2c3e50;
         }
         
@@ -244,18 +297,32 @@
         .btn-success { background: #27ae60; color: white; }
         .btn-danger { background: #e74c3c; color: white; }
         .btn-warning { background: #f39c12; color: white; }
-        .btn-sm { padding: 6px 12px; font-size: 13px; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
         
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 14px 12px; text-align: right; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; font-weight: 700; }
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 500px;
+        }
+        th, td {
+            padding: 12px 10px;
+            text-align: right;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 700;
+        }
         tr:hover { background: #f8f9fa; }
         
-        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 30px; font-size: 12px; font-weight: bold; }
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 30px; font-size: 11px; font-weight: bold; }
         .status-active { background: #27ae60; color: white; }
         .status-inactive { background: #e74c3c; color: white; }
-        .role-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .role-badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: bold; }
         .role-admin { background: #9b59b6; color: white; }
         .role-supervisor { background: #3498db; color: white; }
         .role-employee { background: #2ecc71; color: white; }
@@ -274,30 +341,36 @@
         }
         .modal-content {
             background: white;
-            padding: 30px;
+            padding: 25px;
             border-radius: 24px;
             width: 90%;
             max-width: 500px;
             max-height: 90vh;
             overflow-y: auto;
         }
-        .form-group { margin-bottom: 18px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; }
         .form-group input, .form-group select {
             width: 100%;
-            padding: 12px 15px;
+            padding: 10px 12px;
             border: 2px solid #e0e0e0;
             border-radius: 12px;
+            font-size: 14px;
         }
         .checkbox-group {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
         .checkbox-group input {
             width: auto;
             margin: 0;
+        }
+        .checkbox-group label {
+            margin: 0;
+            font-size: 13px;
         }
         
         .pagination {
@@ -308,11 +381,12 @@
             flex-wrap: wrap;
         }
         .page-btn {
-            padding: 8px 16px;
+            padding: 8px 14px;
             background: white;
             border: 1px solid #ddd;
             border-radius: 10px;
             cursor: pointer;
+            font-size: 13px;
         }
         .page-btn:hover, .page-btn.active {
             background: #3498db;
@@ -333,7 +407,7 @@
         }
         .loading-spinner {
             background: white;
-            padding: 30px;
+            padding: 25px;
             border-radius: 20px;
             text-align: center;
         }
@@ -353,8 +427,9 @@
         
         .result-box {
             margin-top: 15px;
-            padding: 15px;
+            padding: 12px;
             border-radius: 12px;
+            font-size: 13px;
         }
         .result-success {
             background: #d4edda;
@@ -365,16 +440,23 @@
             color: #721c24;
         }
         
-        @media (max-width: 768px) {
-            th, td { font-size: 12px; padding: 8px; }
-            .tab-btn { padding: 10px 18px; font-size: 13px; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        /* تحسينات للتمرير على الهواتف */
+        .table-container::-webkit-scrollbar {
+            height: 4px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
         }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <div class="logo"><i class="fas fa-user-shield"></i><div><h3>لوحة التحكم</h3><p style="font-size: 12px;">إدارة الأحوال المدنية</p></div></div>
+        <div class="logo"><i class="fas fa-user-shield"></i><div><h3>لوحة التحكم</h3><p>إدارة الأحوال المدنية</p></div></div>
         <div class="user-info">
             <div class="user-badge"><i class="fas fa-user"></i> <span id="adminName">مرحباً</span></div>
             <div class="user-badge user-role-badge"><i class="fas fa-tag"></i> <span id="adminRole">-</span></div>
@@ -386,34 +468,34 @@
     <div class="container">
         <div class="tabs" id="tabsContainer">
             <button class="tab-btn active" onclick="showTab('dashboard')"><i class="fas fa-chart-line"></i> لوحة المعلومات</button>
-            <button class="tab-btn" onclick="showTab('branches')" id="branchesTab"><i class="fas fa-building"></i> إحصائيات الفروع</button>
+            <button class="tab-btn" onclick="showTab('branches')" id="branchesTab"><i class="fas fa-building"></i> الفروع</button>
             <button class="tab-btn" onclick="showTab('requests')"><i class="fas fa-file-alt"></i> الطلبات</button>
-            <button class="tab-btn" onclick="showTab('users')" id="usersTab"><i class="fas fa-users"></i> إدارة المستخدمين</button>
-            <button class="tab-btn" onclick="showTab('logs')" id="logsTab"><i class="fas fa-history"></i> سجل الحركات</button>
+            <button class="tab-btn" onclick="showTab('users')" id="usersTab"><i class="fas fa-users"></i> المستخدمين</button>
+            <button class="tab-btn" onclick="showTab('logs')" id="logsTab"><i class="fas fa-history"></i> السجل</button>
         </div>
         
         <div id="dashboard" class="tab-content active">
             <div class="stats-grid" id="statsGrid">
-                <div class="stat-card stat-total" onclick="filterByStatusFromCard(null)"><div class="value" id="totalRequests">-</div><div class="label"><i class="fas fa-chart-line"></i> إجمالي الطلبات (غير الملغاة)</div></div>
+                <div class="stat-card stat-total" onclick="filterByStatusFromCard(null)"><div class="value" id="totalRequests">-</div><div class="label"><i class="fas fa-chart-line"></i> إجمالي الطلبات</div></div>
                 <div class="stat-card stat-new" onclick="filterByStatusFromCard('جديد')"><div class="value" id="newCount">-</div><div class="label"><i class="fas fa-plus-circle"></i> جديد</div></div>
-                <div class="stat-card stat-sent-auth" onclick="filterByStatusFromCard('مرسل للتصديق')"><div class="value" id="sentToAuthCount">-</div><div class="label"><i class="fas fa-paper-plane"></i> مرسل للتصديق</div></div>
-                <div class="stat-card stat-sent-print" onclick="filterByStatusFromCard('مرسل للطباعة')"><div class="value" id="sentToPrintCount">-</div><div class="label"><i class="fas fa-print"></i> مرسل للطباعة</div></div>
+                <div class="stat-card stat-sent-auth" onclick="filterByStatusFromCard('مرسل للتصديق')"><div class="value" id="sentToAuthCount">-</div><div class="label"><i class="fas fa-paper-plane"></i> للتصديق</div></div>
+                <div class="stat-card stat-sent-print" onclick="filterByStatusFromCard('مرسل للطباعة')"><div class="value" id="sentToPrintCount">-</div><div class="label"><i class="fas fa-print"></i> للطباعة</div></div>
                 <div class="stat-card stat-printed" onclick="filterByStatusFromCard('تمت الطباعة')"><div class="value" id="printedCount">-</div><div class="label"><i class="fas fa-check-circle"></i> تمت الطباعة</div></div>
                 <div class="stat-card stat-delivered" onclick="filterByStatusFromCard('تم التسليم')"><div class="value" id="deliveredCount">-</div><div class="label"><i class="fas fa-hand-peace"></i> تم التسليم</div></div>
                 <div class="stat-card stat-rejected" onclick="filterByStatusFromCard('مرفوض')"><div class="value" id="rejectedCount">-</div><div class="label"><i class="fas fa-times-circle"></i> مرفوض</div></div>
-                <div class="stat-card stat-rejected-auth" onclick="filterByStatusFromCard('مرفوض من التصديق')"><div class="value" id="rejectedFromAuthCount">-</div><div class="label"><i class="fas fa-exclamation-triangle"></i> مرفوض من التصديق</div></div>
+                <div class="stat-card stat-rejected-auth" onclick="filterByStatusFromCard('مرفوض من التصديق')"><div class="value" id="rejectedFromAuthCount">-</div><div class="label"><i class="fas fa-exclamation-triangle"></i> رفض تصديق</div></div>
                 <div class="stat-card stat-processing" onclick="filterByStatusFromCard('تحت المعالجة')"><div class="value" id="underProcessCount">-</div><div class="label"><i class="fas fa-cogs"></i> تحت المعالجة</div></div>
                 <div class="stat-card stat-cancelled" onclick="filterByStatusFromCard('طلبات تم إلغائها')"><div class="value" id="cancelledCount">-</div><div class="label"><i class="fas fa-ban"></i> ملغاة</div></div>
             </div>
             
             <div class="filter-section">
-                <h4><i class="fas fa-filter"></i> تصفية حسب حالة الطلب</h4>
+                <h4><i class="fas fa-filter"></i> تصفية حسب الحالة</h4>
                 <div class="filter-buttons" id="filterButtons"></div>
             </div>
             
-            <!-- قسم رفع الملفات -->
-            <div class="upload-section" id="uploadSection">
-                <h4><i class="fas fa-upload"></i> رفع بيانات من ملف (Excel أو CSV)</h4>
+            <!-- قسم رفع الملفات - يظهر فقط لمن لديه صلاحية تعديل -->
+            <div class="upload-section" id="uploadSection" style="display: none;">
+                <h4><i class="fas fa-upload"></i> رفع بيانات من ملف Excel</h4>
                 <div class="columns-list">
                     <span class="column-tag">رقم الطلب</span>
                     <span class="column-tag">نوع الطلب</span>
@@ -439,7 +521,7 @@
                     <div class="progress-container">
                         <div id="uploadProgressBar" class="progress-bar"></div>
                     </div>
-                    <p id="uploadStatus" style="margin-top: 10px; font-size: 13px;"></p>
+                    <p id="uploadStatus" style="margin-top: 10px; font-size: 12px;"></p>
                 </div>
                 <div id="uploadResult" style="display: none;"></div>
             </div>
@@ -461,8 +543,12 @@
             </div>
             <div class="branches-stats-container">
                 <table class="branches-table" id="branchesStatsTable">
-                    <thead><tr><th>الفرع</th><th>جديد</th><th>مرسل للتصديق</th><th>مرسل للطباعة</th><th>تمت الطباعة</th><th>تم التسليم</th><th>مرفوض</th><th>مرفوض من التصديق</th><th>تحت المعالجة</th><th>ملغاة</th><th>الإجمالي</th><tr></thead>
-                    <tbody id="branchesStatsBody"><tr><td colspan="11" style="text-align:center;">جاري التحميل......</div></div></tbody>
+                    <thead>
+                        <tr>
+                            <th>الفرع</th><th>جديد</th><th>للتصديق</th><th>للطباعة</th><th>تمت الطباعة</th><th>تم التسليم</th><th>مرفوض</th><th>رفض تصديق</th><th>تحت المعالجة</th><th>ملغاة</th><th>الإجمالي</th>
+                        </tr>
+                    </thead>
+                    <tbody id="branchesStatsBody"><tr><td colspan="11" style="text-align:center;">جاري التحميل...</td></tr></tbody>
                     <tfoot id="branchesStatsFooter"></tfoot>
                 </table>
             </div>
@@ -472,14 +558,24 @@
         <div id="users" class="tab-content">
             <div id="usersContent">
                 <button class="btn btn-success" onclick="openUserModal()" style="margin-bottom:20px;"><i class="fas fa-plus"></i> إضافة مستخدم جديد</button>
-                <div class="table-container"><table id="usersTable"><thead><tr><th>اسم المستخدم</th><th>الفرع</th><th>الصلاحية</th><th>الحالة</th><th>آخر تسجيل دخول</th><th>إجراءات</th></tr></thead><tbody></tbody></table></div>
+                <div class="table-container">
+                    <table id="usersTable">
+                        <thead><tr><th>اسم المستخدم</th><th>الفرع</th><th>الصلاحية</th><th>الحالة</th><th>آخر تسجيل</th><th>إجراءات</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
         
         <div id="logs" class="tab-content">
             <div id="logsContent">
                 <div class="search-box"><input type="text" id="logSearch" placeholder="بحث في السجل..."><button class="btn btn-primary" onclick="loadLogs()"><i class="fas fa-search"></i> بحث</button></div>
-                <div class="table-container"><table id="logsTable"><thead><tr><th>المستخدم</th><th>الإجراء</th><th>التفاصيل</th><th>التاريخ</th></tr></thead><tbody></tbody></table></div>
+                <div class="table-container">
+                    <table id="logsTable">
+                        <thead><tr><th>المستخدم</th><th>الإجراء</th><th>التفاصيل</th><th>التاريخ</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -498,11 +594,11 @@
             <div class="form-group"><label>الحالة</label><select id="userStatus"><option value="true">نشط</option><option value="false">غير نشط</option></select></div>
             <div class="checkbox-group">
                 <input type="checkbox" id="userCanEdit" value="true">
-                <label>صلاحية التعديل (تغيير حالة الطلبات)</label>
+                <label>صلاحية التعديل</label>
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="userCanViewLogs" value="true">
-                <label>صلاحية مشاهدة سجل الحركات</label>
+                <label>صلاحية مشاهدة السجل</label>
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="userCanViewUsers" value="true">
@@ -542,7 +638,7 @@
                 overlay = document.createElement('div');
                 overlay.id = 'loadingOverlay';
                 overlay.className = 'loading-overlay';
-                overlay.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-pulse"></i><p>جاري تحميل البيانات...</p></div>`;
+                overlay.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-pulse"></i><p>جاري التحميل...</p></div>`;
                 document.body.appendChild(overlay);
             } else if (!show && overlay) { overlay.remove(); }
         }
@@ -558,20 +654,25 @@
         
         function applyPermissions() {
             console.log('تطبيق الصلاحيات - الدور:', currentUserRole);
+            console.log('can_edit:', currentUserCanEdit);
+            console.log('can_view_users:', currentUserCanViewUsers);
             
             const usersTab = document.getElementById('usersTab');
             const logsTab = document.getElementById('logsTab');
             const branchesTab = document.getElementById('branchesTab');
             const uploadSection = document.getElementById('uploadSection');
+            const addUserBtn = document.querySelector('#usersContent .btn-success');
             
+            // تبويب المستخدمين
             if (usersTab) usersTab.style.display = currentUserCanViewUsers ? 'inline-flex' : 'none';
+            // تبويب السجل
             if (logsTab) logsTab.style.display = currentUserCanViewLogs ? 'inline-flex' : 'none';
+            // تبويب الفروع
             if (branchesTab) branchesTab.style.display = (currentUserRole === 'admin' || currentUserRole === 'supervisor') ? 'inline-flex' : 'none';
-            
-            // إظهار أو إخفاء قسم رفع الملفات حسب صلاحية التعديل
-            if (uploadSection) {
-                uploadSection.style.display = currentUserCanEdit ? 'block' : 'none';
-            }
+            // زر إضافة مستخدم
+            if (addUserBtn) addUserBtn.style.display = currentUserCanViewUsers ? 'inline-flex' : 'none';
+            // قسم رفع الملفات
+            if (uploadSection) uploadSection.style.display = currentUserCanEdit ? 'block' : 'none';
             
             document.getElementById('adminRole').innerText = getRoleName(currentUserRole);
         }
@@ -605,9 +706,9 @@
                 currentUserId = data.user_id;
                 currentUserBranch = data.branch;
                 currentUserRole = data.role;
-                currentUserCanEdit = data.can_edit || false;
-                currentUserCanViewLogs = data.can_view_logs || false;
-                currentUserCanViewUsers = data.can_view_users || false;
+                currentUserCanEdit = data.can_edit === true;
+                currentUserCanViewLogs = data.can_view_logs === true;
+                currentUserCanViewUsers = data.can_view_users === true;
                 
                 sessionStorage.setItem('admin_branch', currentUserBranch);
                 sessionStorage.setItem('admin_username', data.username);
@@ -615,6 +716,9 @@
                 
                 document.getElementById('adminName').innerText = data.username;
                 document.getElementById('adminBranch').innerText = currentUserBranch || 'لحج - ردفان';
+                
+                console.log('✅ صلاحية التعديل:', currentUserCanEdit);
+                console.log('✅ صلاحية المستخدمين:', currentUserCanViewUsers);
                 
                 applyPermissions();
                 
@@ -633,9 +737,7 @@
             
             showLoading(true);
             try {
-                let url = `${API_URL}/stats?branch=${encodeURIComponent(currentUserBranch)}`;
-                
-                const response = await fetch(url, {
+                const response = await fetch(`${API_URL}/stats?branch=${encodeURIComponent(currentUserBranch)}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
@@ -677,7 +779,7 @@
                 
                 if (!response.ok) {
                     if (response.status === 403) {
-                        document.getElementById('branchesStatsBody').innerHTML = '<tr><td colspan="11" style="text-align:center;color:red;">غير مصرح لك بمشاهدة هذه البيانات</div></div></tr>';
+                        document.getElementById('branchesStatsBody').innerHTML = '<tr><td colspan="11" style="text-align:center;color:red;">غير مصرح لك بمشاهدة هذه البيانات</td></tr>';
                         return;
                     }
                     throw new Error('Failed to load branches stats');
@@ -701,46 +803,43 @@
                     totalRow.total_count += b.total_count;
                     
                     return `<tr>
-                        <td><strong>${escapeHtml(b.branch)}</strong></div>
-                        <td>${b.new_count.toLocaleString()}</div>
-                        <td>${b.sent_to_auth_count.toLocaleString()}</div>
-                        <td>${b.sent_to_print_count.toLocaleString()}</div>
-                        <td>${b.printed_count.toLocaleString()}</div>
-                        <td>${b.delivered_count.toLocaleString()}</div>
-                        <td>${b.rejected_count.toLocaleString()}</div>
-                        <td>${b.rejected_from_auth_count.toLocaleString()}</div>
-                        <td>${b.under_process_count.toLocaleString()}</div>
-                        <td>${b.cancelled_count.toLocaleString()}</div>
-                        <td><strong>${b.total_count.toLocaleString()}</strong></div>
-                     </tr>`;
+                        <td><strong>${escapeHtml(b.branch)}</strong></td>
+                        <td>${b.new_count.toLocaleString()}</td>
+                        <td>${b.sent_to_auth_count.toLocaleString()}</td>
+                        <td>${b.sent_to_print_count.toLocaleString()}</td>
+                        <td>${b.printed_count.toLocaleString()}</td>
+                        <td>${b.delivered_count.toLocaleString()}</td>
+                        <td>${b.rejected_count.toLocaleString()}</td>
+                        <td>${b.rejected_from_auth_count.toLocaleString()}</td>
+                        <td>${b.under_process_count.toLocaleString()}</td>
+                        <td>${b.cancelled_count.toLocaleString()}</td>
+                        <td><strong>${b.total_count.toLocaleString()}</strong></td>
+                    </tr>`;
                 }).join('');
                 
                 document.getElementById('branchesStatsFooter').innerHTML = `<tr style="background:#2c3e50;color:white;font-weight:bold;">
-                    <td>الإجمالي العام</div>
-                    <td>${totalRow.new_count.toLocaleString()}</div>
-                    <td>${totalRow.sent_to_auth_count.toLocaleString()}</div>
-                    <td>${totalRow.sent_to_print_count.toLocaleString()}</div>
-                    <td>${totalRow.printed_count.toLocaleString()}</div>
-                    <td>${totalRow.delivered_count.toLocaleString()}</div>
-                    <td>${totalRow.rejected_count.toLocaleString()}</div>
-                    <td>${totalRow.rejected_from_auth_count.toLocaleString()}</div>
-                    <td>${totalRow.under_process_count.toLocaleString()}</div>
-                    <td>${totalRow.cancelled_count.toLocaleString()}</div>
-                    <td>${totalRow.total_count.toLocaleString()}</div>
+                    <td>الإجمالي العام</td>
+                    <td>${totalRow.new_count.toLocaleString()}</td>
+                    <td>${totalRow.sent_to_auth_count.toLocaleString()}</td>
+                    <td>${totalRow.sent_to_print_count.toLocaleString()}</td>
+                    <td>${totalRow.printed_count.toLocaleString()}</td>
+                    <td>${totalRow.delivered_count.toLocaleString()}</td>
+                    <td>${totalRow.rejected_count.toLocaleString()}</td>
+                    <td>${totalRow.rejected_from_auth_count.toLocaleString()}</td>
+                    <td>${totalRow.under_process_count.toLocaleString()}</td>
+                    <td>${totalRow.cancelled_count.toLocaleString()}</td>
+                    <td>${totalRow.total_count.toLocaleString()}</td>
                 </tr>`;
                 
-                if (branchesChart) {
-                    branchesChart.destroy();
-                }
-                
+                if (branchesChart) branchesChart.destroy();
                 const ctx = document.getElementById('branchesChart').getContext('2d');
                 branchesChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: data.map(b => b.branch.length > 15 ? b.branch.substring(0, 15) + '...' : b.branch),
+                        labels: data.map(b => b.branch.length > 12 ? b.branch.substring(0, 12) + '...' : b.branch),
                         datasets: [
                             { label: 'جديد', data: data.map(b => b.new_count), backgroundColor: '#3498db', borderRadius: 8 },
-                            { label: 'مرسل للطباعة', data: data.map(b => b.sent_to_print_count), backgroundColor: '#e67e22', borderRadius: 8 },
+                            { label: 'للطباعة', data: data.map(b => b.sent_to_print_count), backgroundColor: '#e67e22', borderRadius: 8 },
                             { label: 'تم التسليم', data: data.map(b => b.delivered_count), backgroundColor: '#27ae60', borderRadius: 8 },
                             { label: 'ملغاة', data: data.map(b => b.cancelled_count), backgroundColor: '#95a5a6', borderRadius: 8 }
                         ]
@@ -748,15 +847,12 @@
                     options: { 
                         responsive: true, 
                         maintainAspectRatio: true,
-                        plugins: { 
-                            legend: { position: 'top', rtl: true, labels: { font: { family: 'Tajawal', size: 12 } } },
-                            tooltip: { bodyFont: { family: 'Tajawal' }, titleFont: { family: 'Tajawal' } }
-                        }
+                        plugins: { legend: { position: 'top', rtl: true, labels: { font: { size: 10 } } } }
                     }
                 });
             } catch(err) { 
                 console.error('Branches stats error:', err);
-                document.getElementById('branchesStatsBody').innerHTML = '<tr><td colspan="11" style="text-align:center;color:red;">خطأ في تحميل البيانات</div></div></tr>';
+                document.getElementById('branchesStatsBody').innerHTML = '<tr><td colspan="11" style="text-align:center;color:red;">خطأ في تحميل البيانات</td></tr>';
             }
             finally { showLoading(false); }
         }
@@ -779,31 +875,19 @@
         async function loadRequests() {
             const token = sessionStorage.getItem('admin_token');
             if (!token) return;
-            
             if (isLoading) return;
             isLoading = true; showLoading(true);
             try {
-                let branch = currentUserBranch;
-                let url = `${API_URL}/requests?page=${currentPage}&branch=${encodeURIComponent(branch)}&limit=${PAGE_SIZE}`;
+                let url = `${API_URL}/requests?page=${currentPage}&branch=${encodeURIComponent(currentUserBranch)}&limit=${PAGE_SIZE}`;
                 if (currentStatusFilter && currentStatusFilter !== 'all') url += `&status=${encodeURIComponent(currentStatusFilter)}`;
                 if (currentSearchQuery) url += `&search=${encodeURIComponent(currentSearchQuery)}`;
                 
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        sessionStorage.clear();
-                        window.location.href = 'admin-login.html';
-                    }
-                    throw new Error('Failed to load requests');
-                }
+                const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) throw new Error('Failed to load requests');
                 
                 const data = await response.json();
                 currentRequests = data.requests;
                 totalRecords = data.total;
-                
                 displayRequestsResults(); 
                 renderPagination();
             } catch(err) { 
@@ -824,12 +908,12 @@
                 const editButton = currentUserCanEdit ? 
                     `<button class="btn btn-primary btn-sm" onclick="editRequestStatus('${escapeHtml(r['رقم الطلب'])}')"><i class="fas fa-edit"></i> تعديل</button>` : '';
                 html += `<tr>
-                    <td><strong>${escapeHtml(r['رقم الطلب'])}</strong></div>
-                    <td>${escapeHtml(r['الاسم بالكامل'] || '-----')}</div>
-                    <td>${escapeHtml(r['نوع الطلب'] || '-----')}</div>
-                    <td>${escapeHtml(r['حالة الطلب'] || '-----')}</div>
-                    <td>${formatDate(r['تاريخ التقديم'])}</div></div>
-                    <td><button class="btn btn-warning btn-sm" onclick='window.showRequestDetails(${JSON.stringify(r).replace(/'/g, "\\'")})'><i class="fas fa-eye"></i> عرض</button> ${editButton}</div>
+                    <td><strong>${escapeHtml(r['رقم الطلب'])}</strong></td>
+                    <td>${escapeHtml(r['الاسم بالكامل'] || '-----')}</td>
+                    <td>${escapeHtml(r['نوع الطلب'] || '-----')}</td>
+                    <td>${escapeHtml(r['حالة الطلب'] || '-----')}</td>
+                    <td>${formatDate(r['تاريخ التقديم'])}</td>
+                    <td><button class="btn btn-warning btn-sm" onclick='window.showRequestDetails(${JSON.stringify(r).replace(/'/g, "\\'")})'><i class="fas fa-eye"></i> عرض</button> ${editButton}</td>
                 </tr>`; 
             });
             html += `</tbody></table></div>`; 
@@ -843,21 +927,15 @@
                 'مرسل للطباعة':'📤 في انتظار الطباعة',
                 'مرفوض':'❌ تم رفض الطلب',
                 'تحت المعالجة':'⚙️ قيد المراجعة',
-                'جديد':'✅ قيد التجهيز',
-                'مرسل للتصديق':'📋 قيد التصديق',
-                'مرفوض من التصديق':'⚠️ مرفوض من جهة التصديق'
+                'جديد':'✅ قيد التجهيز'
             };
             const content = `
                 <h3 style="margin-bottom:20px;">تفاصيل الطلب</h3>
-                <div style="margin-bottom:10px;"><strong>🔢 رقم الطلب:</strong> ${record['رقم الطلب']}</div>
-                <div style="margin-bottom:10px;"><strong>👤 الاسم بالكامل:</strong> ${record['الاسم بالكامل'] || '-----'}</div>
-                <div style="margin-bottom:10px;"><strong>📌 نوع الطلب:</strong> ${record['نوع الطلب'] || '-----'}</div>
-                <div style="margin-bottom:10px;"><strong>📊 الحالة:</strong> ${record['حالة الطلب']}</div>
-                <div style="margin-bottom:10px;"><strong>📝 ملاحظة:</strong> ${statusMessages[record['حالة الطلب']] || 'يرجى مراجعة الإدارة'}</div>
-                <div style="margin-bottom:10px;"><strong>🏢 وحدة التسجيل:</strong> ${record['وحدة التسجيل'] || '-----'}</div>
-                <div style="margin-bottom:10px;"><strong>📅 تاريخ التقديم:</strong> ${formatDate(record['تاريخ التقديم'])}</div>
-                <hr style="margin:15px 0;">
-                <button class="btn btn-success" style="width:100%;" onclick="window.contactWhatsApp('${record['رقم الطلب']}')"><i class="fab fa-whatsapp"></i> تواصل مع المتقدم</button>
+                <div style="margin-bottom:10px;"><strong>رقم الطلب:</strong> ${record['رقم الطلب']}</div>
+                <div style="margin-bottom:10px;"><strong>الاسم:</strong> ${record['الاسم بالكامل'] || '-----'}</div>
+                <div style="margin-bottom:10px;"><strong>الحالة:</strong> ${record['حالة الطلب']}</div>
+                <div style="margin-bottom:10px;"><strong>ملاحظة:</strong> ${statusMessages[record['حالة الطلب']] || 'يرجى مراجعة الإدارة'}</div>
+                <button class="btn btn-success" style="width:100%;margin-top:15px;" onclick="window.contactWhatsApp('${record['رقم الطلب']}')"><i class="fab fa-whatsapp"></i> تواصل مع المتقدم</button>
             `;
             document.getElementById('detailsContent').innerHTML = content; 
             document.getElementById('detailsModal').style.display = 'flex';
@@ -868,21 +946,15 @@
         };
         
         window.editRequestStatus = async function(requestNumber) {
-            if (!currentUserCanEdit) {
-                alert('⚠️ ليس لديك صلاحية لتعديل حالة الطلبات');
-                return;
-            }
-            const newStatus = prompt('تغيير حالة الطلب إلى (جديد - مرسل للتصديق - مرسل للطباعة - تمت الطباعة - تم التسليم - مرفوض - مرفوض من التصديق - تحت المعالجة - طلبات تم إلغائها):', '');
+            if (!currentUserCanEdit) { alert('⚠️ ليس لديك صلاحية للتعديل'); return; }
+            const newStatus = prompt('تغيير حالة الطلب إلى:', '');
             if (newStatus) {
                 const token = sessionStorage.getItem('admin_token');
                 showLoading(true);
                 try {
                     await fetch(`${API_URL}/update-status`, { 
                         method: 'POST', 
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        }, 
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
                         body: JSON.stringify({ requestNumber, status: newStatus }) 
                     });
                     alert('تم تحديث الحالة بنجاح'); 
@@ -897,9 +969,9 @@
             const totalPages = Math.ceil(totalRecords / PAGE_SIZE);
             if (totalPages <= 1) { document.getElementById('paginationContainer').innerHTML = ''; return; }
             let html = '';
-            if (currentPage > 1) html += `<button class="page-btn" onclick="goToPage(${currentPage-1})">السابقة</button>`;
+            if (currentPage > 1) html += `<button class="page-btn" onclick="goToPage(${currentPage-1})">السابق</button>`;
             for (let i = Math.max(1, currentPage-2); i <= Math.min(totalPages, currentPage+2); i++) html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goToPage(${i})">${i}</button>`;
-            if (currentPage < totalPages) html += `<button class="page-btn" onclick="goToPage(${currentPage+1})">التالية</button>`;
+            if (currentPage < totalPages) html += `<button class="page-btn" onclick="goToPage(${currentPage+1})">التالي</button>`;
             document.getElementById('paginationContainer').innerHTML = html;
         }
         
@@ -908,11 +980,7 @@
         window.filterByStatusFromCard = function(status) { filterByStatus(status); document.getElementById('requestsResults').scrollIntoView({ behavior: 'smooth' }); };
         window.searchRequests = function() { currentSearchQuery = document.getElementById('nameInput').value.trim() || null; currentPage = 1; loadRequests(); };
         window.resetFilters = function() { 
-            currentStatusFilter = null; 
-            currentSearchQuery = null; 
-            document.getElementById('nameInput').value = ''; 
-            currentPage = 1; 
-            loadRequests(); 
+            currentStatusFilter = null; currentSearchQuery = null; document.getElementById('nameInput').value = ''; currentPage = 1; loadRequests(); 
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active')); 
             document.querySelector('.filter-btn[data-status="all"]')?.classList.add('active'); 
         };
@@ -922,18 +990,16 @@
         async function loadUsers() {
             if (!currentUserCanViewUsers) return;
             const token = sessionStorage.getItem('admin_token');
-            const response = await fetch(`${API_URL}/users`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const response = await fetch(`${API_URL}/users`, { headers: { 'Authorization': `Bearer ${token}` } });
             const users = await response.json();
             document.querySelector('#usersTable tbody').innerHTML = users.map(u => `
                 <tr>
-                    <td>${escapeHtml(u.username)}</div>
-                    <td>${escapeHtml(u.branch_name)}</div>
-                    <td><span class="role-badge role-${u.role}">${getRoleName(u.role)}</span></div>
-                    <td><span class="status-badge ${u.is_active?'status-active':'status-inactive'}">${u.is_active?'نشط':'غير نشط'}</span></div>
-                    <td>${u.last_login?.split('T')[0]||'-----'}</div>
-                    <td><button class="btn btn-warning btn-sm" onclick="editUser(${u.id},'${u.username}','${u.branch_name}','${u.role}',${u.is_active},${u.can_edit},${u.can_view_logs},${u.can_view_users})"><i class="fas fa-edit"></i></button> <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button></div>
+                    <td>${escapeHtml(u.username)}</td>
+                    <td>${escapeHtml(u.branch_name)}</td>
+                    <td><span class="role-badge role-${u.role}">${getRoleName(u.role)}</span></td>
+                    <td><span class="status-badge ${u.is_active?'status-active':'status-inactive'}">${u.is_active?'نشط':'غير نشط'}</span></td>
+                    <td>${u.last_login?.split('T')[0]||'-----'}</td>
+                    <td><button class="btn btn-warning btn-sm" onclick="editUser(${u.id},'${u.username}','${u.branch_name}','${u.role}',${u.is_active},${u.can_edit},${u.can_view_logs},${u.can_view_users})"><i class="fas fa-edit"></i></button> <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button></td>
                 </tr>`).join('');
         }
         
@@ -976,7 +1042,7 @@
             const canViewUsers = document.getElementById('userCanViewUsers').checked;
             
             if (!username) { alert('يرجى إدخال اسم المستخدم'); return; }
-            if (!currentEditUserId && !password) { alert('يرجى إدخال كلمة المرور للمستخدم الجديد'); return; }
+            if (!currentEditUserId && !password) { alert('يرجى إدخال كلمة المرور'); return; }
             
             await fetch(`${API_URL}/users`, {
                 method: currentEditUserId ? 'PUT' : 'POST',
@@ -991,10 +1057,7 @@
             if (!currentUserCanViewUsers) return;
             if (confirm('هل أنت متأكد؟')) {
                 const token = sessionStorage.getItem('admin_token');
-                await fetch(`${API_URL}/users?id=${userId}`, { 
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                await fetch(`${API_URL}/users?id=${userId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
                 alert('تم الحذف'); loadUsers();
             } 
         }
@@ -1004,47 +1067,37 @@
         async function loadLogs() {
             if (!currentUserCanViewLogs) return;
             const token = sessionStorage.getItem('admin_token');
-            const response = await fetch(`${API_URL}/logs`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const response = await fetch(`${API_URL}/logs`, { headers: { 'Authorization': `Bearer ${token}` } });
             const logs = await response.json();
             document.querySelector('#logsTable tbody').innerHTML = logs.map(l => `
                 <tr>
-                    <td>${escapeHtml(l.username || 'غير معروف')}</div>
-                    <td>${escapeHtml(l.action)}</div>
-                    <td>${escapeHtml(l.details || '')}</div>
-                    <td>${new Date(l.created_at).toLocaleString('ar-EG')}</div>
+                    <td>${escapeHtml(l.username || 'غير معروف')}</td>
+                    <td>${escapeHtml(l.action)}</td>
+                    <td>${escapeHtml(l.details || '')}</td>
+                    <td>${new Date(l.created_at).toLocaleString('ar-EG')}</td>
                 </tr>`).join('');
         }
         
         function initFilterButtons() {
-            document.getElementById('filterButtons').innerHTML = `<button class="filter-btn active" data-status="all" onclick="filterByStatus(null)">الكل</button>
+            document.getElementById('filterButtons').innerHTML = `
+                <button class="filter-btn active" data-status="all" onclick="filterByStatus(null)">الكل</button>
                 <button class="filter-btn" data-status="جديد" onclick="filterByStatus('جديد')">جديد</button>
-                <button class="filter-btn" data-status="مرسل للتصديق" onclick="filterByStatus('مرسل للتصديق')">مرسل للتصديق</button>
-                <button class="filter-btn" data-status="مرسل للطباعة" onclick="filterByStatus('مرسل للطباعة')">مرسل للطباعة</button>
+                <button class="filter-btn" data-status="مرسل للتصديق" onclick="filterByStatus('مرسل للتصديق')">للتصديق</button>
+                <button class="filter-btn" data-status="مرسل للطباعة" onclick="filterByStatus('مرسل للطباعة')">للطباعة</button>
                 <button class="filter-btn" data-status="تمت الطباعة" onclick="filterByStatus('تمت الطباعة')">تمت الطباعة</button>
                 <button class="filter-btn" data-status="تم التسليم" onclick="filterByStatus('تم التسليم')">تم التسليم</button>
                 <button class="filter-btn" data-status="مرفوض" onclick="filterByStatus('مرفوض')">مرفوض</button>
-                <button class="filter-btn" data-status="مرفوض من التصديق" onclick="filterByStatus('مرفوض من التصديق')">مرفوض من التصديق</button>
+                <button class="filter-btn" data-status="مرفوض من التصديق" onclick="filterByStatus('مرفوض من التصديق')">رفض تصديق</button>
                 <button class="filter-btn" data-status="تحت المعالجة" onclick="filterByStatus('تحت المعالجة')">تحت المعالجة</button>
                 <button class="filter-btn" data-status="طلبات تم إلغائها" onclick="filterByStatus('طلبات تم إلغائها')">ملغاة</button>`;
         }
         
-        // ============= دوال رفع الملفات =============
-        
+        // دوال رفع الملفات
         async function uploadExcelFile() {
             const fileInput = document.getElementById('excelFile');
             const file = fileInput.files[0];
-            
-            if (!file) {
-                alert('❌ يرجى اختيار ملف أولاً');
-                return;
-            }
-            
-            if (!currentUserCanEdit) {
-                alert('⚠️ ليس لديك صلاحية لرفع البيانات');
-                return;
-            }
+            if (!file) { alert('❌ يرجى اختيار ملف أولاً'); return; }
+            if (!currentUserCanEdit) { alert('⚠️ ليس لديك صلاحية لرفع البيانات'); return; }
             
             const progressDiv = document.getElementById('uploadProgress');
             const progressBar = document.getElementById('uploadProgressBar');
@@ -1057,106 +1110,45 @@
             resultDiv.style.display = 'none';
             
             try {
-                // قراءة الملف وتحويله إلى Base64
                 const reader = new FileReader();
-                
                 reader.onload = async function(e) {
                     progressBar.style.width = '60%';
                     statusText.innerText = 'جاري معالجة البيانات...';
-                    
                     const base64File = e.target.result.split(',')[1];
                     const token = sessionStorage.getItem('admin_token');
-                    
                     const response = await fetch(`${API_URL}/upload-requests`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                            file: base64File,
-                            branch: currentUserBranch,
-                            filename: file.name
-                        })
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ file: base64File, branch: currentUserBranch, filename: file.name })
                     });
-                    
                     progressBar.style.width = '100%';
-                    
                     const data = await response.json();
-                    
                     if (response.ok) {
                         statusText.innerHTML = '✅ ' + data.message;
                         resultDiv.style.display = 'block';
                         resultDiv.className = 'result-box result-success';
-                        resultDiv.innerHTML = `
-                            <strong><i class="fas fa-check-circle"></i> نتيجة الرفع:</strong><br>
-                            📊 إجمالي السجلات في الملف: ${data.stats.total}<br>
-                            ➕ سجلات جديدة تمت إضافتها: ${data.stats.new}<br>
-                            ✏️ سجلات محدثة: ${data.stats.updated}<br>
-                            ⏭️ سجلات مكررة تم تخطيها: ${data.stats.skipped}
-                        `;
-                        await loadAllStats();
-                        await loadRequests();
+                        resultDiv.innerHTML = `<strong>نتيجة الرفع:</strong><br>📊 إجمالي: ${data.stats.total}<br>➕ جديد: ${data.stats.new}<br>✏️ محدث: ${data.stats.updated}<br>⏭️ مكرر: ${data.stats.skipped}`;
+                        await loadAllStats(); await loadRequests();
                     } else {
                         statusText.innerHTML = '❌ ' + (data.error || 'حدث خطأ');
                         resultDiv.style.display = 'block';
                         resultDiv.className = 'result-box result-error';
-                        resultDiv.innerHTML = `<strong><i class="fas fa-exclamation-triangle"></i> خطأ:</strong><br>${data.error}`;
+                        resultDiv.innerHTML = `<strong>خطأ:</strong><br>${data.error}`;
                     }
                 };
-                
-                reader.onerror = function() {
-                    statusText.innerHTML = '❌ خطأ في قراءة الملف';
-                    resultDiv.style.display = 'block';
-                    resultDiv.className = 'result-box result-error';
-                    resultDiv.innerHTML = 'حدث خطأ أثناء قراءة الملف';
-                };
-                
                 reader.readAsDataURL(file);
-                
             } catch (err) {
                 console.error('Upload error:', err);
-                statusText.innerHTML = '❌ خطأ في الاتصال بالخادم';
-                resultDiv.style.display = 'block';
-                resultDiv.className = 'result-box result-error';
-                resultDiv.innerHTML = 'حدث خطأ أثناء رفع الملف';
+                statusText.innerHTML = '❌ خطأ في الاتصال';
             }
-            
-            setTimeout(() => {
-                progressDiv.style.display = 'none';
-                progressBar.style.width = '0%';
-                fileInput.value = '';
-            }, 5000);
+            setTimeout(() => { progressDiv.style.display = 'none'; fileInput.value = ''; }, 5000);
         }
         
         function downloadTemplate() {
             const templateData = [
-                {
-                    'رقم الطلب': 'R-001',
-                    'نوع الطلب': 'بطاقة ذكية',
-                    'نوع المستند': 'بطاقة شخصية',
-                    'سبب الطلب': 'إصدار جديد',
-                    'تاريخ التقديم': '2024-01-15',
-                    'حالة الطلب': 'جديد',
-                    'مصدر الطلب': 'خدمة ذاتية',
-                    'الاسم بالكامل': 'أحمد محمد علي',
-                    'وحدة التسجيل': 'لحج - ردفان',
-                    'مُصدر التسجيل': 'نظام إلكتروني'
-                },
-                {
-                    'رقم الطلب': 'R-002',
-                    'نوع الطلب': 'جواز سفر',
-                    'نوع المستند': 'جواز سفر',
-                    'سبب الطلب': 'تجديد',
-                    'تاريخ التقديم': '2024-01-16',
-                    'حالة الطلب': 'مرسل للطباعة',
-                    'مصدر الطلب': 'مركز خدمة',
-                    'الاسم بالكامل': 'خالد عبدالله سالم',
-                    'وحدة التسجيل': 'لحج - ردفان',
-                    'مُصدر التسجيل': 'نظام إلكتروني'
-                }
+                { 'رقم الطلب': 'R-001', 'نوع الطلب': 'بطاقة ذكية', 'نوع المستند': 'بطاقة شخصية', 'سبب الطلب': 'إصدار جديد', 'تاريخ التقديم': '2024-01-15', 'حالة الطلب': 'جديد', 'مصدر الطلب': 'خدمة ذاتية', 'الاسم بالكامل': 'أحمد محمد علي', 'وحدة التسجيل': 'لحج - ردفان', 'مُصدر التسجيل': 'نظام إلكتروني' },
+                { 'رقم الطلب': 'R-002', 'نوع الطلب': 'جواز سفر', 'نوع المستند': 'جواز سفر', 'سبب الطلب': 'تجديد', 'تاريخ التقديم': '2024-01-16', 'حالة الطلب': 'مرسل للطباعة', 'مصدر الطلب': 'مركز خدمة', 'الاسم بالكامل': 'خالد عبدالله سالم', 'وحدة التسجيل': 'لحج - ردفان', 'مُصدر التسجيل': 'نظام إلكتروني' }
             ];
-            
             const ws = XLSX.utils.json_to_sheet(templateData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'الطلبات');
@@ -1181,11 +1173,8 @@
             if (event.target === document.getElementById('userModal')) closeUserModal(); 
         };
         
-        document.getElementById('nameInput')?.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') searchRequests();
-        });
+        document.getElementById('nameInput')?.addEventListener('keypress', function(e) { if (e.key === 'Enter') searchRequests(); });
         
-        // بدء التطبيق
         (async function init() {
             const authResult = await checkAuth();
             if (authResult) { 

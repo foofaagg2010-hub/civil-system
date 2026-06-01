@@ -1,19 +1,28 @@
 {
   "name": "civil-system",
   "version": "1.0.0",
-  "description": "",
+  "description": "نظام إدارة الأحوال المدنية - فرع لحج ردفان",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "netlify dev",
+    "build": "echo 'Build complete'"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "civil",
+    "system",
+    "netlify",
+    "supabase"
+  ],
+  "author": "ABDULLAH",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
-    "bcryptjs": "^3.0.3",
-    "jsonwebtoken": "^9.0.3"
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.3",
+    "web-push": "^3.6.7",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "netlify-cli": "^26.0.2"
