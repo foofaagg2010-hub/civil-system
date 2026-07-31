@@ -1,4 +1,3 @@
-// netlify/functions/save-subscription.js
 const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
@@ -23,8 +22,6 @@ exports.handler = async (event) => {
             process.env.SUPABASE_URL,
             process.env.SUPABASE_SERVICE_KEY
         );
-        
-        // حفظ الاشتراك
         const { error } = await supabase
             .from('notification_subscriptions')
             .upsert({

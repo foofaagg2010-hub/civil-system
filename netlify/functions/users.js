@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const bcrypt = require('bcryptjs');
 
 exports.handler = async (event) => {
     const token = event.headers.authorization?.split(' ')[1];
@@ -15,7 +16,6 @@ exports.handler = async (event) => {
             process.env.SUPABASE_SERVICE_KEY
         );
         
-        // التحقق من الجلسة
         const { data: session, error: sessionError } = await supabase
             .from('admin_sessions')
             .select('user_id')
@@ -30,14 +30,12 @@ exports.handler = async (event) => {
             };
         }
         
-        // جلب صلاحية المستخدم
         const { data: user } = await supabase
             .from('users')
-            .select('role, can_view_users')
+            .select('role, can_view_users, id, username')
             .eq('id', session.user_id)
             .single();
         
-        // التحقق من صلاحية مشاهدة المستخدمين
         if (user.role !== 'admin' && !user.can_view_users) {
             return {
                 statusCode: 403,
@@ -45,11 +43,10 @@ exports.handler = async (event) => {
             };
         }
         
-        // GET - جلب المستخدمين
         if (event.httpMethod === 'GET') {
             const { data: users, error } = await supabase
                 .from('users')
-                .select('id, username, branch_name, role, is_active, last_login, can_edit, can_view_logs, can_view_users');
+                .select('id, username, branch_name, role, is_active, last_login, can_edit, can_view_logs, can_view_users, admin_phone, tech_phone, whatsapp_number');
             
             if (error) throw error;
             
@@ -59,7 +56,6 @@ exports.handler = async (event) => {
             };
         }
         
-        // POST - إضافة مستخدم جديد (للمدير فقط)
         if (event.httpMethod === 'POST') {
             if (user.role !== 'admin') {
                 return {
@@ -68,22 +64,34 @@ exports.handler = async (event) => {
                 };
             }
             
-            const { username, password, branch, role, is_active, can_edit, can_view_logs, can_view_users } = JSON.parse(event.body);
+            const { username, password, branch, role, is_active, can_edit, can_view_logs, can_view_users, admin_phone, tech_phone, whatsapp_number } = JSON.parse(event.body);
+            const password_hash = password ? await bcrypt.hash(password, 10) : null;
             
             const { error } = await supabase
                 .from('users')
                 .insert({
                     username,
-                    password_hash: password,
+                    password_hash,
                     branch_name: branch,
                     role,
-                    is_active,
+                    is_active: is_active !== false,
                     can_edit: can_edit || false,
                     can_view_logs: can_view_logs || false,
-                    can_view_users: can_view_users || false
+                    can_view_users: can_view_users || false,
+                    admin_phone: admin_phone || '',
+                    tech_phone: tech_phone || '',
+                    whatsapp_number: whatsapp_number || ''
                 });
             
             if (error) throw error;
+            
+            await supabase.from('admin_logs').insert({
+                user_id: user.id,
+                username: user.username,
+                action: 'إضافة مستخدم',
+                details: `إضافة مستخدم جديد: ${username}`,
+                created_at: new Date().toISOString()
+            });
             
             return {
                 statusCode: 200,
@@ -91,7 +99,6 @@ exports.handler = async (event) => {
             };
         }
         
-        // PUT - تحديث مستخدم (للمدير فقط)
         if (event.httpMethod === 'PUT') {
             if (user.role !== 'admin') {
                 return {
@@ -100,17 +107,23 @@ exports.handler = async (event) => {
                 };
             }
             
-            const { id, username, password, branch, role, is_active, can_edit, can_view_logs, can_view_users } = JSON.parse(event.body);
+            const { id, username, password, branch, role, is_active, can_edit, can_view_logs, can_view_users, admin_phone, tech_phone, whatsapp_number } = JSON.parse(event.body);
             
             const updates = { 
                 branch_name: branch, 
                 role, 
-                is_active,
+                is_active: is_active !== false,
                 can_edit: can_edit || false,
                 can_view_logs: can_view_logs || false,
-                can_view_users: can_view_users || false
+                can_view_users: can_view_users || false,
+                admin_phone: admin_phone || '',
+                tech_phone: tech_phone || '',
+                whatsapp_number: whatsapp_number || ''
             };
-            if (password) updates.password_hash = password;
+            
+            if (password) {
+                updates.password_hash = await bcrypt.hash(password, 10);
+            }
             
             const { error } = await supabase
                 .from('users')
@@ -119,13 +132,20 @@ exports.handler = async (event) => {
             
             if (error) throw error;
             
+            await supabase.from('admin_logs').insert({
+                user_id: user.id,
+                username: user.username,
+                action: 'تعديل مستخدم',
+                details: `تعديل المستخدم: ${username}`,
+                created_at: new Date().toISOString()
+            });
+            
             return {
                 statusCode: 200,
                 body: JSON.stringify({ success: true })
             };
         }
         
-        // DELETE - حذف مستخدم (للمدير فقط)
         if (event.httpMethod === 'DELETE') {
             if (user.role !== 'admin') {
                 return {
@@ -136,12 +156,26 @@ exports.handler = async (event) => {
             
             const id = event.queryStringParameters?.id;
             
+            const { data: deletedUser } = await supabase
+                .from('users')
+                .select('username')
+                .eq('id', id)
+                .single();
+            
             const { error } = await supabase
                 .from('users')
                 .delete()
                 .eq('id', id);
             
             if (error) throw error;
+            
+            await supabase.from('admin_logs').insert({
+                user_id: user.id,
+                username: user.username,
+                action: 'حذف مستخدم',
+                details: `حذف المستخدم: ${deletedUser?.username || id}`,
+                created_at: new Date().toISOString()
+            });
             
             return {
                 statusCode: 200,

@@ -1,4 +1,3 @@
-// netlify/functions/send-notification.js
 const { createClient } = require('@supabase/supabase-js');
 const webpush = require('web-push');
 
@@ -23,8 +22,6 @@ exports.handler = async (event) => {
             process.env.SUPABASE_URL,
             process.env.SUPABASE_SERVICE_KEY
         );
-        
-        // التحقق من الجلسة
         const { data: session, error: sessionError } = await supabase
             .from('admin_sessions')
             .select('user_id')
@@ -47,8 +44,6 @@ exports.handler = async (event) => {
                 body: JSON.stringify({ message: 'Not a delivery status' })
             };
         }
-        
-        // البحث عن الاشتراكات لهذا الطلب
         const { data: subscriptions, error: subError } = await supabase
             .from('notification_subscriptions')
             .select('*')
@@ -61,15 +56,11 @@ exports.handler = async (event) => {
                 body: JSON.stringify({ message: 'No subscriptions found' })
             };
         }
-        
-        // إعداد VAPID keys
         webpush.setVapidDetails(
             'mailto:admin@civil-system.com',
             process.env.VAPID_PUBLIC_KEY,
             process.env.VAPID_PRIVATE_KEY
         );
-        
-        // إرسال الإشعار لكل اشتراك
         const notificationPayload = {
             title: '🎉 بطاقتك جاهزة للاستلام!',
             body: `${applicantName || 'المواطن'}، تم وصول بطاقتك إلى فرع الأحوال المدنية. رقم الطلب: ${requestNumber}`,
@@ -91,8 +82,6 @@ exports.handler = async (event) => {
                     pushSubscription,
                     JSON.stringify(notificationPayload)
                 );
-                
-                // تحديث حالة الإشعار
                 await supabase
                     .from('notification_subscriptions')
                     .update({ notified: true, notified_at: new Date().toISOString() })
@@ -100,7 +89,6 @@ exports.handler = async (event) => {
                     
             } catch (err) {
                 console.error('Error sending notification:', err);
-                // إذا كان الاشتراك غير صالح، حذفه
                 if (err.statusCode === 410) {
                     await supabase
                         .from('notification_subscriptions')
@@ -109,8 +97,6 @@ exports.handler = async (event) => {
                 }
             }
         }
-        
-        // تسجيل العملية
         await supabase.from('logs').insert({
             user_id: session.user_id,
             action: 'إرسال إشعار متصفح',

@@ -21,8 +21,6 @@ exports.handler = async (event) => {
             process.env.SUPABASE_URL,
             process.env.SUPABASE_SERVICE_KEY
         );
-        
-        // التحقق من الجلسة
         const { data: session, error: sessionError } = await supabase
             .from('admin_sessions')
             .select('user_id')
@@ -36,23 +34,17 @@ exports.handler = async (event) => {
                 body: JSON.stringify({ error: 'Invalid session' })
             };
         }
-        
-        // جلب صلاحية المستخدم
         const { data: user } = await supabase
             .from('users')
             .select('role')
             .eq('id', session.user_id)
             .single();
-        
-        // admin و supervisor يمكنهم مشاهدة إحصائيات كل الفروع
         if (user.role !== 'admin' && user.role !== 'supervisor') {
             return {
                 statusCode: 403,
                 body: JSON.stringify({ error: 'غير مصرح لك بمشاهدة إحصائيات الفروع' })
             };
         }
-        
-        // جلب إحصائيات الفروع من الـ view
         const { data: branches, error } = await supabase
             .from('branch_statistics')
             .select('*');

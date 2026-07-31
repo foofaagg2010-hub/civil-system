@@ -3,84 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
     <title>الرئيسية - الأحوال المدنية</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         body {
             font-family: 'Tajawal', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
-        
+
         .national-bar {
             background: linear-gradient(90deg, #CE1126 0%, #CE1126 33%, #FFFFFF 33%, #FFFFFF 66%, #212122 66%, #212122 100%);
             height: 6px;
         }
-        
+
         .navbar {
-            background: rgba(44, 62, 80, 0.95);
-            backdrop-filter: blur(10px);
+            background: linear-gradient(135deg, #0f1a2e 0%, #1a2a4a 50%, #0f1a2e 100%);
             color: white;
-            padding: 15px 24px;
+            padding: 10px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
             position: sticky;
             top: 0;
             z-index: 100;
+            border-bottom: 3px solid #C5A03A;
         }
-        
-        .logo { display: flex; align-items: center; gap: 12px; }
-        .logo i { font-size: 2rem; }
-        .logo-text h2 { font-size: 1.3rem; margin: 0; }
-        .logo-text p { font-size: 0.85rem; opacity: 0.85; margin: 3px 0 0; }
-        
+
+        .logo { display: flex; align-items: center; gap: 14px; }
+        .logo-img { height: 48px; width: auto; object-fit: contain; background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .logo-img-fallback { display: none; }
+        .logo-img-error + .logo-img-fallback { display: flex; }
+        .logo-divider { width: 1px; height: 40px; background: rgba(255,255,255,0.2); }
+        .logo-text { line-height: 1.3; }
+        .logo-text h2 { font-size: 1.2rem; margin: 0; color: #f0f0f0; }
+        .logo-text p { font-size: 0.8rem; opacity: 0.8; margin: 2px 0 0; color: #C5A03A; }
+        .logo-text .sub-title { font-size: 0.7rem; opacity: 0.6; margin: 0; }
+
         .date {
             background: rgba(255,255,255,0.15);
             padding: 6px 15px;
             border-radius: 40px;
             font-size: 0.85rem;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 40px auto;
             padding: 0 20px;
         }
-        
+
         .hero {
             text-align: center;
             color: white;
-            margin-bottom: 60px;
+            margin-bottom: 50px;
             animation: fadeInUp 0.8s ease;
+            position: relative;
         }
-        
+
+        .hero::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #C5A03A, transparent);
+            margin: 20px auto 0;
+            border-radius: 2px;
+        }
+
         .hero h1 {
             font-size: 2.5rem;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
-        
-        .hero p { font-size: 1.2rem; opacity: 0.9; }
-        
+
+        .hero p { font-size: 1.15rem; opacity: 0.9; line-height: 1.7; }
+
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
+
+        .result-timeline {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 12px;
+        }
+
+        .result-timeline h4 {
+            font-size: 13px;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .timeline-steps {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+            position: relative;
+        }
+
+        .timeline-steps::before {
+            content: '';
+            position: absolute;
+            top: 18px;
+            right: 10%;
+            left: 10%;
+            height: 3px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+
+        .timeline-steps .tl-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            min-width: 0;
+        }
+
+        .timeline-steps .tl-step .tl-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 4px;
+            transition: 0.3s;
+            border: 3px solid #e0e0e0;
+            position: relative;
+        }
+
+        .timeline-steps .tl-step .tl-dot i { font-size: 13px; color: white; }
+
+        .timeline-steps .tl-step .tl-label {
+            font-size: 9px;
+            color: #999;
+            display: block;
+            line-height: 1.2;
+            transition: 0.3s;
+        }
+
+        .timeline-steps .tl-step.active .tl-dot {
+            background: #3498db;
+            border-color: #3498db;
+            box-shadow: 0 0 0 4px rgba(52,152,219,0.2);
+        }
+
+        .timeline-steps .tl-step.active .tl-label {
+            color: #2c3e50;
+            font-weight: 700;
+        }
+
+        .timeline-steps .tl-step.completed .tl-dot {
+            background: #27ae60;
+            border-color: #27ae60;
+        }
+
+        .timeline-steps .tl-step.completed .tl-label {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .timeline-steps .tl-step.rejected .tl-dot {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .timeline-steps .tl-step.rejected .tl-label {
+            color: #e74c3c;
+        }
+
+        .timeline-steps .tl-step.cancelled .tl-dot {
+            background: #95a5a6;
+            border-color: #95a5a6;
+        }
+
+        .timeline-steps .tl-step.cancelled .tl-label {
+            color: #95a5a6;
+        }
+
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 30px;
             margin-bottom: 50px;
         }
-        
+
         .service-card {
             background: white;
             border-radius: 28px;
@@ -91,8 +213,11 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
             position: relative;
             overflow: hidden;
+            display: block;
+            text-decoration: none;
+            color: inherit;
         }
-        
+
         .service-card::before {
             content: '';
             position: absolute;
@@ -104,16 +229,11 @@
             transform: scaleX(0);
             transition: transform 0.4s ease;
         }
-        
-        .service-card:hover::before {
-            transform: scaleX(1);
-        }
-        
-        .service-card:hover {
-            transform: translateY(-12px);
-            box-shadow: 0 30px 50px rgba(0,0,0,0.2);
-        }
-        
+
+        .service-card:hover::before { transform: scaleX(1); }
+        .service-card:hover { transform: translateY(-12px); box-shadow: 0 30px 50px rgba(0,0,0,0.2); }
+        .service-card:active { transform: translateY(-4px); }
+
         .card-icon {
             width: 90px;
             height: 90px;
@@ -125,20 +245,17 @@
             margin: 0 auto 20px;
             transition: 0.3s;
         }
-        
-        .service-card:hover .card-icon {
-            transform: scale(1.05);
-        }
-        
+
+        .service-card:hover .card-icon { transform: scale(1.05); }
         .card-icon i { font-size: 42px; color: white; }
-        
+
         .service-card:nth-child(1) .card-icon { background: linear-gradient(135deg, #3498db, #2980b9); }
         .service-card:nth-child(2) .card-icon { background: linear-gradient(135deg, #e74c3c, #c0392b); }
         .service-card:nth-child(3) .card-icon { background: linear-gradient(135deg, #27ae60, #1e8449); }
-        
+
         .service-card h3 { font-size: 1.6rem; margin-bottom: 12px; color: #2c3e50; }
         .service-card p { color: #666; line-height: 1.7; margin-bottom: 25px; }
-        
+
         .card-btn {
             display: inline-block;
             padding: 12px 30px;
@@ -148,57 +265,134 @@
             font-weight: 600;
             transition: 0.3s;
         }
-        
-        .service-card:hover .card-btn {
-            background: #3498db;
-            color: white;
-            transform: translateX(-5px);
-        }
-        
+
+        .service-card:hover .card-btn { background: #3498db; color: white; transform: translateX(-5px); }
+
         .quick-query {
-            background: rgba(255,255,255,0.95);
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fe 100%);
             border-radius: 28px;
-            padding: 35px;
+            padding: 35px 35px 40px;
             margin-bottom: 40px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            backdrop-filter: blur(5px);
+            box-shadow: 0 15px 50px rgba(15,26,46,0.12);
+            border: 1px solid rgba(197,160,58,0.15);
+            position: relative;
+            overflow: hidden;
+            animation: cardFloat 0.8s ease-out;
         }
-        
+
+        .quick-query::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(197,160,58,0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .quick-query::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(26,42,74,0.04) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        @keyframes cardFloat {
+            0% { opacity: 0; transform: translateY(40px) scale(0.97); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
         .quick-query h2 {
-            color: #2c3e50;
-            margin-bottom: 20px;
+            color: #1a2a4a;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 10px;
-            border-right: 4px solid #3498db;
-            padding-right: 15px;
+            font-size: 1.5rem;
+            position: relative;
         }
-        
+
+        .quick-query h2 i {
+            color: #C5A03A;
+            background: rgba(197,160,58,0.12);
+            padding: 10px;
+            border-radius: 14px;
+            font-size: 1.2rem;
+        }
+
+        .quick-query .query-subtitle {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            margin-right: 52px;
+            position: relative;
+        }
+
         .search-box {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             flex-wrap: wrap;
+            position: relative;
+            animation: slideUp 0.6s ease-out 0.3s both;
         }
-        
-        .search-box input {
+
+        @keyframes slideUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .search-box .search-wrapper {
             flex: 1;
-            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            background: white;
             border: 2px solid #e0e0e0;
             border-radius: 16px;
-            font-size: 16px;
-            font-family: inherit;
+            transition: 0.3s;
+            min-width: 200px;
+        }
+
+        .search-box .search-wrapper:focus-within {
+            border-color: #C5A03A;
+            box-shadow: 0 0 0 4px rgba(197,160,58,0.1);
+        }
+
+        .search-box .search-wrapper .search-icon {
+            padding: 0 16px;
+            color: #bbb;
+            font-size: 1rem;
             transition: 0.3s;
         }
-        
-        .search-box input:focus {
-            border-color: #3498db;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+
+        .search-box .search-wrapper:focus-within .search-icon {
+            color: #C5A03A;
         }
-        
+
+        .search-box input {
+            flex: 1;
+            padding: 16px 0 16px 16px;
+            border: none;
+            border-radius: 0;
+            font-size: 16px;
+            font-family: inherit;
+            background: transparent;
+            direction: rtl;
+        }
+
+        .search-box input:focus {
+            outline: none;
+        }
+
         .search-box button {
-            padding: 16px 35px;
-            background: #3498db;
+            padding: 16px 30px;
+            background: linear-gradient(135deg, #1a2a4a, #2c4a7c);
             color: white;
             border: none;
             border-radius: 16px;
@@ -209,91 +403,232 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            white-space: nowrap;
+            position: relative;
+            overflow: hidden;
         }
-        
-        .search-box button:hover {
-            background: #2980b9;
-            transform: translateY(-2px);
+
+        .search-box button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: 0.5s;
         }
-        
-        .result {
-            margin-top: 20px;
-            padding: 20px;
-            border-radius: 16px;
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .result.success {
-            background: linear-gradient(135deg, #d4edda, #c8e6d9);
-            color: #155724;
-            display: block;
-            border-right: 5px solid #27ae60;
-        }
-        
+
+        .search-box button:hover::before { left: 100%; }
+        .search-box button:hover { background: linear-gradient(135deg, #2c4a7c, #1a2a4a); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(26,42,74,0.3); }
+        .search-box button:active { transform: translateY(0); }
+
+        .result { margin-top: 20px; display: none; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
         .result.error {
             background: linear-gradient(135deg, #f8d7da, #ffdddd);
             color: #721c24;
             display: block;
             border-right: 5px solid #e74c3c;
+            padding: 20px;
+            border-radius: 16px;
         }
-        
+
         .result.loading {
             background: #e3f2fd;
             color: #1565c0;
             display: block;
             text-align: center;
+            padding: 20px;
+            border-radius: 16px;
         }
-        
-        .notification-btn {
-            background: #3498db;
+
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            padding: 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            animation: fadeInUp 0.4s ease;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .result-card-header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            padding: 16px 20px;
             color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 15px;
-            width: 100%;
-            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .result-card-header .header-icon {
+            width: 42px;
+            height: 42px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .result-card-header .header-icon i { font-size: 20px; }
+        .result-card-header .header-text h3 { font-size: 14px; margin: 0; }
+        .result-card-header .header-text p { font-size: 11px; opacity: 0.85; margin: 2px 0 0; }
+
+        .result-card-body { padding: 14px 18px; }
+
+        .result-info-row {
+            display: flex;
+            align-items: center;
             gap: 10px;
-            transition: 0.3s;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
         }
-        
-        .notification-btn:hover {
-            background: #2980b9;
-            transform: translateY(-2px);
+
+        .result-info-row:last-child { border-bottom: none; }
+
+        .result-info-row .info-icon {
+            width: 32px;
+            height: 32px;
+            background: #e8f0fe;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
-        
-        .notification-btn:disabled {
-            background: #27ae60;
-            cursor: default;
-            transform: none;
+
+        .result-info-row .info-icon i { font-size: 14px; color: #3498db; }
+
+        .result-info-row .info-label {
+            font-size: 11px;
+            color: #888;
+            min-width: 60px;
         }
-        
-        .notification-permission-btn {
-            background: #f39c12;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 10px;
-            font-size: 14px;
+
+        .result-info-row .info-value {
+            font-size: 13px;
+            color: #2c3e50;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .status-badge-result {
             display: inline-flex;
             align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-badge-result.delivered { background: #e8f5e9; color: #2e7d32; }
+        .status-badge-result.printed { background: #e0f2f1; color: #00695c; }
+        .status-badge-result.printing { background: #fff3e0; color: #e65100; }
+        .status-badge-result.processing { background: #e3f2fd; color: #1565c0; }
+        .status-badge-result.new { background: #fce4ec; color: #c62828; }
+        .status-badge-result.rejected { background: #ffebee; color: #b71c1c; }
+        .status-badge-result.cancelled { background: #f5f5f5; color: #616161; }
+        .status-badge-result.default { background: #f3e5f5; color: #6a1b9a; }
+
+        .result-card-footer {
+            background: #f8f9fa;
+            padding: 12px 18px;
+            display: flex;
+            flex-wrap: wrap;
             gap: 8px;
         }
-        
+
+        .result-card-footer .action-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .result-card-footer .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .result-card-footer .action-btn-whatsapp { background: #25D366; color: white; }
+        .result-card-footer .action-btn-whatsapp:hover { background: #128C7E; }
+        .result-card-footer .action-btn-notify { background: #f39c12; color: white; }
+        .result-card-footer .action-btn-notify:hover { background: #d68910; }
+        .result-card-footer .action-btn-notify:disabled { background: #27ae60; cursor: default; transform: none; }
+
+        .contact-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 28px;
+            padding: 35px;
+            margin-bottom: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .contact-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-right: 4px solid #25D366;
+            padding-right: 15px;
+        }
+
+        .contact-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .contact-row select {
+            flex: 1;
+            min-width: 250px;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 14px;
+            font-size: 15px;
+            font-family: inherit;
+            background: white;
+            cursor: pointer;
+        }
+
+        .contact-row select:focus {
+            border-color: #25D366;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37,211,102,0.1);
+        }
+
+        .contact-row .wa-contact-btn {
+            padding: 14px 28px;
+            background: #25D366;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .contact-row .wa-contact-btn:hover { background: #128C7E; transform: translateY(-2px); }
+        .contact-row .wa-contact-btn[disabled] { background: #ccc; cursor: not-allowed; transform: none; pointer-events: none; opacity: 0.5; }
+
         .info-section {
             background: rgba(255,255,255,0.95);
             border-radius: 24px;
@@ -305,13 +640,9 @@
             gap: 25px;
             backdrop-filter: blur(5px);
         }
-        
-        .contact-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
+
+        .contact-item { display: flex; align-items: center; gap: 15px; }
+
         .contact-icon {
             width: 50px;
             height: 50px;
@@ -321,9 +652,9 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .contact-icon i { font-size: 24px; color: white; }
-        
+
         .whatsapp-btn {
             background: #25D366;
             color: white;
@@ -337,100 +668,233 @@
             transition: 0.3s;
             font-size: 1rem;
         }
-        
-        .whatsapp-btn:hover {
-            background: #128C7E;
-            transform: scale(1.03);
+
+        .whatsapp-btn:hover { background: #128C7E; transform: scale(1.03); }
+
+        .notify-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
         }
-        
+
+        .notify-modal.active { display: flex; }
+
+        .notify-modal-content {
+            background: white;
+            border-radius: 28px;
+            padding: 35px;
+            width: 90%;
+            max-width: 450px;
+            animation: fadeInUp 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .notify-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .notify-modal-header h3 { color: #2c3e50; font-size: 1.4rem; margin: 0; }
+        .notify-modal-close { font-size: 32px; cursor: pointer; color: #aaa; transition: 0.3s; background: none; border: none; }
+        .notify-modal-close:hover { color: #333; }
+        .notify-modal-body p { color: #555; margin-bottom: 20px; font-size: 15px; }
+        .notify-modal-body .form-group { margin-bottom: 20px; }
+        .notify-modal-body label { display: block; font-weight: 600; color: #2c3e50; margin-bottom: 8px; }
+
+        .notify-modal-body input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 14px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: 0.3s;
+            direction: ltr;
+        }
+
+        .notify-modal-body input:focus { border-color: #3498db; outline: none; box-shadow: 0 0 0 3px rgba(52,152,219,0.1); }
+
+        .notify-modal-footer { display: flex; gap: 12px; margin-top: 10px; }
+        .notify-modal-footer button { flex: 1; padding: 14px; border: none; border-radius: 14px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        .btn-confirm { background: #27ae60; color: white; }
+        .btn-confirm:hover { background: #1e8449; transform: translateY(-2px); }
+        .btn-cancel { background: #e74c3c; color: white; }
+        .btn-cancel:hover { background: #c0392b; transform: translateY(-2px); }
+        .notify-modal-body .error-msg { color: #e74c3c; font-size: 13px; margin-top: 8px; display: none; }
+        .notify-modal-body .info-msg { color: #856404; font-size: 14px; margin-top: 10px; display: none; text-align: center; padding: 15px; background: #fff3cd; border-radius: 12px; }
+        .notify-modal-body .success-msg { color: #27ae60; font-size: 14px; margin-top: 10px; display: none; text-align: center; padding: 15px; background: #e8f5e9; border-radius: 12px; }
+
         .footer {
             text-align: center;
             padding: 40px;
             color: rgba(255,255,255,0.8);
             font-size: 0.85rem;
         }
-        
+
         @media (max-width: 768px) {
-            .hero h1 { font-size: 1.8rem; }
-            .cards-grid { gap: 20px; }
-            .service-card { padding: 25px 20px; }
-            .info-section { flex-direction: column; text-align: center; }
+            .hero h1 { font-size: 1.5rem; }
+            .hero p { font-size: 0.95rem; }
+            .container { padding: 0 12px; margin: 20px auto; }
+            .cards-grid { gap: 16px; grid-template-columns: 1fr; }
+            .service-card { padding: 20px 16px; }
+            .service-card h3 { font-size: 1.3rem; }
+            .quick-query { padding: 22px; border-radius: 20px; }
+            .search-box { flex-direction: column; gap: 10px; }
+            .search-box .search-wrapper { width: 100%; }
+            .search-box input { padding: 14px 0 14px 12px; font-size: 15px; }
+            .search-box button { width: 100%; justify-content: center; padding: 14px; }
+            .quick-query h2 { font-size: 1.2rem; }
+            .quick-query .query-subtitle { font-size: 0.8rem; margin-right: 44px; }
+            .logo-img { height: 36px !important; }
+            .logo-text h2 { font-size: 0.9rem; }
+            .logo-text p { font-size: 0.65rem; }
+            .logo-text .sub-title { font-size: 0.6rem; }
+            .info-section { flex-direction: column; text-align: center; padding: 20px; }
             .contact-item { justify-content: center; }
-            .search-box button { width: 100%; justify-content: center; }
+            .notify-modal-content { padding: 20px; width: 95%; }
+            .workflow-steps { flex-direction: column; }
+            .workflow-step { min-width: auto; }
+            .contact-row { flex-direction: column; }
+            .contact-row select { width: 100%; }
+            .contact-row .wa-contact-btn { width: 100%; justify-content: center; }
+            .result-card-footer { flex-direction: column; }
+            .result-card-footer .action-btn { width: 100%; }
+            .result-card-body { padding: 10px 14px; }
+            .result-info-row { padding: 6px 0; gap: 8px; }
+            .result-info-row .info-value { font-size: 12px; }
+            .result-info-row .info-label { font-size: 10px; min-width: 50px; }
+            .timeline-steps { gap: 3px; }
+            .timeline-steps .tl-step .tl-dot { width: 26px; height: 26px; }
+            .timeline-steps .tl-step .tl-dot i { font-size: 11px; }
+            .timeline-steps .tl-step .tl-label { font-size: 8px; }
+            .result-card-header { padding: 12px 14px; }
+            .result-card-header .header-icon { width: 36px; height: 36px; }
+            .result-card-header .header-icon i { font-size: 16px; }
+            .result-card-header .header-text h3 { font-size: 13px; }
+            .result-card-header .header-text p { font-size: 10px; }
+            .status-badge-result { font-size: 11px; padding: 3px 10px; }
+            .navbar { padding: 10px 14px; }
+            .logo-divider { height: 30px; }
+            .logo-img { height: 36px !important; }
+            .logo-text h2 { font-size: 0.85rem; }
+            .logo-text p { font-size: 0.65rem; }
+            .logo-text .sub-title { font-size: 0.6rem; }
+            .date { font-size: 0.75rem; padding: 4px 10px; }
+        }
+
+        @media (max-width: 480px) {
+            .navbar { padding: 8px 12px; gap: 8px; }
+            .logo { gap: 8px; }
+            .logo-img { height: 32px !important; }
+            .logo-divider { height: 28px; }
+            .logo-text h2 { font-size: 0.75rem; }
+            .logo-text p { font-size: 0.6rem; }
+            .logo-text .sub-title { font-size: 0.55rem; }
+            .date { font-size: 0.65rem; padding: 3px 8px; }
+            .hero h1 { font-size: 1.3rem; }
+            .quick-query h2 { font-size: 1.1rem; }
+            .quick-query .query-subtitle { font-size: 0.75rem; margin-right: 0; }
+            .search-box .search-wrapper .search-icon { padding: 0 10px; }
+            .search-box input { padding: 12px 0 12px 10px; font-size: 14px; }
+            .search-box button { padding: 12px; font-size: 14px; }
+            .timeline-steps .tl-step .tl-dot { width: 22px; height: 22px; border-width: 2px; }
+            .timeline-steps .tl-step .tl-dot i { font-size: 10px; }
+            .timeline-steps .tl-step .tl-label { font-size: 7px; }
         }
     </style>
 </head>
 <body>
     <div class="national-bar"></div>
-    
+
     <div class="navbar">
         <div class="logo">
-            <i class="fas fa-id-card"></i>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                <img src="image.png" alt="الجمهورية اليمنية" class="logo-img" style="height:50px;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="logo-img-fallback" style="display:none;width:50px;height:50px;background:rgba(255,255,255,0.1);border-radius:50%;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-flag" style="font-size:24px;color:#C5A03A;"></i></div>
+                <div class="logo-divider"></div>
+                <img src="images.png" alt="شعار الأحوال المدنية" class="logo-img" style="height:46px;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="logo-img-fallback" style="display:none;width:46px;height:46px;background:rgba(255,255,255,0.1);border-radius:50%;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-id-card" style="font-size:22px;color:#C5A03A;"></i></div>
+                <div class="logo-divider"></div>
+            </div>
             <div class="logo-text">
-                <h2>الأحوال المدنية</h2>
-                <p>لحج - ردفان</p>
+                <h2>مصلحة الأحوال المدنية</h2>
+                <p>البوابة الإلكترونية للاستعلامات</p>
+                <div class="sub-title">الجمهورية اليمنية</div>
             </div>
         </div>
         <div class="date" id="dateDisplay"></div>
     </div>
-    
+
     <div class="container">
         <div class="hero">
             <h1>مرحباً بكم في بوابة الخدمات</h1>
-            <p>الإدارة العامة للأحوال المدنية - فرع محافظة لحج، مديرية ردفان</p>
+            <p>مصلحة الاحوال المدنية والسجل المدني - البوابة الالكترونية لمتابعة الطلبات والاستفسارات</p>
         </div>
-        
+
         <div class="quick-query">
             <h2><i class="fas fa-search"></i> الاستعلام عن حالة الطلب</h2>
+            <div class="query-subtitle">أدخل رقم المتابعة الموجود في سند المتابعة الخاص بك</div>
             <div class="search-box">
-                <input type="text" id="requestNumber" placeholder="أدخل رقم الطلب" autocomplete="off">
+                <div class="search-wrapper">
+                    <input type="text" id="requestNumber" placeholder="أدخل رقم الطلب" autocomplete="off" pattern="[0-9]*" inputmode="numeric">
+                    <span class="search-icon"><i class="fas fa-search"></i></span>
+                </div>
                 <button onclick="searchRequest()"><i class="fas fa-search"></i> بحث</button>
             </div>
             <div id="result"></div>
         </div>
-        
+
         <div class="cards-grid">
-            <div class="service-card" onclick="document.getElementById('requestNumber').focus()">
-                <div class="card-icon">
-                    <i class="fas fa-search"></i>
-                </div>
+            <a class="service-card" href="javascript:void(0)" onclick="document.getElementById('requestNumber').focus()" role="button" tabindex="0">
+                <div class="card-icon"><i class="fas fa-search"></i></div>
                 <h3>الاستعلام عن الطلبات</h3>
                 <p>يمكنك الاستعلام عن حالة الطلب من خلال ادخال رقم المتابعة الموجود في سند المتابعة الخاص بك في مربع البحث اعلاه ثم اضغط زر البحث</p>
                 <span class="card-btn">استعلام الآن <i class="fas fa-arrow-left"></i></span>
-            </div>
-            
-            <div class="service-card" onclick="window.location.href='admin-login.html'">
-                <div class="card-icon">
-                    <i class="fas fa-user-shield"></i>
-                </div>
-                <h3>لوحة المشرفين</h3>
-                <p>الدخول إلى لوحة التحكم لإدارة الطلبات ومتابعة الإحصائيات</p>
-                <span class="card-btn">دخول <i class="fas fa-lock"></i></span>
-            </div>
-            
-            <div class="service-card" onclick="window.location.href='transactions.html'">
-                <div class="card-icon">
-                    <i class="fas fa-file-alt"></i>
-                </div>
+            </a>
+            <a class="service-card" href="transactions.html" role="button" tabindex="0">
+                <div class="card-icon"><i class="fas fa-file-alt"></i></div>
                 <h3>المعاملات والخدمات</h3>
                 <p>تعرف على المستندات المطلوبة لاستخراج البطاقة الذكية والوثائق</p>
                 <span class="card-btn">عرض الخدمات <i class="fas fa-book"></i></span>
-            </div>
+            </a>
         </div>
-        
+
+        <div class="contact-section">
+            <h2><i class="fab fa-whatsapp" style="color:#25D366;"></i> تواصل مع أحد الفروع</h2>
+            <div class="contact-row">
+                <select id="branchSelect">
+                    <option value="">-- اختر الفرع --</option>
+                </select>
+                <a id="waContactBtn" class="wa-contact-btn" href="javascript:void(0)" target="_blank" disabled>
+                    <i class="fab fa-whatsapp"></i> إرسال رسالة واتساب
+                </a>
+            </div>
+            <div id="branchContactInfo" style="margin-top:15px;font-size:13px;color:#666;text-align:center;"></div>
+        </div>
+
         <div class="info-section">
             <div class="contact-item">
                 <div class="contact-icon"><i class="fas fa-user-tie"></i></div>
                 <div>
-                    <strong>مدير الفرع:</strong> لطفي نصر أحمد<br>
-                    <small>للإستفسارات الإدارية 777062437 </small>
+                    <strong>مدير فرع ردفان:</strong> لطفي نصر أحمد<br>
+                    <small>للإستفسارات الإدارية 777062437</small>
                 </div>
             </div>
             <div class="contact-item">
                 <div class="contact-icon"><i class="fas fa-laptop-code"></i></div>
                 <div>
                     <strong>الدعم الفني:عبدالله حسين</strong><br>
-                    <small>للمشاكل التقنية 771277759 </small>
+                    <small>للمشاكل التقنية 771277759</small>
                 </div>
             </div>
             <a href="https://wa.me/967771277759" class="whatsapp-btn" target="_blank">
@@ -444,279 +908,499 @@
         <p style="margin-top: 8px;">آخر تحديث: رمضان 1446 هـ</p>
     </div>
 
+    <div id="notifyModal" class="notify-modal">
+        <div class="notify-modal-content">
+            <div class="notify-modal-header">
+                <h3><i class="fas fa-bell"></i> اشعرني عند وصول البطاقة</h3>
+                <button class="notify-modal-close" onclick="closeNotifyModal()">&times;</button>
+            </div>
+            <div class="notify-modal-body">
+                <p>📱 سيتم إشعارك فور وصول بطاقتك إلى الفرع عبر رسالة واتساب.</p>
+                <div class="form-group">
+                    <label><i class="fas fa-phone"></i> رقم الهاتف (واتساب)</label>
+                    <input type="tel" id="notifyPhone" placeholder="مثال: 771234567" dir="ltr" pattern="[0-9]*" inputmode="numeric" maxlength="12">
+                    <div class="error-msg" id="notifyError">⚠️ يرجى إدخال رقم هاتف صحيح</div>
+                    <div class="info-msg" id="notifyInfo">ℹ️ تم تسجيل هذا الطلب للإشعار مسبقاً. سيتم إشعارك فور وصول بطاقتك.</div>
+                    <div class="success-msg" id="notifySuccess">✅ تم تسجيل طلب الإشعار بنجاح! سيتم إشعارك فور وصول بطاقتك.</div>
+                </div>
+                <div class="notify-modal-footer">
+                    <button class="btn-cancel" onclick="closeNotifyModal()">إلغاء</button>
+                    <button class="btn-confirm" onclick="saveNotification()"><i class="fas fa-check"></i> تأكيد</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const SUPABASE_URL = 'https://rqpcwyhsaygyrgjpczlr.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcGN3eWhzYXlneXJnanBjemxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjY2MDEsImV4cCI6MjA5NTIwMjYwMX0.yrxJTQZQDVccw9y98y_mzLbCeYnhgjxsP30patcU9rc';
-        
         let currentRequestRecord = null;
-        let isSubscribed = false;
-        let currentSubscription = null;
-        
-        // تسجيل الـ Service Worker
-        async function registerServiceWorker() {
-            if ('serviceWorker' in navigator && 'PushManager' in window) {
-                try {
-                    const registration = await navigator.serviceWorker.register('/sw.js');
-                    console.log('Service Worker registered');
-                    return registration;
-                } catch (err) {
-                    console.error('Service Worker registration failed:', err);
-                }
+        let currentPhoneNumber = '';
+        let branchesData = [];
+
+        const rateLimiter = {
+            timestamps: [],
+            maxRequests: 5,
+            windowMs: 60000,
+            isLimited() {
+                const now = Date.now();
+                this.timestamps = this.timestamps.filter(t => now - t < this.windowMs);
+                return this.timestamps.length >= this.maxRequests;
+            },
+            addRequest() {
+                this.timestamps.push(Date.now());
+            },
+            getRemainingTime() {
+                if (this.timestamps.length === 0) return 0;
+                const now = Date.now();
+                const oldest = this.timestamps[0];
+                return Math.ceil((this.windowMs - (now - oldest)) / 1000);
             }
+        };
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;', '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;' };
+            return String(str).replace(/[&<>"'/`=]/g, function(m) { return map[m]; });
+        }
+
+        function formatDate(value) {
+            if (!value) return 'غير محدد';
+            if (typeof value === 'number' || (!isNaN(value) && !isNaN(parseFloat(value)) && String(value).includes('.'))) {
+                const serial = typeof value === 'string' ? parseFloat(value) : value;
+                const utc_days = Math.floor(serial - 25569);
+                const utc_value = utc_days * 86400;
+                const date_info = new Date(utc_value * 1000);
+                const fractional_day = serial - Math.floor(serial) + 0.0000001;
+                let total_seconds = Math.floor(86400 * fractional_day);
+                const seconds = total_seconds % 60;
+                total_seconds -= seconds;
+                const hours = Math.floor(total_seconds / (60 * 60)) % 24;
+                const minutes = Math.floor(total_seconds / 60) % 60;
+
+                const d = new Date(date_info.getFullYear(), date_info.getMonth(), date_info.getDate(), hours, minutes, seconds);
+                return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) +
+                       ' ' + d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+            }
+            if (typeof value === 'string' && (value.includes('T') || value.includes('-'))) {
+                try {
+                    const d = new Date(value);
+                    if (!isNaN(d.getTime())) {
+                        return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) +
+                               ' ' + d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+                    }
+                } catch(e) {}
+            }
+            return String(value);
+        }
+
+        function maskFullName(fullName) {
+            if (!fullName) return 'غير محدد';
+            const parts = fullName.trim().split(/\s+/);
+            if (parts.length <= 2) return fullName;
+            return parts[0] + ' ' + parts[1] + ' ***';
+        }
+
+        function validatePhone(phone) {
+            const clean = phone.replace(/[^0-9]/g, '');
+            if (clean.length === 10 && clean.startsWith('77')) return '967' + clean;
+            if (clean.length === 12 && clean.startsWith('967')) return clean;
+            if (clean.length === 9 && clean.startsWith('7')) return '967' + clean;
             return null;
         }
-        
-        // طلب إذن الإشعارات
-        async function subscribeToNotifications(registration, requestNumber) {
+
+        async function loadBranches() {
             try {
-                const permission = await Notification.requestPermission();
-                if (permission !== 'granted') {
-                    alert('❌ يرجى السماح بالإشعارات لتلقي التنبيهات');
-                    return false;
-                }
-                
-                // الحصول على مفتاح VAPID من الخادم
-                const vapidResponse = await fetch('/.netlify/functions/vapid-public-key');
-                const vapidData = await vapidResponse.json();
-                
-                const subscription = await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: vapidData.publicKey
-                });
-                
-                // حفظ الاشتراك في قاعدة البيانات
-                const response = await fetch('/.netlify/functions/save-subscription', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        subscription: subscription,
-                        requestNumber: requestNumber
-                    })
-                });
-                
+                const response = await fetch(`/.netlify/functions/get-branch?name=all`);
                 if (response.ok) {
-                    console.log('Subscription saved successfully');
-                    currentSubscription = subscription;
-                    return true;
+                    const data = await response.json();
+                    branchesData = data || [];
                 }
             } catch (err) {
-                console.error('Subscription error:', err);
-                alert('⚠️ حدث خطأ في تفعيل الإشعارات');
+                console.log('Error loading branches:', err);
             }
-            return false;
+
+            try {
+                const branchListResponse = await fetch('/.netlify/functions/branches-list');
+                if (branchListResponse.ok) {
+                    const branches = await branchListResponse.json();
+                    populateBranchSelect(branches);
+                    return;
+                }
+            } catch(e) {}
+
+            populateBranchSelect([]);
         }
-        
+
+        function populateBranchSelect(branches) {
+            const select = document.getElementById('branchSelect');
+            select.innerHTML = '<option value="">-- اختر الفرع --</option>';
+
+            if (branches && branches.length > 0) {
+                branches.forEach(b => {
+                    const phone = b.admin_phone || b.whatsapp_number || '';
+                    if (phone) {
+                        const option = document.createElement('option');
+                        option.value = b.id;
+                        option.dataset.phone = phone;
+                        option.dataset.name = b.branch_name || b.username || 'فرع';
+                        option.textContent = (b.branch_name || b.username) + ' - ' + phone;
+                        select.appendChild(option);
+                    }
+                });
+            }
+
+            if (select.options.length <= 1) {
+
+                const defaultBranches = [
+                    { name: 'لحج - ردفان', phone: '967777062437' },
+                    { name: 'لحج - الحوطة', phone: '967771277759' },
+                    { name: 'عدن - خور مكسر', phone: '967777062437' },
+                    { name: 'عدن - المنصورة', phone: '967771277759' }
+                ];
+                defaultBranches.forEach(b => {
+                    const option = document.createElement('option');
+                    option.value = b.phone;
+                    option.dataset.phone = b.phone;
+                    option.dataset.name = b.name;
+                    option.textContent = b.name + ' - ' + b.phone;
+                    select.appendChild(option);
+                });
+            }
+
+            select.addEventListener('change', updateBranchContact);
+        }
+
+        function updateBranchContact() {
+            const select = document.getElementById('branchSelect');
+            const btn = document.getElementById('waContactBtn');
+            const info = document.getElementById('branchContactInfo');
+            const selected = select.options[select.selectedIndex];
+
+            if (selected && selected.value) {
+                const phone = selected.dataset.phone || selected.value;
+                const name = selected.dataset.name || 'الفرع';
+                const validated = validatePhone(phone) || phone;
+                const message = encodeURIComponent('مرحباً، أريد بعض الاستفسار');
+                btn.href = `https://wa.me/${validated}?text=${message}`;
+                btn.removeAttribute('disabled');
+                btn.style.opacity = '1';
+                info.innerHTML = `<i class="fas fa-info-circle"></i> يمكنك التواصل مع <strong>${name}</strong> عبر واتساب`;
+            } else {
+                btn.removeAttribute('href');
+                btn.setAttribute('disabled', 'disabled');
+                btn.style.opacity = '0.5';
+                info.innerHTML = '';
+            }
+        }
+
         async function searchRequest() {
             const requestNumber = document.getElementById('requestNumber').value.trim();
             const resultDiv = document.getElementById('result');
-            
+
+            if (rateLimiter.isLimited()) {
+                const remaining = rateLimiter.getRemainingTime();
+                resultDiv.innerHTML = `<div class="result error">⚠️ تجاوزت الحد المسموح من الاستعلامات (5 مرات في الدقيقة). يرجى الانتظار ${remaining} ثانية.</div>`;
+                return;
+            }
+
             if (!requestNumber) {
                 resultDiv.innerHTML = '<div class="result error">❌ يرجى إدخال رقم الطلب</div>';
                 return;
             }
-            
+
+            if (!/^[0-9]+$/.test(requestNumber) || requestNumber.length > 30) {
+                resultDiv.innerHTML = '<div class="result error">❌ رقم الطلب يجب أن يحتوي على أرقام فقط (حد أقصى 30 رقم)</div>';
+                return;
+            }
+
+            rateLimiter.addRequest();
             resultDiv.innerHTML = '<div class="result loading">⏳ جاري البحث... <i class="fas fa-spinner fa-pulse"></i></div>';
-            
+
             try {
-                const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/requests?${encodeURIComponent('رقم الطلب')}=eq.${encodeURIComponent(requestNumber)}&select=*`,
-                    {
-                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                    }
-                );
-                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const response = await fetch(`/.netlify/functions/get-request?requestNumber=${encodeURIComponent(requestNumber)}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error('فشل في جلب البيانات');
+
                 const data = await response.json();
-                
+
                 if (!data || data.length === 0) {
                     resultDiv.innerHTML = '<div class="result error">❌ رقم الطلب غير موجود في النظام</div>';
                     return;
                 }
-                
+
                 currentRequestRecord = data[0];
                 const record = currentRequestRecord;
-                
+
                 const statusMessages = {
-                    'تم التسليم': '✅ تم تجهيز البطاقة، يرجى الحضور للاستلام',
-                    'تمت الطباعة': '🖨️ تمت طباعة البطاقة، قيد الشحن للفرع',
-                    'مرسل للطباعة': '📤 تمت الموافقة، في انتظار الطباعة',
-                    'تحت المعالجة': '⚙️ طلبك قيد المراجعة والمعالجة',
-                    'جديد': '✅ تم استلام طلبك، قيد المعالجة',
+                    'تم التسليم': '✅ تم وصول بطاقتك الى الفرع، يرجى الحضور لاستلامها',
+                    'تمت الطباعة': '🖨️ تمت طباعة البطاقة، في انتظار وصولها الى الفرع واصبح بامكانك استخراج استبيان حسب اختيارك او حاجتك',
+                    'مرسل للطباعة': '📤 تمت الموافقة على طلبك، في انتظار طباعة البطاقة في المركز الرئيسي',
+                    'تحت المعالجة': '⚙️ طلبك قيد المراجعة والمعالجة في المركز الرئيسي',
+                    'جديد': '✅ سيتم تجهيز طلبك بعد ادخال بياناتك الأساسية',
                     'مرفوض': '❌ عذراً، تم رفض الطلب',
-                    'مرفوض من التصديق': '⚠️ يرجى مراجعة الإدارة للاستفسار',
-                    'مرسل للتصديق': '📋 طلبك قيد التجهيز',
+                    'مرفوض من التصديق': '⚠️ يرجى مراجعة الإدارة للاستفسار في حال تاخر الموافقة على طلبك',
+                    'مرسل للتصديق': '📋 تم تجهيز طلبك و سيتم الموافقة عليه خلال فتره لا تتجاوز 24 ساعة',
                     'طلبات تم إلغائها': '🚫 تم إلغاء هذا الطلب'
                 };
-                
+
                 const status = record['حالة الطلب'] || 'غير محدد';
                 const statusMessage = statusMessages[status] || '📞 يرجى مراجعة الإدارة للاستفسار';
-                
-                // التحقق من وجود طلب إشعار مسبق
-                const subResponse = await fetch(
-                    `${SUPABASE_URL}/rest/v1/notification_subscriptions?request_number=eq.${encodeURIComponent(record['رقم الطلب'])}&select=*`,
-                    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+
+                const branchName = record['وحدة التسجيل'] || 'لحج - ردفان';
+                let whatsappNumber = '967771277759';
+                let adminPhone = '';
+                let techPhone = '';
+                let adminName = '';
+
+                try {
+                    const branchResponse = await fetch(`/.netlify/functions/get-branch?name=${encodeURIComponent(branchName)}`);
+                    if (branchResponse.ok) {
+                        const branchData = await branchResponse.json();
+                        if (branchData) {
+                            whatsappNumber = branchData.whatsapp_number || branchData.admin_phone || '967771277759';
+                            adminPhone = branchData.admin_phone || '';
+                            techPhone = branchData.tech_phone || '';
+                            adminName = branchData.username || '';
+                        }
+                    }
+                } catch (err) {}
+
+                let hasNotification = false;
+                let isNotified = false;
+                try {
+                    const notifResponse = await fetch(`/.netlify/functions/check-notification?requestNumber=${encodeURIComponent(record['رقم الطلب'])}`);
+                    if (notifResponse.ok) {
+                        const notifData = await notifResponse.json();
+                        if (notifData && notifData.length > 0) {
+                            hasNotification = true;
+                            isNotified = notifData[0].notified === true;
+                        }
+                    }
+                } catch (err) {}
+
+                let statusIcon = 'fa-question-circle';
+                let statusClass = 'default';
+                if (status === 'تم التسليم') { statusIcon = 'fa-check-circle'; statusClass = 'delivered'; }
+                else if (status === 'تمت الطباعة') { statusIcon = 'fa-print'; statusClass = 'printed'; }
+                else if (status === 'مرسل للطباعة') { statusIcon = 'fa-paper-plane'; statusClass = 'printing'; }
+                else if (status === 'تحت المعالجة' || status === 'مرسل للتصديق') { statusIcon = 'fa-cogs'; statusClass = 'processing'; }
+                else if (status === 'جديد') { statusIcon = 'fa-plus-circle'; statusClass = 'new'; }
+                else if (status === 'مرفوض' || status === 'مرفوض من التصديق') { statusIcon = 'fa-times-circle'; statusClass = 'rejected'; }
+                else if (status === 'طلبات تم إلغائها') { statusIcon = 'fa-ban'; statusClass = 'cancelled'; }
+
+                const maskedName = maskFullName(record['الاسم بالكامل']);
+
+                const validatedWhatsapp = validatePhone(whatsappNumber) || '967771277759';
+                const message = encodeURIComponent(
+                    `مرحباً، استفسار عن الطلب رقم: ${record['رقم الطلب']}\n` +
+                    `الاسم: ${record['الاسم بالكامل'] || 'غير محدد'}\n` +
+                    `الفرع: ${branchName}`
                 );
-                const subsData = await subResponse.json();
-                const hasSubscription = subsData && subsData.length > 0;
-                const alreadyNotified = hasSubscription && subsData[0].notified === true;
-                
-                let notificationButtonHtml = '';
-                if (status !== 'تم التسليم' && !alreadyNotified) {
-                    notificationButtonHtml = `
-                        <button class="notification-btn" onclick="enableNotifications()">
-                            <i class="fas fa-bell"></i> فعّل الإشعارات لتصلني البطاقة
-                        </button>
-                    `;
-                } else if (alreadyNotified && status === 'تم التسليم') {
-                    notificationButtonHtml = `
-                        <button class="notification-btn" disabled style="background: #27ae60;">
-                            <i class="fas fa-check-circle"></i> تم تفعيل الإشعارات - بطاقتك جاهزة
-                        </button>
-                    `;
-                } else if (status === 'تم التسليم') {
-                    notificationButtonHtml = `
-                        <button class="notification-btn" disabled style="background: #27ae60;">
-                            <i class="fas fa-check-circle"></i> بطاقتك جاهزة للاستلام
-                        </button>
-                    `;
+
+                let notifyBtnHtml = '';
+                if (status === 'تم التسليم') {
+                    notifyBtnHtml = `<button class="action-btn action-btn-notify" disabled style="background:#27ae60;"><i class="fas fa-check-circle"></i> بطاقتك جاهزة للاستلام</button>`;
+                } else if (hasNotification) {
+                    notifyBtnHtml = `<button class="action-btn action-btn-notify" disabled style="background:#27ae60;"><i class="fas fa-check${isNotified ? '-circle' : ''}"></i> ${isNotified ? 'تم إشعارك مسبقاً' : 'تم التسجيل للإشعار'}</button>`;
+                } else {
+                    notifyBtnHtml = `<button class="action-btn action-btn-notify" onclick="openNotifyModal()"><i class="fas fa-bell"></i> اشعرني عند وصول البطاقة</button>`;
                 }
-                
+
+                let activeStep = 0;
+                const stage1 = ['جديد', 'مرفوض من التصديق', 'طلبات تم إلغائها'];
+                const stage2 = ['مرسل للتصديق'];
+                const stage3 = ['مرسل للطباعة', 'تحت المعالجة'];
+                const stage4 = ['تمت الطباعة'];
+                const stage5 = ['تم التسليم'];
+
+                if (stage1.includes(status)) activeStep = 1;
+                else if (stage2.includes(status)) activeStep = 2;
+                else if (stage3.includes(status)) activeStep = 3;
+                else if (stage4.includes(status)) activeStep = 4;
+                else if (stage5.includes(status)) activeStep = 5;
+
+                const isRejected = (status === 'مرفوض' || status === 'مرفوض من التصديق');
+                const isCancelled = (status === 'طلبات تم إلغائها');
+
+                let timelineClass1 = '', timelineClass2 = '', timelineClass3 = '', timelineClass4 = '', timelineClass5 = '';
+                if (isRejected) {
+                    timelineClass1 = 'rejected';
+                } else if (isCancelled) {
+                    timelineClass1 = 'cancelled';
+                } else {
+                    if (activeStep >= 1) timelineClass1 = activeStep === 1 ? 'active' : 'completed';
+                    if (activeStep >= 2) timelineClass2 = activeStep === 2 ? 'active' : 'completed';
+                    if (activeStep >= 3) timelineClass3 = activeStep === 3 ? 'active' : 'completed';
+                    if (activeStep >= 4) timelineClass4 = activeStep === 4 ? 'active' : 'completed';
+                    if (activeStep >= 5) timelineClass5 = activeStep === 5 ? 'active' : 'completed';
+                }
+
                 resultDiv.innerHTML = `
-                    <div class="result success">
-                        <h3 style="margin-bottom: 15px;"><i class="fas fa-file-alt"></i> تفاصيل الطلب</h3>
-                        <p><strong>🔢 رقم الطلب:</strong> ${record['رقم الطلب'] || '-----'}</p>
-                        <p><strong>👤 الاسم بالكامل:</strong> ${record['الاسم بالكامل'] || 'غير محدد'}</p>
-                        <p><strong>📌 الحالة:</strong> ${status}</p>
-                        <p><strong>💬 ملاحظة:</strong> ${statusMessage}</p>
-                        <hr style="margin: 12px 0;">
-                        <p style="font-size: 13px; color: #666;">
-                            <i class="far fa-calendar"></i> تاريخ التقديم: ${record['تاريخ التقديم'] || 'غير محدد'}
-                        </p>
-                        <p style="font-size: 13px; color: #666;">
-                            <i class="fas fa-building"></i> وحدة التسجيل: ${record['وحدة التسجيل'] || 'لحج - ردفان'}
-                        </p>
-                        ${notificationButtonHtml}
+                    <div class="result-card">
+                        <div class="result-card-header">
+                            <div class="header-icon"><i class="fas fa-file-alt"></i></div>
+                            <div class="header-text">
+                                <h3>تفاصيل الطلب</h3>
+                                <p>رقم المتابعة: ${escapeHtml(record['رقم الطلب'] || '-----')}</p>
+                            </div>
+                        </div>
+                        <div class="result-card-body">
+                            <div class="result-info-row">
+                                <div class="info-icon"><i class="fas fa-user"></i></div>
+                                <div class="info-label">الاسم</div>
+                                <div class="info-value">${escapeHtml(maskedName)}</div>
+                            </div>
+                            <div class="result-info-row">
+                                <div class="info-icon"><i class="fas fa-tag"></i></div>
+                                <div class="info-label">الحالة</div>
+                                <div class="info-value">
+                                    <span class="status-badge-result ${statusClass}">
+                                        <i class="fas ${statusIcon}"></i> ${escapeHtml(status)}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="result-info-row">
+                                <div class="info-icon"><i class="fas fa-comment"></i></div>
+                                <div class="info-label">ملاحظة</div>
+                                <div class="info-value" style="font-size:13px;">${escapeHtml(statusMessage)}</div>
+                            </div>
+                            <div class="result-info-row">
+                                <div class="info-icon"><i class="far fa-calendar"></i></div>
+                                <div class="info-label">تاريخ التقديم</div>
+                                <div class="info-value">${formatDate(record['تاريخ التقديم'])}</div>
+                            </div>
+                            <div class="result-info-row">
+                                <div class="info-icon"><i class="fas fa-building"></i></div>
+                                <div class="info-label">وحدة التسجيل</div>
+                                <div class="info-value">${escapeHtml(branchName)}</div>
+                            </div>
+
+                            <div class="result-timeline">
+                                <h4><i class="fas fa-tasks"></i> مراحل سير الطلب</h4>
+                                <div class="timeline-steps">
+                                    <div class="tl-step ${timelineClass1}">
+                                        <div class="tl-dot"><i class="fas ${isRejected ? 'fa-times' : isCancelled ? 'fa-ban' : 'fa-hourglass-start'}"></i></div>
+                                        <span class="tl-label">لم يتم<br>التجهيز</span>
+                                    </div>
+                                    <div class="tl-step ${timelineClass2}">
+                                        <div class="tl-dot"><i class="fas fa-spinner"></i></div>
+                                        <span class="tl-label">قيد<br>التجهيز</span>
+                                    </div>
+                                    <div class="tl-step ${timelineClass3}">
+                                        <div class="tl-dot"><i class="fas fa-check"></i></div>
+                                        <span class="tl-label">تم<br>الموافقة</span>
+                                    </div>
+                                    <div class="tl-step ${timelineClass4}">
+                                        <div class="tl-dot"><i class="fas fa-truck"></i></div>
+                                        <span class="tl-label">في انتظار<br>الوصول</span>
+                                    </div>
+                                    <div class="tl-step ${timelineClass5}">
+                                        <div class="tl-dot"><i class="fas fa-hand-peace"></i></div>
+                                        <span class="tl-label">جاهزة<br>للاستلام</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-card-footer">
+                            <a href="https://wa.me/${validatedWhatsapp}?text=${message}" target="_blank" class="action-btn action-btn-whatsapp">
+                                <i class="fab fa-whatsapp"></i> تواصل مع الفرع
+                            </a>
+                            ${notifyBtnHtml}
+                        </div>
                     </div>
                 `;
-                
+
             } catch (err) {
                 console.error(err);
                 resultDiv.innerHTML = '<div class="result error">⚠️ حدث خطأ في الاتصال. يرجى المحاولة لاحقاً</div>';
             }
         }
-        
-        async function enableNotifications() {
-            if (!currentRequestRecord) return;
-            
-            const requestNumber = currentRequestRecord['رقم الطلب'];
-            
-            // التحقق من دعم المتصفح
-            if (!('Notification' in window)) {
-                alert('⚠️ متصفحك لا يدعم الإشعارات');
-                return;
-            }
-            
-            // طلب الإذن
-            if (Notification.permission === 'denied') {
-                alert('❌ تم رفض الإشعارات مسبقاً. يرجى تفعيلها من إعدادات المتصفح');
-                return;
-            }
-            
-            if (Notification.permission === 'granted') {
-                // الإذن موجود، نرسل إشعار تجريبي
-                showTestNotification(requestNumber);
-                // تسجيل الاشتراك للإشعارات المستقبلية
-                await registerAndSubscribe(requestNumber);
-            } else {
-                // طلب الإذن
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    showTestNotification(requestNumber);
-                    await registerAndSubscribe(requestNumber);
-                } else {
-                    alert('❌ يرجى السماح بالإشعارات لتلقي التنبيهات');
-                }
-            }
+
+        function openNotifyModal() {
+            if (!currentRequestRecord) { alert('⚠️ يرجى البحث عن الطلب أولاً'); return; }
+            document.getElementById('notifyModal').classList.add('active');
+            document.getElementById('notifyPhone').value = '';
+            document.getElementById('notifyError').style.display = 'none';
+            document.getElementById('notifyInfo').style.display = 'none';
+            document.getElementById('notifySuccess').style.display = 'none';
+            document.getElementById('notifyPhone').focus();
         }
-        
-        async function registerAndSubscribe(requestNumber) {
+
+        function closeNotifyModal() { document.getElementById('notifyModal').classList.remove('active'); }
+
+        document.getElementById('notifyModal').addEventListener('click', function(e) {
+            if (e.target === this) closeNotifyModal();
+        });
+
+        document.getElementById('notifyPhone').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        async function saveNotification() {
+            const phone = document.getElementById('notifyPhone').value.trim();
+            const errorDiv = document.getElementById('notifyError');
+            const infoDiv = document.getElementById('notifyInfo');
+            const successDiv = document.getElementById('notifySuccess');
+
+            const validatedPhone = validatePhone(phone);
+            if (!validatedPhone) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '⚠️ يرجى إدخال رقم هاتف صحيح (مثال: 771234567)';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+            infoDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            const record = currentRequestRecord;
+            const requestNumber = record['رقم الطلب'];
+            const applicantName = record['الاسم بالكامل'] || '';
+            const branch = record['وحدة التسجيل'] || 'لحج - ردفان';
+
             try {
-                const registration = await registerServiceWorker();
-                if (registration) {
-                    // حفظ معلومات الطلب في localStorage
-                    localStorage.setItem('notify_request_number', requestNumber);
-                    localStorage.setItem('notify_applicant_name', currentRequestRecord['الاسم بالكامل'] || '');
-                    
-                    alert('✅ تم تفعيل الإشعارات! سيتم إشعارك فور وصول بطاقتك.');
-                    
-                    // تحديث الواجهة
-                    const btn = document.querySelector('.notification-btn');
-                    if (btn) {
-                        btn.innerHTML = '<i class="fas fa-check"></i> تم تفعيل الإشعارات - في انتظار وصول البطاقة';
-                        btn.disabled = true;
-                        btn.style.background = '#27ae60';
-                    }
+                const response = await fetch('/.netlify/functions/save-notification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ request_number: requestNumber, phone_number: phone, applicant_name: applicantName, branch: branch })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    successDiv.style.display = 'block';
+                    const resultDiv = document.getElementById('result');
+                    const notifyBtn = resultDiv.querySelector('.action-btn-notify');
+                    if (notifyBtn) { notifyBtn.disabled = true; notifyBtn.innerHTML = '<i class="fas fa-check"></i> تم التسجيل للإشعار'; notifyBtn.style.background = '#27ae60'; }
+                    setTimeout(() => closeNotifyModal(), 2000);
+                } else if (result.error && result.error.includes('already has a notification subscription')) {
+                    infoDiv.style.display = 'block';
+                    const resultDiv = document.getElementById('result');
+                    const notifyBtn = resultDiv.querySelector('.action-btn-notify');
+                    if (notifyBtn) { notifyBtn.disabled = true; notifyBtn.innerHTML = '<i class="fas fa-check"></i> تم التسجيل مسبقاً'; notifyBtn.style.background = '#27ae60'; }
+                    setTimeout(() => closeNotifyModal(), 3000);
+                } else {
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = '⚠️ ' + (result.error || 'حدث خطأ في حفظ طلب الإشعار');
                 }
             } catch (err) {
-                console.error('Subscription error:', err);
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '⚠️ حدث خطأ في الاتصال. يرجى المحاولة لاحقاً';
             }
         }
-        
-        function showTestNotification(requestNumber) {
-            new Notification('✅ تم تفعيل الإشعارات', {
-                body: `سوف تصلك إشعارات فور وصول بطاقة الطلب رقم ${requestNumber}`,
-                icon: '/favicon.ico',
-                badge: '/favicon.ico',
-                vibrate: [200, 100, 200],
-                silent: false
-            });
-        }
-        
-        // التحقق من الإشعارات المعلقة عند تحميل الصفحة
-        async function checkPendingNotifications() {
-            const pendingRequest = localStorage.getItem('notify_request_number');
-            if (pendingRequest) {
-                // التحقق من حالة الطلب
-                const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/requests?${encodeURIComponent('رقم الطلب')}=eq.${encodeURIComponent(pendingRequest)}&select=*`,
-                    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
-                );
-                const data = await response.json();
-                if (data && data.length > 0 && data[0]['حالة الطلب'] === 'تم التسليم') {
-                    showDeliveryNotification(data[0]);
-                    localStorage.removeItem('notify_request_number');
-                }
-            }
-        }
-        
-        function showDeliveryNotification(record) {
-            if (Notification.permission === 'granted') {
-                new Notification('🎉 بطاقتك جاهزة للاستلام!', {
-                    body: `الطلب رقم ${record['رقم الطلب']} - ${record['الاسم بالكامل']}\nيرجى الحضور لاستلام بطاقتك من الفرع.`,
-                    icon: '/favicon.ico',
-                    badge: '/favicon.ico',
-                    vibrate: [200, 100, 200, 100, 200],
-                    silent: false,
-                    requireInteraction: true,
-                    tag: 'card-ready'
-                });
-            }
-        }
-        
+
         document.getElementById('requestNumber').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') searchRequest();
         });
-        
+
         const today = new Date();
         document.getElementById('dateDisplay').innerHTML = `
-            <i class="far fa-calendar-alt"></i> 
-            ${today.toLocaleDateString('ar-EG')}
+            <i class="far fa-calendar-alt"></i>
+            ${today.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
         `;
-        
-        // تشغيل الخدمات عند تحميل الصفحة
-        if ('serviceWorker' in navigator) {
-            registerServiceWorker();
-        }
-        checkPendingNotifications();
+
+        loadBranches();
     </script>
 </body>
 </html>

@@ -1,15 +1,12 @@
 const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
-    // فقط POST مسموح
     if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
             body: JSON.stringify({ error: 'Method not allowed' })
         };
     }
-    
-    // التحقق من التوكن
     const token = event.headers.authorization?.split(' ')[1];
     if (!token) {
         return {
@@ -25,8 +22,6 @@ exports.handler = async (event) => {
         );
         
         console.log('🔍 التحقق من الجلسة...');
-        
-        // التحقق من الجلسة
         const { data: session, error: sessionError } = await supabase
             .from('admin_sessions')
             .select('user_id')
@@ -43,8 +38,6 @@ exports.handler = async (event) => {
         }
         
         console.log(`✅ تم التحقق من الجلسة - user_id: ${session.user_id}`);
-        
-        // التحقق من صلاحية التعديل للمستخدم
         console.log('🔍 التحقق من صلاحية المستخدم...');
         const { data: user, error: userError } = await supabase
             .from('users')
@@ -69,8 +62,6 @@ exports.handler = async (event) => {
                 body: JSON.stringify({ error: 'ليس لديك صلاحية لتعديل حالة الطلبات' })
             };
         }
-        
-        // قراءة البيانات المرسلة
         const { requestNumber, status } = JSON.parse(event.body);
         
         console.log(`📝 محاولة تحديث الطلب: ${requestNumber} إلى الحالة: ${status}`);
@@ -81,8 +72,6 @@ exports.handler = async (event) => {
                 body: JSON.stringify({ error: 'رقم الطلب والحالة مطلوبين' })
             };
         }
-        
-        // التحقق من وجود الطلب
         console.log('🔍 البحث عن الطلب...');
         const { data: existingRequest, error: checkError } = await supabase
             .from('requests')
@@ -101,8 +90,6 @@ exports.handler = async (event) => {
         const oldStatus = existingRequest['حالة الطلب'];
         const applicantName = existingRequest['الاسم بالكامل'] || '';
         console.log(`✅ تم العثور على الطلب - الحالة القديمة: ${oldStatus}`);
-        
-        // تحديث حالة الطلب
         console.log('🔄 جاري تحديث الحالة...');
         const { error: updateError } = await supabase
             .from('requests')
@@ -118,12 +105,8 @@ exports.handler = async (event) => {
         }
         
         console.log('✅ تم تحديث الحالة بنجاح');
-        
-        // ========== إرسال إشعار المتصفح إذا كانت الحالة "تم التسليم" ==========
         if (status === 'تم التسليم' && oldStatus !== 'تم التسليم') {
             console.log('📢 الحالة تغيرت إلى "تم التسليم" - جاري إرسال الإشعارات...');
-            
-            // البحث عن الاشتراكات المسجلة لهذا الطلب
             const { data: subscriptions, error: subError } = await supabase
                 .from('notification_subscriptions')
                 .select('*')
@@ -132,8 +115,6 @@ exports.handler = async (event) => {
             
             if (!subError && subscriptions && subscriptions.length > 0) {
                 console.log(`📱 تم العثور على ${subscriptions.length} اشتراك للطلب ${requestNumber}`);
-                
-                // استدعاء Function إرسال الإشعارات (غير متزامن)
                 const siteUrl = process.env.URL || 'https://radfan.netlify.app';
                 fetch(`${siteUrl}/.netlify/functions/send-notification`, {
                     method: 'POST',
@@ -156,8 +137,6 @@ exports.handler = async (event) => {
                 console.log(`📭 لا توجد اشتراكات مسجلة للطلب ${requestNumber}`);
             }
         }
-        
-        // تسجيل الحركة في سجل اللوغات
         console.log('📝 جاري تسجيل الحركة...');
         const { error: logError } = await supabase
             .from('logs')
@@ -169,7 +148,6 @@ exports.handler = async (event) => {
         
         if (logError) {
             console.warn('⚠️ تحذير: فشل تسجيل الحركة:', logError.message);
-            // لا نمنع العملية إذا فشل التسجيل
         } else {
             console.log('✅ تم تسجيل الحركة بنجاح');
         }

@@ -21,8 +21,6 @@ exports.handler = async (event) => {
             process.env.SUPABASE_URL,
             process.env.SUPABASE_SERVICE_KEY
         );
-        
-        // التحقق من الجلسة وجلب بيانات المستخدم
         const { data: session, error: sessionError } = await supabase
             .from('admin_sessions')
             .select('user_id')
@@ -36,18 +34,12 @@ exports.handler = async (event) => {
                 body: JSON.stringify({ error: 'Invalid session' })
             };
         }
-        
-        // جلب بيانات المستخدم
         const { data: user } = await supabase
             .from('users')
             .select('role, branch_name')
             .eq('id', session.user_id)
             .single();
-        
-        // تحديد الفرع بناءً على الصلاحية
         let branch = event.queryStringParameters?.branch;
-        
-        // إذا كان المستخدم ليس admin، نستخدم فرعه فقط
         if (user.role !== 'admin') {
             branch = user.branch_name;
         }
@@ -60,8 +52,6 @@ exports.handler = async (event) => {
         }
         
         console.log('جلب الإحصائيات - المستخدم:', user.role, 'الفرع:', branch);
-        
-        // جلب الإحصائيات
         let stats = {
             total: 0,
             new: 0,
@@ -74,15 +64,11 @@ exports.handler = async (event) => {
             underProcess: 0,
             cancelled: 0
         };
-        
-        // جلب إجمالي الطلبات
         const { count: total } = await supabase
             .from('requests')
             .select('*', { count: 'exact', head: true })
             .eq('وحدة التسجيل', branch);
         stats.total = total || 0;
-        
-        // جلب كل حالة
         const { count: newCount } = await supabase
             .from('requests')
             .select('*', { count: 'exact', head: true })

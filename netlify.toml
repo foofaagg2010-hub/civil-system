@@ -3,10 +3,16 @@
 [build]
   command = "npm install"
   functions = "netlify/functions"
+  publish = "."
 
 [dev]
   framework = "#static"
   staticServerPort = 4000
+
+# إعدادات تجميع الدوال (Functions bundling)
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["web-push", "bcryptjs", "jsonwebtoken", "xlsx", "@supabase/supabase-js"]
 
 # إعادة التوجيه (Redirects)
 [[redirects]]
@@ -24,12 +30,17 @@
     X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+    Cross-Origin-Embedder-Policy = "require-corp"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Resource-Policy = "same-origin"
 
-# لصفحات المشرف (حماية إضافية)
+# ✅ سياسة أمان المحتوى (CSP) - محسنة
 [[headers]]
-  for = "/admin-*.html"
+  for = "/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 
 # للـ Functions
 [[headers]]
@@ -38,3 +49,7 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Content-Security-Policy = "default-src 'none'"
+    Access-Control-Allow-Origin = "https://radfan.netlify.app"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+    Access-Control-Allow-Credentials = "true"

@@ -8,130 +8,78 @@ exports.handler = async (event) => {
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Content-Type': 'application/json'
     };
-    
-    if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 204, headers };
-    }
-    
-    if (event.httpMethod !== 'POST') {
-        return {
-            statusCode: 405,
-            headers,
-            body: JSON.stringify({ error: 'Method not allowed' })
-        };
-    }
-    
+
+    if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers };
+    if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+
     const token = event.headers.authorization?.split(' ')[1];
-    if (!token) {
-        return {
-            statusCode: 401,
-            headers,
-            body: JSON.stringify({ error: 'Unauthorized' })
-        };
-    }
-    
+    if (!token) return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
+
     try {
-        const supabase = createClient(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_SERVICE_KEY
-        );
-        const { data: session, error: sessionError } = await supabase
+        const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+
+        const { data: session } = await supabase
             .from('admin_sessions')
             .select('user_id')
             .eq('token', token)
             .gte('expires_at', new Date().toISOString())
             .single();
-        
-        if (sessionError || !session) {
-            return {
-                statusCode: 401,
-                headers,
-                body: JSON.stringify({ error: 'Invalid session' })
-            };
-        }
-        
-        const { data: user, error: userError } = await supabase
+
+        if (!session) return { statusCode: 401, headers, body: JSON.stringify({ error: 'Invalid session' }) };
+
+        const { data: user } = await supabase
             .from('users')
-            .select('can_edit, username, branch_name')
+            .select('can_edit, branch_name')
             .eq('id', session.user_id)
             .single();
-        
-        if (userError || !user?.can_edit) {
-            return {
-                statusCode: 403,
-                headers,
-                body: JSON.stringify({ error: 'ليس لديك صلاحية لرفع البيانات' })
-            };
-        }
-        let fileBuffer, fileName, branch;
-        
-        try {
-            const body = JSON.parse(event.body);
-            if (body.file) {
-                fileBuffer = Buffer.from(body.file, 'base64');
-                fileName = body.filename || 'upload.xlsx';
-                branch = body.branch || user.branch_name || 'لحج - ردفان';
-            } else {
-                return {
-                    statusCode: 400,
-                    headers,
-                    body: JSON.stringify({ error: 'لم يتم إرسال ملف صالح' })
-                };
-            }
-        } catch (parseError) {
-            return {
-                statusCode: 400,
-                headers,
-                body: JSON.stringify({ error: 'بيانات غير صالحة' })
-            };
-        }
-        
-        if (!fileBuffer || fileBuffer.length === 0) {
-            return {
-                statusCode: 400,
-                headers,
-                body: JSON.stringify({ error: 'الملف فارغ' })
-            };
-        }
-        
-        console.log(`📤 بدء معالجة الملف: ${fileName}`);
+
+        if (!user?.can_edit) return { statusCode: 403, headers, body: JSON.stringify({ error: 'ليس لديك صلاحية لرفع البيانات' }) };
+
+        const body = JSON.parse(event.body);
+        if (!body.file) return { statusCode: 400, headers, body: JSON.stringify({ error: 'لم يتم إرسال ملف' }) };
+
+        const fileBuffer = Buffer.from(body.file, 'base64');
+        const fileName = body.filename || 'upload.xlsx';
+        const branch = body.branch || user.branch_name || 'الضالع - الحصين';
+
+        console.log(`📌 معالجة ملف للفرع: ${branch}`);
         const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const records = XLSX.utils.sheet_to_json(worksheet);
-        
+        const records = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
         if (!records || records.length === 0) {
-            return {
-                statusCode: 400,
-                headers,
-                body: JSON.stringify({ error: 'الملف فارغ أو لا يحتوي على بيانات' })
-            };
+            return { statusCode: 400, headers, body: JSON.stringify({ error: 'الملف فارغ' }) };
         }
-        
+
         const totalRows = records.length;
         console.log(`📊 تم قراءة ${totalRows} سجل`);
         const { data: existingRequests } = await supabase
             .from('requests')
-            .select('رقم الطلب, id');
-        
+            .select('رقم الطلب')
+            .eq('وحدة التسجيل', branch);
+
         const existingNumbers = new Set();
         if (existingRequests) {
             existingRequests.forEach(req => {
                 existingNumbers.add(String(req['رقم الطلب']).trim());
             });
         }
-        
+
+        console.log(`📋 عدد السجلات الموجودة في الفرع ${branch}: ${existingNumbers.size}`);
+
         let insertedRows = 0;
         let replacedRows = 0;
         let errorRows = 0;
         for (const record of records) {
             try {
-                const requestNumber = String(record['رقم الطلب'] || '').trim();
+                let requestNumber = String(record['رقم الطلب'] || '').trim();
+                requestNumber = requestNumber.replace(/\s/g, '');
+
                 if (!requestNumber) {
                     errorRows++;
                     continue;
                 }
-                
+
                 const newRecord = {
                     'رقم الطلب': requestNumber,
                     'نوع الطلب': record['نوع الطلب'] || '',
@@ -144,51 +92,51 @@ exports.handler = async (event) => {
                     'وحدة التسجيل': record['وحدة التسجيل'] || branch,
                     'مُصدر التسجيل': record['مُصدر التسجيل'] || ''
                 };
-                
+
                 if (existingNumbers.has(requestNumber)) {
                     await supabase.from('requests').delete().eq('رقم الطلب', requestNumber);
                     await supabase.from('requests').insert(newRecord);
                     replacedRows++;
+                    console.log(`🔄 استبدال: ${requestNumber}`);
                 } else {
                     await supabase.from('requests').insert(newRecord);
                     insertedRows++;
                     existingNumbers.add(requestNumber);
+                    console.log(`➕ إضافة جديدة: ${requestNumber}`);
                 }
-                
+
             } catch (err) {
-                console.error('خطأ في معالجة سجل:', err);
+                console.error('❌ خطأ في معالجة سجل:', err);
                 errorRows++;
             }
         }
-        
+
         console.log(`✅ النتيجة: +${insertedRows} جديد, 🔄 ${replacedRows} استبدال, ❌ ${errorRows} أخطاء`);
+
         await supabase.from('logs').insert({
             user_id: session.user_id,
             action: 'رفع بيانات من Excel',
-            details: `تم رفع ملف "${fileName}": ${insertedRows} جديد, ${replacedRows} استبدال`
+            details: `تم رفع ملف "${fileName}" للفرع ${branch}: ${insertedRows} جديد, ${replacedRows} استبدال`
         });
-        
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 success: true,
+                jobId: Date.now(),  
                 message: 'تمت معالجة الملف بنجاح',
                 stats: {
                     total: totalRows,
                     new: insertedRows,
-                    replaced: replacedRows,
+                    statusUpdated: replacedRows,
+                    skipped: 0,
                     errors: errorRows
                 }
             })
         };
-        
+
     } catch (error) {
         console.error('❌ خطأ عام:', error);
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({ error: error.message })
-        };
+        return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
     }
 };

@@ -1,20 +1,105 @@
 const { createClient } = require('@supabase/supabase-js');
 const XLSX = require('xlsx');
+function normalizeRequestNumber(value) {
+    if (!value) return '';
+    return String(value).trim();
+}
+function convertToISO(dateValue) {
+    if (!dateValue) return new Date().toISOString();
+    
+    if (typeof dateValue === 'string') {
+        let match = dateValue.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+        if (match) {
+            const date = new Date(match[1], match[2]-1, match[3], match[4], match[5], match[6]);
+            return date.toISOString();
+        }
+        
+        match = dateValue.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/);
+        if (match) {
+            const date = new Date(match[3], match[2]-1, match[1], match[4], match[5], match[6]);
+            return date.toISOString();
+        }
+        
+        const directDate = new Date(dateValue);
+        if (!isNaN(directDate.getTime())) {
+            return directDate.toISOString();
+        }
+    }
+    
+    if (typeof dateValue === 'number') {
+        const excelEpoch = new Date(1899, 11, 30);
+        const milliseconds = dateValue * 86400000;
+        const date = new Date(excelEpoch.getTime() + milliseconds);
+        return date.toISOString();
+    }
+    
+    return new Date().toISOString();
+}
+async function fetchAllRequests(supabase) {
+    let allRequests = [];
+    let page = 0;
+    const pageSize = 1000;
+    let hasMore = true;
+    
+    console.log('📥 جلب جميع السجلات من قاعدة البيانات...');
+    
+    while (hasMore) {
+        const from = page * pageSize;
+        const to = from + pageSize - 1;
+        
+        const { data, error, count } = await supabase
+            .from('requests')
+            .select('*', { count: 'exact' })
+            .range(from, to);
+        
+        if (error) {
+            console.error('خطأ في جلب البيانات:', error);
+            throw error;
+        }
+        
+        if (data && data.length > 0) {
+            allRequests = allRequests.concat(data);
+            console.log(`   ✅ تم جلب ${allRequests.length} سجل (الصفحة ${page + 1})`);
+            page++;
+        }
+        if (!data || data.length < pageSize) {
+            hasMore = false;
+        }
+        if (page > 100) {
+            console.log('⚠️ تم الوصول للحد الأقصى من الصفحات (100)');
+            hasMore = false;
+        }
+    }
+    
+    console.log(`📦 إجمالي السجلات في قاعدة البيانات: ${allRequests.length}`);
+    return allRequests;
+}
 
 exports.handler = async (event) => {
-    // فقط POST مسموح
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Content-Type': 'application/json'
+    };
+    
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 204, headers };
+    }
+    
     if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
+            headers,
             body: JSON.stringify({ error: 'Method not allowed' })
         };
     }
     
-    // التحقق من التوكن
     const token = event.headers.authorization?.split(' ')[1];
     if (!token) {
         return {
             statusCode: 401,
+            headers,
             body: JSON.stringify({ error: 'Unauthorized' })
         };
     }
@@ -24,8 +109,6 @@ exports.handler = async (event) => {
             process.env.SUPABASE_URL,
             process.env.SUPABASE_SERVICE_KEY
         );
-        
-        // التحقق من الجلسة
         const { data: session, error: sessionError } = await supabase
             .from('admin_sessions')
             .select('user_id')
@@ -36,11 +119,10 @@ exports.handler = async (event) => {
         if (sessionError || !session) {
             return {
                 statusCode: 401,
+                headers,
                 body: JSON.stringify({ error: 'Invalid session' })
             };
         }
-        
-        // التحقق من صلاحية التعديل
         const { data: user, error: userError } = await supabase
             .from('users')
             .select('can_edit, username, branch_name')
@@ -50,6 +132,7 @@ exports.handler = async (event) => {
         if (userError || !user) {
             return {
                 statusCode: 401,
+                headers,
                 body: JSON.stringify({ error: 'User not found' })
             };
         }
@@ -57,25 +140,35 @@ exports.handler = async (event) => {
         if (!user.can_edit) {
             return {
                 statusCode: 403,
+                headers,
                 body: JSON.stringify({ error: 'ليس لديك صلاحية لإضافة أو تعديل البيانات' })
             };
         }
-        
-        // قراءة الملف المرسل
-        const { file, branch, filename } = JSON.parse(event.body);
+        let file, branch, filename;
+        try {
+            const body = JSON.parse(event.body);
+            file = body.file;
+            branch = body.branch;
+            filename = body.filename;
+        } catch (err) {
+            console.error('خطأ في تحليل JSON:', err);
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ error: 'بيانات غير صالحة: ' + err.message })
+            };
+        }
         
         if (!file) {
             return {
                 statusCode: 400,
+                headers,
                 body: JSON.stringify({ error: 'لم يتم إرسال ملف' })
             };
         }
-        
-        // فك تشفير الملف (base64)
         const fileBuffer = Buffer.from(file, 'base64');
-        
-        // قراءة ملف Excel
         let data = [];
+        
         try {
             const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
             const sheetName = workbook.SheetNames[0];
@@ -85,122 +178,119 @@ exports.handler = async (event) => {
             console.error('خطأ في قراءة الملف:', err);
             return {
                 statusCode: 400,
-                body: JSON.stringify({ error: 'الملف غير صالح أو تالف' })
+                headers,
+                body: JSON.stringify({ error: 'الملف غير صالح أو تالف: ' + err.message })
             };
         }
         
         if (!data || data.length === 0) {
             return {
                 statusCode: 400,
+                headers,
                 body: JSON.stringify({ error: 'الملف فارغ أو لا يحتوي على بيانات' })
             };
         }
         
         console.log(`📊 تم قراءة ${data.length} سجل من الملف: ${filename}`);
-        console.log(`👤 تم الرفع بواسطة: ${user.username}`);
-        console.log(`🏢 الفرع المستهدف: ${branch}`);
+        let existingMap = new Map();
         
-        // جلب جميع السجلات الموجودة حالياً في قاعدة البيانات للمقارنة
-        const { data: existingRequests, error: fetchError } = await supabase
-            .from('requests')
-            .select('*')
-            .eq('وحدة التسجيل', branch);
-        
-        if (fetchError) {
-            console.error('خطأ في جلب البيانات الموجودة:', fetchError);
-        }
-        
-        // إنشاء Map من السجلات الموجودة (مفتاح = رقم الطلب)
-        const existingMap = new Map();
-        if (existingRequests) {
-            existingRequests.forEach(req => {
-                existingMap.set(req['رقم الطلب'], req);
-            });
-        }
-        
-        // الأعمدة التي سيتم مقارنتها
-        const fieldsToCompare = [
-            'نوع الطلب',
-            'نوع المستند',
-            'سبب الطلب',
-            'حالة الطلب',
-            'مصدر الطلب',
-            'الاسم بالكامل',
-            'وحدة التسجيل',
-            'مُصدر التسجيل'
-        ];
-        
-        // تصفية السجلات الجديدة أو المعدلة
-        const newRecords = [];
-        const updatedRecords = [];
-        let skippedCount = 0;
-        
-        for (const record of data) {
-            const requestNumber = record['رقم الطلب'];
+        try {
+            const allExistingRequests = await fetchAllRequests(supabase);
             
-            if (!requestNumber) {
-                console.log('⚠️ تخطي سجل بدون رقم طلب');
-                skippedCount++;
+            allExistingRequests.forEach(req => {
+                const normalizedRequestNumber = normalizeRequestNumber(req['رقم الطلب']);
+                existingMap.set(normalizedRequestNumber, {
+                    id: req.id,
+                    currentStatus: req['حالة الطلب'],
+                    originalData: req
+                });
+            });
+            
+            console.log(`📦 تم جلب ${existingMap.size} سجل من قاعدة البيانات`);
+        } catch (err) {
+            console.error('❌ خطأ في جلب البيانات:', err);
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({ error: 'خطأ في جلب البيانات: ' + err.message })
+            };
+        }
+        const newRecords = [];
+        const updateStatusRecords = [];
+        const errorRecords = [];
+        let skippedCount = 0;
+        let recordsWithoutNumber = 0;
+        
+        const validStatuses = ['جديد', 'مرسل للتصديق', 'مرسل للطباعة', 'تمت الطباعة', 'تم التسليم', 'مرفوض', 'مرفوض من التصديق', 'تحت المعالجة', 'طلبات تم إلغائها'];
+        
+        for (let i = 0; i < data.length; i++) {
+            const record = data[i];
+            const originalRequestNumber = record['رقم الطلب'];
+            const normalizedRequestNumber = normalizeRequestNumber(originalRequestNumber);
+            const rowNumber = i + 2;
+            if (!normalizedRequestNumber) {
+                recordsWithoutNumber++;
+                errorRecords.push({
+                    row: rowNumber,
+                    error: 'رقم الطلب فارغ'
+                });
                 continue;
             }
-            
-            // إضافة الفرع إذا لم يكن موجوداً
-            if (!record['وحدة التسجيل']) {
-                record['وحدة التسجيل'] = branch;
+            const newStatus = record['حالة الطلب'];
+            if (!newStatus) {
+                errorRecords.push({
+                    row: rowNumber,
+                    requestNumber: originalRequestNumber,
+                    error: 'حالة الطلب فارغة'
+                });
+                continue;
             }
-            
-            // إضافة تاريخ التقديم إذا لم يكن موجوداً
-            if (!record['تاريخ التقديم']) {
-                record['تاريخ التقديم'] = new Date().toISOString().split('T')[0];
+            let formattedDate;
+            try {
+                formattedDate = convertToISO(record['تاريخ التقديم']);
+            } catch (err) {
+                formattedDate = new Date().toISOString();
             }
+            const recordData = {
+                'رقم الطلب': normalizedRequestNumber,
+                'نوع الطلب': record['نوع الطلب'] || '',
+                'نوع المستند': record['نوع المستند'] || '',
+                'سبب الطلب': record['سبب الطلب'] || '',
+                'تاريخ التقديم': formattedDate,
+                'حالة الطلب': newStatus,
+                'مصدر الطلب': record['مصدر الطلب'] || '',
+                'الاسم بالكامل': record['الاسم بالكامل'] || '',
+                'وحدة التسجيل': record['وحدة التسجيل'] || branch,
+                'مُصدر التسجيل': record['مُصدر التسجيل'] || ''
+            };
             
-            // إضافة حالة الطلب إذا لم تكن موجودة
-            if (!record['حالة الطلب']) {
-                record['حالة الطلب'] = 'جديد';
-            }
-            
-            const existing = existingMap.get(requestNumber);
+            const existing = existingMap.get(normalizedRequestNumber);
             
             if (!existing) {
-                // سجل جديد تماماً
-                newRecords.push(record);
-                console.log(`➕ سجل جديد: ${requestNumber} - ${record['الاسم بالكامل']}`);
+                newRecords.push(recordData);
+                console.log(`➕ [جديد] رقم الطلب: ${normalizedRequestNumber}`);
+            } else if (existing.currentStatus === newStatus) {
+                skippedCount++;
+                console.log(`⏭️ [تخطي] رقم الطلب: ${normalizedRequestNumber} - الحالة متطابقة: "${newStatus}"`);
             } else {
-                // التحقق من وجود تغيير واحد على الأقل
-                let hasChanges = false;
-                const changes = [];
-                
-                for (const field of fieldsToCompare) {
-                    const newValue = (record[field] || '').toString().trim();
-                    const oldValue = (existing[field] || '').toString().trim();
-                    
-                    if (newValue !== oldValue) {
-                        hasChanges = true;
-                        changes.push(`${field}: "${oldValue}" → "${newValue}"`);
-                    }
-                }
-                
-                if (hasChanges) {
-                    updatedRecords.push({
-                        ...record,
-                        id: existing.id
-                    });
-                    console.log(`✏️ سجل محدث: ${requestNumber} - التغييرات: ${changes.length} تغيير`);
-                } else {
-                    skippedCount++;
-                    console.log(`⏭️ سجل مكرر تم تخطيه: ${requestNumber}`);
-                }
+                updateStatusRecords.push({
+                    id: existing.id,
+                    requestNumber: normalizedRequestNumber,
+                    oldStatus: existing.currentStatus,
+                    newStatus: newStatus
+                });
+                console.log(`🔄 [تحديث حالة] رقم الطلب: ${normalizedRequestNumber} - من "${existing.currentStatus}" إلى "${newStatus}"`);
             }
         }
         
-        console.log(`📝 سجلات جديدة: ${newRecords.length}`);
-        console.log(`✏️ سجلات محدثة: ${updatedRecords.length}`);
-        console.log(`⏭️ سجلات مكررة تم تخطيها: ${skippedCount}`);
-        
-        // إضافة السجلات الجديدة
+        console.log('='.repeat(50));
+        console.log(`📊 خلاصة المعالجة:`);
+        console.log(`   ➕ سجلات جديدة: ${newRecords.length}`);
+        console.log(`   🔄 تحديث حالة: ${updateStatusRecords.length}`);
+        console.log(`   ⏭️ سجلات متطابقة: ${skippedCount}`);
+        console.log(`   ❌ أخطاء: ${errorRecords.length}`);
+        console.log(`   ⚠️ بدون رقم طلب: ${recordsWithoutNumber}`);
         let insertedCount = 0;
-        let updatedCount = 0;
-        
         if (newRecords.length > 0) {
             const { error: insertError } = await supabase
                 .from('requests')
@@ -208,68 +298,75 @@ exports.handler = async (event) => {
             
             if (insertError) {
                 console.error('خطأ في إضافة السجلات الجديدة:', insertError);
-                return {
-                    statusCode: 500,
-                    body: JSON.stringify({ error: 'خطأ في إضافة البيانات: ' + insertError.message })
-                };
+                errorRecords.push({
+                    row: 'متعدد',
+                    error: 'خطأ في إضافة سجلات جديدة: ' + insertError.message
+                });
+            } else {
+                insertedCount = newRecords.length;
+                console.log(`✅ تم إضافة ${insertedCount} سجل جديد`);
             }
-            insertedCount = newRecords.length;
         }
-        
-        // تحديث السجلات الموجودة (بها تغييرات)
-        for (const record of updatedRecords) {
-            const { id, ...updateData } = record;
-            
+        let updatedCount = 0;
+        for (const item of updateStatusRecords) {
             const { error: updateError } = await supabase
                 .from('requests')
-                .update({
-                    'نوع الطلب': updateData['نوع الطلب'],
-                    'نوع المستند': updateData['نوع المستند'],
-                    'سبب الطلب': updateData['سبب الطلب'],
-                    'تاريخ التقديم': updateData['تاريخ التقديم'],
-                    'حالة الطلب': updateData['حالة الطلب'],
-                    'مصدر الطلب': updateData['مصدر الطلب'],
-                    'الاسم بالكامل': updateData['الاسم بالكامل'],
-                    'وحدة التسجيل': updateData['وحدة التسجيل'],
-                    'مُصدر التسجيل': updateData['مُصدر التسجيل']
-                })
-                .eq('id', id);
+                .update({ 'حالة الطلب': item.newStatus })
+                .eq('id', item.id);
             
             if (updateError) {
-                console.error(`خطأ في تحديث السجل ${record['رقم الطلب']}:`, updateError);
+                console.error(`❌ خطأ في تحديث حالة الطلب ${item.requestNumber}:`, updateError);
+                errorRecords.push({
+                    row: 'غير معروف',
+                    requestNumber: item.requestNumber,
+                    error: `فشل تحديث الحالة: ${updateError.message}`
+                });
             } else {
                 updatedCount++;
             }
         }
-        
-        // تسجيل الحركة في سجل اللوغات
-        await supabase
-            .from('logs')
-            .insert({
-                user_id: session.user_id,
-                action: 'رفع بيانات من Excel',
-                details: `تم رفع ملف "${filename}": ${insertedCount} سجل جديد, ${updatedCount} سجل محدث, ${skippedCount} سجل مكرر تم تخطيه`
-            });
-        
+        console.log(`✅ تم تحديث حالة ${updatedCount} سجل`);
+        try {
+            await supabase
+                .from('logs')
+                .insert({
+                    user_id: session.user_id,
+                    action: 'رفع بيانات من Excel',
+                    details: `تم رفع ملف "${filename || 'غير معروف'}": ${insertedCount} سجل جديد, ${updatedCount} تحديث حالة, ${skippedCount} مكرر, ${errorRecords.length} خطأ`
+                });
+        } catch (logError) {
+            console.warn('⚠️ فشل تسجيل العملية:', logError.message);
+        }
         return {
             statusCode: 200,
+            headers,
             body: JSON.stringify({
                 success: true,
-                message: 'تمت معالجة الملف بنجاح',
+                message: `تمت معالجة الملف بنجاح${errorRecords.length > 0 ? ' مع وجود أخطاء' : ''}`,
                 stats: {
                     total: data.length,
                     new: insertedCount,
-                    updated: updatedCount,
-                    skipped: skippedCount
-                }
+                    statusUpdated: updatedCount,
+                    skipped: skippedCount,
+                    errors: errorRecords.length,
+                    withoutNumber: recordsWithoutNumber
+                },
+                errors: errorRecords
             })
         };
         
     } catch (error) {
-        console.error('Upload error:', error);
+        console.error('❌ خطأ عام في upload-requests:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'خطأ داخلي: ' + error.message })
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                error: 'خطأ داخلي: ' + error.message,
+                stack: error.stack 
+            })
         };
     }
 };

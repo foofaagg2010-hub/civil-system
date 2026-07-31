@@ -1,4 +1,3 @@
-// netlify/functions/vapid-public-key.js
 
 exports.handler = async (event) => {
     if (event.httpMethod !== 'GET') {

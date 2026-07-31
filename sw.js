@@ -1,4 +1,4 @@
-// sw.js - Service Worker لإشعارات المتصفح
+
 
 self.addEventListener('push', function(event) {
     const data = event.data ? event.data.json() : {};
@@ -47,7 +47,6 @@ self.addEventListener('notificationclose', function(event) {
     console.log('Notification closed');
 });
 
-// تثبيت Service Worker
 self.addEventListener('install', function(event) {
     console.log('Service Worker installed');
     self.skipWaiting();
