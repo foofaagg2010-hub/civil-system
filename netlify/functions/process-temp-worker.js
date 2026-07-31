@@ -56,7 +56,7 @@ exports.handler = async (event) => {
         console.log(`📊 جاري معالجة ${totalRows} سجل`);
         const { data: existingRequests } = await supabase
             .from('requests')
-            .select('رقم الطلب, id');
+            .select('"رقم الطلب", id');
 
         const existingNumbers = new Set();
         if (existingRequests) {

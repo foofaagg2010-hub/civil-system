@@ -76,10 +76,11 @@ exports.handler = async (event) => {
         }
 
         const supabase = createClient(supabaseUrl, supabaseKey);
+        const quotedFields = SAFE_FIELDS.map(f => `"${f}"`).join(',');
 
         const { data, error } = await supabase
             .from('requests')
-            .select(SAFE_FIELDS.join(','))
+            .select(quotedFields)
             .eq('رقم الطلب', requestNumber);
 
         if (error) {

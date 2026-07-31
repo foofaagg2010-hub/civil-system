@@ -55,7 +55,7 @@ exports.handler = async (event) => {
         console.log(`📊 تم قراءة ${totalRows} سجل`);
         const { data: existingRequests } = await supabase
             .from('requests')
-            .select('رقم الطلب')
+            .select('"رقم الطلب"')
             .eq('وحدة التسجيل', branch);
 
         const existingNumbers = new Set();

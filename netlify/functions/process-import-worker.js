@@ -70,7 +70,7 @@ exports.handler = async (event) => {
             .eq('id', job.id);
         const { data: existingRequests } = await supabase
             .from('requests')
-            .select('رقم الطلب, id, حالة الطلب');
+            .select('"رقم الطلب", id, "حالة الطلب"');
 
         const existingMap = new Map();
         if (existingRequests) {
