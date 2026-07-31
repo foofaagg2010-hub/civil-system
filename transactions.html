@@ -8,168 +8,210 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --bg: #F8FAFC;
+            --card: #FFFFFF;
+            --primary: #0F172A;
+            --secondary: #2563EB;
+            --secondary-dark: #1D4ED8;
+            --green: #16A34A;
+            --green-dark: #15803D;
+            --whatsapp: #25D366;
+            --gold: #C5A03A;
+            --danger: #DC2626;
+            --muted: #64748B;
+            --border: #E2E8F0;
+            --radius: 18px;
+            --radius-sm: 12px;
+            --shadow-sm: 0 1px 3px rgba(15,23,42,0.08);
+            --shadow-md: 0 6px 20px rgba(15,23,42,0.10);
+            --tr: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --maxw: 1080px;
+        }
+
+        html { scroll-behavior: smooth; }
 
         body {
             font-family: 'Tajawal', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg);
+            color: var(--primary);
             min-height: 100vh;
+            line-height: 1.6;
+            font-size: 16px;
+            overflow-x: hidden;
         }
 
         .national-bar {
             background: linear-gradient(90deg, #CE1126 0%, #CE1126 33%, #FFFFFF 33%, #FFFFFF 66%, #212122 66%, #212122 100%);
-            height: 6px;
+            height: 5px;
         }
 
         .navbar {
-            background: linear-gradient(135deg, #0f1a2e 0%, #1a2a4a 50%, #0f1a2e 100%);
-            color: white;
-            padding: 10px 24px;
+            background: var(--card);
+            color: var(--primary);
+            padding: 10px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            gap: 10px;
+            box-shadow: var(--shadow-sm);
             position: sticky;
             top: 0;
             z-index: 100;
-            border-bottom: 3px solid #C5A03A;
+            border-bottom: 1px solid var(--border);
         }
 
-        .logo { display: flex; align-items: center; gap: 14px; }
-        .logo-img { height: 48px; width: auto; object-fit: contain; background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .logo { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .logo-img { height: 34px; width: auto; object-fit: contain; background: transparent; border-radius: 6px; }
         .logo-img-fallback { display: none; }
-        .logo-divider { width: 1px; height: 40px; background: rgba(255,255,255,0.2); }
-        .logo-text { line-height: 1.3; }
-        .logo-text h2 { font-size: 1.2rem; margin: 0; color: #f0f0f0; }
-        .logo-text p { font-size: 0.8rem; opacity: 0.8; margin: 2px 0 0; color: #C5A03A; }
-        .logo-text .sub-title { font-size: 0.7rem; opacity: 0.6; margin: 0; }
+        .logo-divider { width: 1px; height: 28px; background: var(--border); }
+        .logo-text { line-height: 1.3; min-width: 0; }
+        .logo-text h2 { font-size: 0.95rem; margin: 0; color: var(--primary); font-weight: 800; }
+        .logo-text p { font-size: 0.68rem; color: var(--secondary); margin: 1px 0 0; font-weight: 600; }
+        .logo-text .sub-title { font-size: 0.58rem; color: var(--muted); margin: 0; }
 
         .back-btn {
-            background: rgba(255,255,255,0.12);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 10px 22px;
+            background: #EEF2FF;
+            color: var(--secondary);
+            border: none;
+            padding: 10px 18px;
             border-radius: 40px;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: 0.3s;
+            transition: var(--tr);
             text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 600;
-            backdrop-filter: blur(5px);
+            font-size: 0.85rem;
+            font-weight: 700;
+            min-height: 44px;
+            font-family: inherit;
         }
 
-        .back-btn:hover {
-            background: rgba(197,160,58,0.25);
-            border-color: #C5A03A;
-            transform: translateY(-2px);
-        }
+        .back-btn:hover { background: var(--secondary); color: white; }
+        .back-btn:active { transform: scale(0.97); }
 
         .container {
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 0 20px;
+            max-width: var(--maxw);
+            margin: 0 auto;
+            padding: 16px 16px 80px;
+            width: 100%;
         }
 
         .page-hero {
             text-align: center;
-            color: white;
-            margin-bottom: 35px;
-            animation: fadeInUp 0.8s ease;
+            color: var(--primary);
+            margin-bottom: 18px;
+            animation: fadeInUp 0.6s ease;
             position: relative;
         }
 
         .page-hero h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-size: 1.5rem;
+            margin-bottom: 6px;
+            color: var(--primary);
+            font-weight: 800;
+            text-shadow: none;
         }
 
         .page-hero p {
-            font-size: 1rem;
-            opacity: 0.9;
+            font-size: 0.9rem;
+            color: var(--muted);
             line-height: 1.7;
+            max-width: 600px;
+            margin: 0 auto;
         }
 
         .page-hero::after {
             content: '';
             display: block;
-            width: 80px;
+            width: 56px;
             height: 3px;
-            background: linear-gradient(90deg, transparent, #C5A03A, transparent);
-            margin: 15px auto 0;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            margin: 10px auto 0;
             border-radius: 2px;
         }
 
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .transaction-card {
-            background: white;
-            border-radius: 20px;
+            background: var(--card);
+            border-radius: var(--radius);
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 16px;
             animation: cardSlide 0.5s ease-out both;
-            border: 1px solid rgba(197,160,58,0.1);
+            border: 1px solid var(--border);
         }
 
         .transaction-card:nth-child(2) { animation-delay: 0.1s; }
         .transaction-card:nth-child(3) { animation-delay: 0.2s; }
 
         @keyframes cardSlide {
-            0% { opacity: 0; transform: translateY(25px); }
+            0% { opacity: 0; transform: translateY(18px); }
             100% { opacity: 1; transform: translateY(0); }
         }
 
         .transaction-header {
-            background: linear-gradient(135deg, #1a2a4a, #2c4a7c);
-            color: white;
-            padding: 16px 22px;
+            background: var(--card);
+            color: var(--primary);
+            padding: 16px;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: var(--tr);
             user-select: none;
         }
 
-        .transaction-header:hover {
-            background: linear-gradient(135deg, #2c4a7c, #1a2a4a);
-        }
+        .transaction-header:hover { background: #F8FAFC; }
 
         .transaction-header .header-icon {
             width: 40px;
             height: 40px;
-            background: rgba(197,160,58,0.2);
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: var(--tr);
+        }
+
+        .transaction-header.active .header-icon { background: linear-gradient(135deg, var(--gold), #A8861F); }
+
+        .transaction-header .header-icon i { font-size: 1.05rem; color: white; }
+        .transaction-header h3 { margin: 0; flex: 1; font-size: 1.05rem; font-weight: 800; }
+        .transaction-header .toggle-icon {
+            font-size: 0.85rem;
+            color: var(--muted);
+            transition: var(--tr);
+            background: #F1F5F9;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
         }
-
-        .transaction-header .header-icon i { font-size: 1.2rem; color: #C5A03A; }
-        .transaction-header h3 { margin: 0; flex: 1; font-size: 1.1rem; }
-        .transaction-header .toggle-icon { font-size: 0.9rem; opacity: 0.7; transition: 0.3s; }
-        .transaction-header.active .toggle-icon { transform: rotate(180deg); }
+        .transaction-header.active .toggle-icon { transform: rotate(180deg); color: var(--secondary); }
 
         .transaction-content {
-            padding: 0 22px;
+            padding: 0 16px;
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.4s ease, padding 0.3s ease;
         }
 
         .transaction-content.active {
-            padding: 22px;
-            max-height: 2500px;
+            padding: 8px 16px 16px;
+            max-height: 4000px;
         }
 
         .sub-option {
@@ -177,27 +219,27 @@
         }
 
         .sub-option-btn {
-            background: #f0f2f5;
-            color: #1a2a4a;
-            border: none;
-            padding: 13px 18px;
+            background: #F1F5F9;
+            color: var(--primary);
+            border: 1px solid var(--border);
+            padding: 13px 14px;
             width: 100%;
             text-align: right;
-            border-radius: 12px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.3s;
+            transition: var(--tr);
             font-size: 0.95rem;
             font-family: inherit;
-            font-weight: 500;
+            font-weight: 600;
             gap: 10px;
+            min-height: 48px;
         }
 
-        .sub-option-btn:hover {
-            background: #e2e6ea;
-        }
+        .sub-option-btn:hover { background: #E2E8F0; }
+        .sub-option-btn:active { background: #CBD5E1; }
 
         .sub-option-btn .btn-text {
             display: flex;
@@ -206,34 +248,35 @@
         }
 
         .sub-option-btn .btn-icon {
-            color: #999;
+            color: var(--muted);
             font-size: 0.8rem;
-            transition: 0.3s;
+            transition: var(--tr);
             flex-shrink: 0;
         }
 
         .sub-option-btn .btn-icon.rotated {
             transform: rotate(180deg);
+            color: var(--secondary);
         }
 
         .whatsapp-option {
             background-color: rgba(37, 211, 102, 0.08);
-            border: 1px dashed rgba(37, 211, 102, 0.3);
+            border: 1px dashed rgba(37, 211, 102, 0.4);
         }
 
         .whatsapp-option:hover {
-            background-color: rgba(37, 211, 102, 0.15);
+            background-color: rgba(37, 211, 102, 0.16);
         }
 
-        .whatsapp-option .btn-icon { color: #25D366; font-size: 1.1rem; }
+        .whatsapp-option .btn-icon { color: var(--whatsapp); font-size: 1.1rem; }
 
         .requirements-list {
-            background: #f8f9fa;
-            padding: 16px 18px;
-            border-radius: 12px;
+            background: #F8FAFC;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
             margin-top: 8px;
             display: none;
-            border-right: 3px solid #C5A03A;
+            border-right: 3px solid var(--gold);
             animation: fadeIn 0.25s ease;
         }
 
@@ -243,45 +286,49 @@
         }
 
         .requirements-list ol {
-            padding-right: 20px;
+            padding-right: 18px;
             margin: 0;
         }
 
         .requirements-list li {
-            margin-bottom: 8px;
+            margin-bottom: 9px;
             line-height: 1.6;
             font-size: 0.9rem;
-            color: #444;
+            color: #475569;
         }
 
         .requirements-list li:last-child { margin-bottom: 0; }
 
         .section-title {
-            color: #1a2a4a;
-            margin: 18px 0 10px 0;
-            padding-right: 12px;
-            border-right: 3px solid #C5A03A;
+            color: var(--primary);
+            margin: 16px 0 10px 0;
+            padding-right: 10px;
+            border-right: 3px solid var(--gold);
             font-size: 1rem;
+            font-weight: 800;
         }
 
+        .section-title:first-child { margin-top: 12px; }
+
         .whatsapp-btn {
-            background: linear-gradient(135deg, #25D366, #128C7E);
+            background: linear-gradient(135deg, var(--whatsapp), #1EBE5D);
             color: white;
             border: none;
-            padding: 13px;
-            border-radius: 12px;
+            padding: 14px;
+            border-radius: var(--radius-sm);
             width: 100%;
-            margin-top: 15px;
+            margin-top: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: var(--tr);
             font-size: 0.95rem;
-            font-weight: bold;
+            font-weight: 700;
             font-family: inherit;
             text-decoration: none;
+            min-height: 48px;
         }
 
         .whatsapp-btn:hover {
@@ -289,58 +336,33 @@
             box-shadow: 0 6px 20px rgba(37,211,102,0.3);
         }
 
+        .whatsapp-btn:active { transform: scale(0.98); }
+
         .footer {
             text-align: center;
-            padding: 30px;
-            color: rgba(255,255,255,0.7);
-            font-size: 0.85rem;
+            padding: 24px 16px 96px;
+            color: var(--muted);
+            font-size: 0.82rem;
+            border-top: 1px solid var(--border);
+            background: var(--card);
         }
 
-        @media (max-width: 768px) {
-            .container { padding: 0 14px; margin: 20px auto; }
-            .navbar { padding: 10px 14px; }
-            .logo { gap: 10px; }
-            .logo-img { height: 36px !important; }
-            .logo-divider { height: 30px; }
-            .logo-text h2 { font-size: 0.9rem; }
-            .logo-text p { font-size: 0.65rem; }
-            .logo-text .sub-title { font-size: 0.6rem; }
-            .back-btn { padding: 8px 16px; font-size: 0.8rem; }
-            .page-hero h1 { font-size: 1.5rem; }
-            .page-hero p { font-size: 0.85rem; }
-            .transaction-header { padding: 14px 16px; gap: 10px; }
-            .transaction-header .header-icon { width: 34px; height: 34px; }
-            .transaction-header .header-icon i { font-size: 1rem; }
-            .transaction-header h3 { font-size: 0.95rem; }
-            .transaction-content.active { padding: 16px; }
-            .sub-option-btn { padding: 11px 14px; font-size: 0.85rem; }
-            .requirements-list { padding: 12px 14px; }
-            .requirements-list li { font-size: 0.82rem; }
-            .section-title { font-size: 0.9rem; }
-            .whatsapp-btn { padding: 12px; font-size: 0.85rem; }
+        @media (min-width: 768px) {
+            .container { padding: 24px 24px 90px; }
+            .navbar { padding: 12px 24px; }
+            .logo-img { height: 40px; }
+            .logo-text h2 { font-size: 1.1rem; }
+            .page-hero h1 { font-size: 1.9rem; }
+            .page-hero p { font-size: 1rem; }
+            .transaction-card { margin-bottom: 20px; }
+            .transaction-header { padding: 18px 22px; }
+            .transaction-content.active { padding: 12px 22px 22px; }
+            .footer { padding-bottom: 40px; }
         }
 
-        @media (max-width: 480px) {
-            .navbar { padding: 8px 10px; gap: 8px; }
-            .logo { gap: 6px; }
-            .logo-img { height: 28px !important; }
-            .logo-divider { height: 24px; }
-            .logo-text h2 { font-size: 0.75rem; }
-            .logo-text p { font-size: 0.55rem; }
-            .logo-text .sub-title { font-size: 0.5rem; }
-            .back-btn { padding: 6px 12px; font-size: 0.75rem; gap: 5px; }
-            .page-hero h1 { font-size: 1.2rem; }
-            .page-hero p { font-size: 0.8rem; }
-            .transaction-header { padding: 12px 14px; }
-            .transaction-header .header-icon { width: 30px; height: 30px; }
-            .transaction-header .header-icon i { font-size: 0.85rem; }
-            .transaction-header h3 { font-size: 0.85rem; }
-            .transaction-content.active { padding: 12px; }
-            .sub-option-btn { padding: 10px 12px; font-size: 0.8rem; border-radius: 10px; }
-            .requirements-list { padding: 10px 12px; }
-            .requirements-list li { font-size: 0.78rem; }
-            .section-title { font-size: 0.85rem; margin: 14px 0 8px; }
-            .whatsapp-btn { padding: 10px; font-size: 0.8rem; margin-top: 12px; }
+        @media (min-width: 1024px) {
+            .container { padding: 32px 24px 100px; }
+            .page-hero h1 { font-size: 2.1rem; }
         }
     </style>
 </head>
@@ -349,12 +371,12 @@
 
     <div class="navbar">
         <div class="logo">
-            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-                <img src="image.png" alt="الجمهورية اليمنية" class="logo-img" style="height:50px;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                <div class="logo-img-fallback" style="display:none;width:50px;height:50px;background:rgba(255,255,255,0.1);border-radius:50%;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-flag" style="font-size:24px;color:#C5A03A;"></i></div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <img src="image.png" alt="الجمهورية اليمنية" class="logo-img" style="height:34px;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="logo-img-fallback" style="display:none;width:34px;height:34px;background:#EEF2FF;border-radius:10px;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-flag" style="font-size:16px;color:#2563EB;"></i></div>
                 <div class="logo-divider"></div>
-                <img src="images.png" alt="شعار الأحوال المدنية" class="logo-img" style="height:46px;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                <div class="logo-img-fallback" style="display:none;width:46px;height:46px;background:rgba(255,255,255,0.1);border-radius:50%;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-id-card" style="font-size:22px;color:#C5A03A;"></i></div>
+                <img src="images.png" alt="شعار الأحوال المدنية" class="logo-img" style="height:30px;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="logo-img-fallback" style="display:none;width:30px;height:30px;background:#EEF2FF;border-radius:10px;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-id-card" style="font-size:14px;color:#2563EB;"></i></div>
                 <div class="logo-divider"></div>
             </div>
             <div class="logo-text">
@@ -364,7 +386,7 @@
             </div>
         </div>
         <a href="index.html" class="back-btn">
-            <i class="fas fa-arrow-right"></i> العودة للرئيسية
+            <i class="fas fa-arrow-right"></i> العودة
         </a>
     </div>
 
@@ -507,7 +529,7 @@
         <div class="transaction-card">
             <div class="transaction-header" onclick="toggleTransaction('national-qid')">
                 <div class="header-icon"><i class="fas fa-address-card"></i></div>
-                <h3>شهادة قيد برقم وطني ( للأطفال و القاصرين ) <span style="background:#e74c3c;color:white;font-size:11px;padding:3px 8px;border-radius:20px;font-weight:700;margin-right:8px;display:inline-block;vertical-align:middle;">جديد</span></h3>
+                <h3>شهادة قيد برقم وطني ( للأطفال و القاصرين ) <span style="background:var(--danger);color:white;font-size:11px;padding:3px 8px;border-radius:20px;font-weight:700;margin-right:8px;display:inline-block;vertical-align:middle;">جديد</span></h3>
                 <i class="fas fa-chevron-down toggle-icon"></i>
             </div>
             <div class="transaction-content" id="national-qid">
