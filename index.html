@@ -1087,7 +1087,7 @@
                 btn.href = `https://wa.me/${validated}?text=${message}`;
                 btn.removeAttribute('disabled');
                 btn.style.opacity = '1';
-                info.innerHTML = `<i class="fas fa-info-circle"></i> يمكنك التواصل مع <strong>${name}</strong> عبر واتساب`;
+                info.innerHTML = `<i class="fas fa-info-circle"></i> يمكنك التواصل مع <strong>${escapeHtml(name)}</strong> عبر واتساب`;
             } else {
                 btn.removeAttribute('href');
                 btn.setAttribute('disabled', 'disabled');
