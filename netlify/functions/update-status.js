@@ -115,7 +115,7 @@ exports.handler = async (event) => {
             
             if (!subError && subscriptions && subscriptions.length > 0) {
                 console.log(`📱 تم العثور على ${subscriptions.length} اشتراك للطلب ${requestNumber}`);
-                const siteUrl = process.env.URL || 'https://radfan.netlify.app';
+                const siteUrl = process.env.URL || 'https://id-yemen.org';
                 fetch(`${siteUrl}/.netlify/functions/send-notification`, {
                     method: 'POST',
                     headers: {

@@ -63,7 +63,9 @@ function markCaptchaUsed(token) {
 }
 
 exports.handler = async (event) => {
-    const allowedOrigin = process.env.SITE_URL || 'https://radfan.netlify.app';
+    const requestOrigin = event.headers.origin || '';
+    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
+    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     const headers = {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': allowedOrigin,
