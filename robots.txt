@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin-login.html
+Disallow: /admin-panel.html
+Disallow: /.netlify/functions/
+Disallow: /*.png$
+Disallow: /*.jpg$
+
+Sitemap: https://id-yemen.org/sitemap.xml
