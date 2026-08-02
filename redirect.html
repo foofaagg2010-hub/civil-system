@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+    <title>تم نقل الموقع - الأحوال المدنية</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="images.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --bg: #F8FAFC;
+            --card: #FFFFFF;
+            --primary: #0F172A;
+            --secondary: #2563EB;
+            --secondary-dark: #1D4ED8;
+            --gold: #C5A03A;
+            --muted: #64748B;
+            --border: #E2E8F0;
+            --radius: 18px;
+            --radius-sm: 12px;
+            --shadow-md: 0 6px 20px rgba(15,23,42,0.10);
+            --tr: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+            font-size: 16px;
+            overflow-x: hidden;
+        }
+
+        .national-bar {
+            background: linear-gradient(90deg, #CE1126 0%, #CE1126 33%, #FFFFFF 33%, #FFFFFF 66%, #212122 66%, #212122 100%);
+            height: 5px;
+            flex-shrink: 0;
+        }
+
+        .wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px 40px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
+            max-width: 460px;
+            width: 100%;
+            padding: 36px 22px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gold), var(--secondary), var(--gold));
+        }
+
+        @keyframes pop {
+            0% { opacity: 0; transform: translateY(24px) scale(0.98); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .logo-circle {
+            width: 92px;
+            height: 92px;
+            margin: 0 auto 18px;
+            border-radius: 50%;
+            background: #EEF2FF;
+            border: 3px solid var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(37,99,235,0.15);
+        }
+
+        .logo-circle img { width: 84%; height: 84%; object-fit: contain; }
+
+        .moved-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+            box-shadow: 0 6px 16px rgba(37,99,235,0.25);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .moved-icon i { font-size: 24px; color: white; }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+
+        .card h1 {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .card .old-link {
+            display: inline-block;
+            background: #F1F5F9;
+            color: var(--muted);
+            border: 1px dashed var(--border);
+            border-radius: 40px;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+            direction: ltr;
+        }
+
+        .card p.desc {
+            color: var(--muted);
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+            line-height: 1.8;
+        }
+
+        .card p.desc strong { color: var(--primary); }
+
+        .go-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 16px;
+            padding: 16px 34px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            min-height: 56px;
+            width: 100%;
+            transition: var(--tr);
+            box-shadow: 0 8px 22px rgba(37,99,235,0.3);
+        }
+
+        .go-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(37,99,235,0.4); }
+        .go-btn:active { transform: scale(0.97); }
+
+        .go-btn .go-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .countdown-note {
+            margin-top: 18px;
+            font-size: 0.82rem;
+            color: var(--muted);
+        }
+
+        .countdown-note .sec { color: var(--secondary); font-weight: 800; }
+
+        .footer {
+            text-align: center;
+            padding: 16px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .card { padding: 44px 40px 36px; }
+            .card h1 { font-size: 1.7rem; }
+            .card p.desc { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="national-bar"></div>
+
+    <div class="wrap">
+        <div class="card">
+            <div class="logo-circle">
+                <img src="images.png" alt="شعار الأحوال المدنية">
+            </div>
+
+            <div class="moved-icon"><i class="fas fa-arrow-right"></i></div>
+
+            <h1>تم نقل الموقع إلى نطاق جديد</h1>
+            <span class="old-link">radfan.netlify.app</span>
+            <p class="desc">
+                يسعدنا إعلامكم أن البوابة الإلكترونية لمصلحة الأحوال المدنية <strong>فرع ردفان</strong>
+                انتقلت إلى نطاق جديد. يرجى استخدام الرابط الجديد أدناه للاستعلام عن المعاملات والخدمات.
+            </p>
+
+            <a class="go-btn" href="https://id-yemen.org" target="_blank" rel="noopener">
+                <span class="go-icon"><i class="fas fa-globe"></i></span>
+                الذهاب إلى الموقع الجديد
+                <i class="fas fa-external-link-alt"></i>
+            </a>
+
+            <div class="countdown-note">
+                سيتم تحويلك تلقائياً خلال <span class="sec" id="count">5</span> ثوانٍ...
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>جميع الحقوق محفوظة © مصلحة الأحوال المدنية - فرع ردفان</p>
+    </div>
+
+    <script>
+        (function() {
+            var seconds = 5;
+            var counter = document.getElementById('count');
+            var timer = setInterval(function() {
+                seconds--;
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    window.location.href = 'https://id-yemen.org';
+                } else if (counter) {
+                    counter.textContent = seconds;
+                }
+            }, 1000);
+        })();
+    </script>
+</body>
+</html>
