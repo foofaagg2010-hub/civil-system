@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const webpush = require('web-push');
 
+const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
     if (event.httpMethod !== 'POST') {
         return {
@@ -9,6 +10,17 @@ exports.handler = async (event) => {
         };
     }
     
+        const __rl = checkRateLimit(event, { limit: 120, windowMs: 60000 });
+    if (__rl.limited) {
+        return {
+            statusCode: 429,
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': (['https://id-yemen.org', 'https://radfan.netlify.app'].includes(event.headers.origin || '') ? event.headers.origin : (process.env.SITE_URL || 'https://id-yemen.org'))
+            },
+            body: JSON.stringify({ error: 'Too many requests', retryAfter: __rl.retryAfter })
+        };
+    }
     const token = event.headers.authorization?.split(' ')[1];
     if (!token) {
         return {

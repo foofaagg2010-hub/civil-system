@@ -1,5 +1,6 @@
 ﻿const { createClient } = require('@supabase/supabase-js');
 
+const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
     const requestOrigin = event.headers.origin || '';
     const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
@@ -19,6 +20,17 @@ exports.handler = async (event) => {
         return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
     }
     
+        const __rl = checkRateLimit(event, { limit: 120, windowMs: 60000 });
+    if (__rl.limited) {
+        return {
+            statusCode: 429,
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': (['https://id-yemen.org', 'https://radfan.netlify.app'].includes(event.headers.origin || '') ? event.headers.origin : (process.env.SITE_URL || 'https://id-yemen.org'))
+            },
+            body: JSON.stringify({ error: 'Too many requests', retryAfter: __rl.retryAfter })
+        };
+    }
     const token = event.headers.authorization?.split(' ')[1];
     if (!token) {
         return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
