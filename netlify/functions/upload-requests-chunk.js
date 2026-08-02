@@ -1,7 +1,10 @@
-const { createClient } = require('@supabase/supabase-js');
+﻿const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
-    const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+    const requestOrigin = event.headers.origin || '';
+    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
+    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
+    const headers = { 'Access-Control-Allow-Origin': allowedOrigin, 'Content-Type': 'application/json' };
     
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 204, headers };
@@ -41,13 +44,13 @@ exports.handler = async (event) => {
         const { error } = await supabase
             .from('requests')
             .upsert(records, {
-                onConflict: 'رقم الطلب',
+                onConflict: 'ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨',
                 ignoreDuplicates: false
             });
         
         if (error) {
             console.error('Chunk upload error:', error);
-            return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error' }) };
         }
         
         return {
@@ -63,6 +66,6 @@ exports.handler = async (event) => {
         
     } catch (error) {
         console.error('Error:', error);
-        return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error' }) };
     }
 };

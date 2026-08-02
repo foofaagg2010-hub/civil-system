@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+﻿const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
     if (event.httpMethod !== 'GET') {
@@ -49,20 +49,20 @@ exports.handler = async (event) => {
         let query = supabase.from('requests').select('*', { count: 'exact' });
         if (user.role === 'admin') {
             if (branch) {
-                query = query.eq('وحدة التسجيل', branch);
+                query = query.eq('ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„', branch);
             }
         } 
         else {
-            query = query.eq('وحدة التسجيل', user.branch_name);
+            query = query.eq('ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„', user.branch_name);
         }
         if (status && status !== 'all') {
-            query = query.eq('حالة الطلب', status);
+            query = query.eq('ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨', status);
         }
         if (search) {
-            query = query.or(`الاسم بالكامل.ilike.%${search}%,رقم الطلب.ilike.%${search}%`);
+            query = query.or(`ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„.ilike.%${search}%,ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨.ilike.%${search}%`);
         }
         
-        console.log('جلب الطلبات - المستخدم:', user.role, 'بحث:', search || 'لا يوجد');
+        console.log('ط¬ظ„ط¨ ط§ظ„ط·ظ„ط¨ط§طھ - ط§ظ„ظ…ط³طھط®ط¯ظ…:', user.role, 'ط¨ط­ط«:', search || 'ظ„ط§ ظٹظˆط¬ط¯');
         
         const { data: requests, error, count } = await query
             .order('id', { ascending: false })
@@ -71,7 +71,7 @@ exports.handler = async (event) => {
         if (error) {
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: error.message })
+                body: JSON.stringify({ error: 'Internal server error' })
             };
         }
         

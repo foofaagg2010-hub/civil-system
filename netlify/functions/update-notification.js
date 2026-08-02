@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+﻿const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
     const headers = {
@@ -69,6 +69,6 @@ exports.handler = async (event) => {
         };
 
     } catch (err) {
-        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error: ' + err.message }) };
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error: '  }) };
     }
 };

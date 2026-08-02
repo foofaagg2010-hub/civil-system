@@ -1,10 +1,13 @@
-const { createClient } = require('@supabase/supabase-js');
+﻿const { createClient } = require('@supabase/supabase-js');
 const XLSX = require('xlsx');
 exports.handler = async (event, context) => {
+    const requestOrigin = event.headers.origin || '';
+    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
+    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     context.callbackWaitsForEmptyEventLoop = false;
     
     const headers = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': allowedOrigin,
         'Content-Type': 'application/json'
     };
     const token = event.headers.authorization?.split(' ')[1];
@@ -35,15 +38,15 @@ exports.handler = async (event, context) => {
             .limit(1);
         
         if (fetchError) {
-            throw new Error('خطأ في جلب المهام: ' + fetchError.message);
+            throw new Error('ط®ط·ط£ ظپظٹ ط¬ظ„ط¨ ط§ظ„ظ…ظ‡ط§ظ…: ' + fetchError.message);
         }
         
         if (!pendingTasks || pendingTasks.length === 0) {
-            return { statusCode: 200, headers, body: JSON.stringify({ message: 'لا توجد مهام معلقة' }) };
+            return { statusCode: 200, headers, body: JSON.stringify({ message: 'ظ„ط§ طھظˆط¬ط¯ ظ…ظ‡ط§ظ… ظ…ط¹ظ„ظ‚ط©' }) };
         }
         
         const task = pendingTasks[0];
-        console.log(`🔄 بدء معالجة المهمة ${task.id}: ${task.filename}`);
+        console.log(`ًں”„ ط¨ط¯ط، ظ…ط¹ط§ظ„ط¬ط© ط§ظ„ظ…ظ‡ظ…ط© ${task.id}: ${task.filename}`);
         await supabase
             .from('processing_queue')
             .update({ status: 'processing', started_at: new Date().toISOString() })
@@ -53,7 +56,7 @@ exports.handler = async (event, context) => {
             .download(task.file_path);
         
         if (downloadError) {
-            throw new Error('خطأ في تحميل الملف: ' + downloadError.message);
+            throw new Error('ط®ط·ط£ ظپظٹ طھط­ظ…ظٹظ„ ط§ظ„ظ…ظ„ظپ: ' + downloadError.message);
         }
         const fileBuffer = Buffer.from(await fileData.arrayBuffer());
         const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
@@ -61,7 +64,7 @@ exports.handler = async (event, context) => {
         const worksheet = workbook.Sheets[sheetName];
         const data = XLSX.utils.sheet_to_json(worksheet);
         
-        console.log(`📊 تم قراءة ${data.length} سجل من ${task.filename}`);
+        console.log(`ًں“ٹ طھظ… ظ‚ط±ط§ط،ط© ${data.length} ط³ط¬ظ„ ظ…ظ† ${task.filename}`);
         let allExistingRequests = [];
         let page = 0;
         const pageSize = 1000;
@@ -91,35 +94,35 @@ exports.handler = async (event, context) => {
         
         const existingMap = new Map();
         allExistingRequests.forEach(req => {
-            const requestNumber = String(req['رقم الطلب'] || '').trim();
+            const requestNumber = String(req['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨'] || '').trim();
             existingMap.set(requestNumber, {
                 id: req.id,
-                currentStatus: req['حالة الطلب']
+                currentStatus: req['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨']
             });
         });
         
-        console.log(`📦 تم جلب ${existingMap.size} سجل من قاعدة البيانات`);
+        console.log(`ًں“¦ طھظ… ط¬ظ„ط¨ ${existingMap.size} ط³ط¬ظ„ ظ…ظ† ظ‚ط§ط¹ط¯ط© ط§ظ„ط¨ظٹط§ظ†ط§طھ`);
         const newRecords = [];
         const updateStatusRecords = [];
         let skippedCount = 0;
         let errorCount = 0;
         
-        const validStatuses = ['جديد', 'مرسل للتصديق', 'مرسل للطباعة', 'تمت الطباعة', 'تم التسليم', 'مرفوض', 'مرفوض من التصديق', 'تحت المعالجة', 'طلبات تم إلغائها'];
+        const validStatuses = ['ط¬ط¯ظٹط¯', 'ظ…ط±ط³ظ„ ظ„ظ„طھطµط¯ظٹظ‚', 'ظ…ط±ط³ظ„ ظ„ظ„ط·ط¨ط§ط¹ط©', 'طھظ…طھ ط§ظ„ط·ط¨ط§ط¹ط©', 'طھظ… ط§ظ„طھط³ظ„ظٹظ…', 'ظ…ط±ظپظˆط¶', 'ظ…ط±ظپظˆط¶ ظ…ظ† ط§ظ„طھطµط¯ظٹظ‚', 'طھط­طھ ط§ظ„ظ…ط¹ط§ظ„ط¬ط©', 'ط·ظ„ط¨ط§طھ طھظ… ط¥ظ„ط؛ط§ط¦ظ‡ط§'];
         
         for (let i = 0; i < data.length; i++) {
             const record = data[i];
-            const requestNumber = String(record['رقم الطلب'] || '').trim();
+            const requestNumber = String(record['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨'] || '').trim();
             
             if (!requestNumber) {
                 errorCount++;
                 continue;
             }
             
-            let newStatus = record['حالة الطلب'] || 'جديد';
+            let newStatus = record['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨'] || 'ط¬ط¯ظٹط¯';
             if (!validStatuses.includes(newStatus)) {
-                newStatus = 'جديد';
+                newStatus = 'ط¬ط¯ظٹط¯';
             }
-            let formattedDate = record['تاريخ التقديم'];
+            let formattedDate = record['طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…'];
             if (formattedDate && typeof formattedDate === 'number') {
                 const excelEpoch = new Date(1899, 11, 30);
                 formattedDate = new Date(excelEpoch.getTime() + formattedDate * 86400000).toISOString();
@@ -130,16 +133,16 @@ exports.handler = async (event, context) => {
             }
             
             const recordData = {
-                'رقم الطلب': requestNumber,
-                'نوع الطلب': record['نوع الطلب'] || '',
-                'نوع المستند': record['نوع المستند'] || '',
-                'سبب الطلب': record['سبب الطلب'] || '',
-                'تاريخ التقديم': formattedDate,
-                'حالة الطلب': newStatus,
-                'مصدر الطلب': record['مصدر الطلب'] || '',
-                'الاسم بالكامل': record['الاسم بالكامل'] || '',
-                'وحدة التسجيل': record['وحدة التسجيل'] || task.branch,
-                'مُصدر التسجيل': record['مُصدر التسجيل'] || ''
+                'ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨': requestNumber,
+                'ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨': record['ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨'] || '',
+                'ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯': record['ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯'] || '',
+                'ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨': record['ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨'] || '',
+                'طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…': formattedDate,
+                'ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨': newStatus,
+                'ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨': record['ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨'] || '',
+                'ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„': record['ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„'] || '',
+                'ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„': record['ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„'] || task.branch,
+                'ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„': record['ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„'] || ''
             };
             
             const existing = existingMap.get(requestNumber);
@@ -157,7 +160,7 @@ exports.handler = async (event, context) => {
             }
         }
         
-        console.log(`📊 جديدة: ${newRecords.length}, تحديث: ${updateStatusRecords.length}, مكرر: ${skippedCount}, أخطاء: ${errorCount}`);
+        console.log(`ًں“ٹ ط¬ط¯ظٹط¯ط©: ${newRecords.length}, طھط­ط¯ظٹط«: ${updateStatusRecords.length}, ظ…ظƒط±ط±: ${skippedCount}, ط£ط®ط·ط§ط،: ${errorCount}`);
         let insertedCount = 0;
         if (newRecords.length > 0) {
             const batchSize = 500;
@@ -168,7 +171,7 @@ exports.handler = async (event, context) => {
                     .insert(batch);
                 
                 if (insertError) {
-                    console.error(`خطأ في إضافة الدفعة:`, insertError);
+                    console.error(`ط®ط·ط£ ظپظٹ ط¥ط¶ط§ظپط© ط§ظ„ط¯ظپط¹ط©:`, insertError);
                 } else {
                     insertedCount += batch.length;
                 }
@@ -178,7 +181,7 @@ exports.handler = async (event, context) => {
         for (const item of updateStatusRecords) {
             const { error: updateError } = await supabase
                 .from('requests')
-                .update({ 'حالة الطلب': item.newStatus })
+                .update({ 'ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨': item.newStatus })
                 .eq('id', item.id);
             
             if (!updateError) {
@@ -203,11 +206,11 @@ exports.handler = async (event, context) => {
             .from('logs')
             .insert({
                 user_id: task.user_id,
-                action: 'رفع بيانات من Excel (خلفية)',
-                details: `تم معالجة "${task.filename}": ${insertedCount} سجل جديد, ${updatedCount} تحديث حالة, ${skippedCount} مكرر`
+                action: 'ط±ظپط¹ ط¨ظٹط§ظ†ط§طھ ظ…ظ† Excel (ط®ظ„ظپظٹط©)',
+                details: `طھظ… ظ…ط¹ط§ظ„ط¬ط© "${task.filename}": ${insertedCount} ط³ط¬ظ„ ط¬ط¯ظٹط¯, ${updatedCount} طھط­ط¯ظٹط« ط­ط§ظ„ط©, ${skippedCount} ظ…ظƒط±ط±`
             });
         
-        console.log(`✅ اكتملت معالجة المهمة ${task.id}`);
+        console.log(`âœ… ط§ظƒطھظ…ظ„طھ ظ…ط¹ط§ظ„ط¬ط© ط§ظ„ظ…ظ‡ظ…ط© ${task.id}`);
         await supabase.storage.from('excel-uploads').remove([task.file_path]);
         
         return {
@@ -215,13 +218,13 @@ exports.handler = async (event, context) => {
             headers,
             body: JSON.stringify({
                 success: true,
-                message: 'تمت معالجة الملف بنجاح',
+                message: 'طھظ…طھ ظ…ط¹ط§ظ„ط¬ط© ط§ظ„ظ…ظ„ظپ ط¨ظ†ط¬ط§ط­',
                 stats: { total: data.length, new: insertedCount, updated: updatedCount, skipped: skippedCount }
             })
         };
         
     } catch (error) {
         console.error('Process upload error:', error);
-        return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error' }) };
     }
 };

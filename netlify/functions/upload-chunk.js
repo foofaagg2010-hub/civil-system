@@ -1,8 +1,11 @@
-const { createClient } = require('@supabase/supabase-js');
+﻿const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
+    const requestOrigin = event.headers.origin || '';
+    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
+    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     const headers = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': allowedOrigin,
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Content-Type': 'application/json'
@@ -43,19 +46,19 @@ exports.handler = async (event) => {
             .single();
         
         if (!user || !user.can_edit) {
-            return { statusCode: 403, headers, body: JSON.stringify({ error: 'ليس لديك صلاحية لإضافة البيانات' }) };
+            return { statusCode: 403, headers, body: JSON.stringify({ error: 'ظ„ظٹط³ ظ„ط¯ظٹظƒ طµظ„ط§ط­ظٹط© ظ„ط¥ط¶ط§ظپط© ط§ظ„ط¨ظٹط§ظ†ط§طھ' }) };
         }
         
         const { chunk, branch, filename, chunkIndex, totalChunks } = JSON.parse(event.body);
         
-        console.log(`📥 معالجة الجزء ${chunkIndex}/${totalChunks} من ${filename}`);
-        console.log(`🏢 الفرع: ${branch}`);
+        console.log(`ًں“¥ ظ…ط¹ط§ظ„ط¬ط© ط§ظ„ط¬ط²ط، ${chunkIndex}/${totalChunks} ظ…ظ† ${filename}`);
+        console.log(`ًںڈ¢ ط§ظ„ظپط±ط¹: ${branch}`);
         let jsonString;
         try {
             jsonString = atob(chunk);
-            console.log(`📄 تم فك التشفير، الطول: ${jsonString.length}`);
+            console.log(`ًں“„ طھظ… ظپظƒ ط§ظ„طھط´ظپظٹط±طŒ ط§ظ„ط·ظˆظ„: ${jsonString.length}`);
         } catch (e) {
-            console.error('❌ فك التشفير العادي فشل:', e);
+            console.error('â‌Œ ظپظƒ ط§ظ„طھط´ظپظٹط± ط§ظ„ط¹ط§ط¯ظٹ ظپط´ظ„:', e);
             try {
                 const binary = atob(chunk);
                 const bytes = new Uint8Array(binary.length);
@@ -63,55 +66,55 @@ exports.handler = async (event) => {
                     bytes[i] = binary.charCodeAt(i);
                 }
                 jsonString = new TextDecoder().decode(bytes);
-                console.log(`📄 تم فك التشفير بالطريقة البديلة، الطول: ${jsonString.length}`);
+                console.log(`ًں“„ طھظ… ظپظƒ ط§ظ„طھط´ظپظٹط± ط¨ط§ظ„ط·ط±ظٹظ‚ط© ط§ظ„ط¨ط¯ظٹظ„ط©طŒ ط§ظ„ط·ظˆظ„: ${jsonString.length}`);
             } catch (e2) {
-                console.error('❌ جميع طرق فك التشفير فشلت:', e2);
-                return { statusCode: 400, headers, body: JSON.stringify({ error: 'خطأ في فك تشفير البيانات' }) };
+                console.error('â‌Œ ط¬ظ…ظٹط¹ ط·ط±ظ‚ ظپظƒ ط§ظ„طھط´ظپظٹط± ظپط´ظ„طھ:', e2);
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'ط®ط·ط£ ظپظٹ ظپظƒ طھط´ظپظٹط± ط§ظ„ط¨ظٹط§ظ†ط§طھ' }) };
             }
         }
         let records;
         try {
             records = JSON.parse(jsonString);
-            console.log(`📊 تم تحليل ${records.length} سجل`);
+            console.log(`ًں“ٹ طھظ… طھط­ظ„ظٹظ„ ${records.length} ط³ط¬ظ„`);
         } catch (e) {
-            console.error('❌ خطأ في تحليل JSON:', e);
-            console.log('📄 أول 500 حرف من النص:', jsonString.substring(0, 500));
-            return { statusCode: 400, headers, body: JSON.stringify({ error: 'خطأ في تحليل JSON: ' + e.message }) };
+            console.error('â‌Œ ط®ط·ط£ ظپظٹ طھط­ظ„ظٹظ„ JSON:', e);
+            console.log('ًں“„ ط£ظˆظ„ 500 ط­ط±ظپ ظ…ظ† ط§ظ„ظ†طµ:', jsonString.substring(0, 500));
+            return { statusCode: 400, headers, body: JSON.stringify({ error: 'ط®ط·ط£ ظپظٹ طھط­ظ„ظٹظ„ JSON: '  }) };
         }
         
         if (!records || records.length === 0) {
             return { statusCode: 200, headers, body: JSON.stringify({ success: true, stats: { new: 0, updated: 0, skipped: 0, errors: 0 } }) };
         }
-        console.log('📋 أول سجل:', JSON.stringify(records[0], null, 2));
+        console.log('ًں“‹ ط£ظˆظ„ ط³ط¬ظ„:', JSON.stringify(records[0], null, 2));
         const recordsToInsert = [];
         
         for (const record of records) {
-            let requestNumber = record['رقم الطلب'];
+            let requestNumber = record['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨'];
             if (!requestNumber) requestNumber = record['request_number'];
             if (!requestNumber) requestNumber = record['RequestNumber'];
             
             if (!requestNumber) {
-                console.log('⚠️ سجل بدون رقم طلب:', record);
+                console.log('âڑ ï¸ڈ ط³ط¬ظ„ ط¨ط¯ظˆظ† ط±ظ‚ظ… ط·ظ„ط¨:', record);
                 continue;
             }
             const requestNumberStr = String(requestNumber).trim();
             const newRecord = {
-                'رقم الطلب': requestNumberStr,
-                'نوع الطلب': record['نوع الطلب'] || record['type'] || '',
-                'نوع المستند': record['نوع المستند'] || record['document_type'] || '',
-                'سبب الطلب': record['سبب الطلب'] || record['reason'] || '',
-                'تاريخ التقديم': record['تاريخ التقديم'] || record['date'] || new Date().toISOString(),
-                'حالة الطلب': record['حالة الطلب'] || record['status'] || 'جديد',
-                'مصدر الطلب': record['مصدر الطلب'] || record['source'] || '',
-                'الاسم بالكامل': record['الاسم بالكامل'] || record['full_name'] || record['name'] || '',
-                'وحدة التسجيل': record['وحدة التسجيل'] || record['branch'] || branch,
-                'مُصدر التسجيل': record['مُصدر التسجيل'] || record['issuer'] || ''
+                'ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨': requestNumberStr,
+                'ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨': record['ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨'] || record['type'] || '',
+                'ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯': record['ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯'] || record['document_type'] || '',
+                'ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨': record['ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨'] || record['reason'] || '',
+                'طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…': record['طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…'] || record['date'] || new Date().toISOString(),
+                'ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨': record['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨'] || record['status'] || 'ط¬ط¯ظٹط¯',
+                'ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨': record['ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨'] || record['source'] || '',
+                'ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„': record['ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„'] || record['full_name'] || record['name'] || '',
+                'ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„': record['ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„'] || record['branch'] || branch,
+                'ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„': record['ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„'] || record['issuer'] || ''
             };
             
             recordsToInsert.push(newRecord);
         }
         
-        console.log(`📝 تجهيز ${recordsToInsert.length} سجل للإدراج`);
+        console.log(`ًں“‌ طھط¬ظ‡ظٹط² ${recordsToInsert.length} ط³ط¬ظ„ ظ„ظ„ط¥ط¯ط±ط§ط¬`);
         
         if (recordsToInsert.length === 0) {
             return { statusCode: 200, headers, body: JSON.stringify({ success: true, stats: { new: 0, updated: 0, skipped: 0, errors: records.length } }) };
@@ -119,18 +122,18 @@ exports.handler = async (event) => {
         const { data, error } = await supabase
             .from('requests')
             .upsert(recordsToInsert, {
-                onConflict: 'رقم الطلب',
+                onConflict: 'ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨',
                 ignoreDuplicates: false
             })
             .select();
         
         if (error) {
-            console.error('❌ خطأ في الإدراج:', error);
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في إضافة البيانات: ' + error.message }) };
+            console.error('â‌Œ ط®ط·ط£ ظپظٹ ط§ظ„ط¥ط¯ط±ط§ط¬:', error);
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'ط®ط·ط£ ظپظٹ ط¥ط¶ط§ظپط© ط§ظ„ط¨ظٹط§ظ†ط§طھ: '  }) };
         }
         
         const insertedCount = data ? data.length : 0;
-        console.log(`✅ تم إدراج/تحديث ${insertedCount} سجل بنجاح`);
+        console.log(`âœ… طھظ… ط¥ط¯ط±ط§ط¬/طھط­ط¯ظٹط« ${insertedCount} ط³ط¬ظ„ ط¨ظ†ط¬ط§ط­`);
         
         return {
             statusCode: 200,
@@ -147,11 +150,11 @@ exports.handler = async (event) => {
         };
         
     } catch (error) {
-        console.error('❌ خطأ عام:', error);
+        console.error('â‌Œ ط®ط·ط£ ط¹ط§ظ…:', error);
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: 'خطأ داخلي: ' + error.message, stack: error.stack })
+            body: JSON.stringify({ error: 'ط®ط·ط£ ط¯ط§ط®ظ„ظٹ: '  })
         };
     }
 };

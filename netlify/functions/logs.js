@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+﻿const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
     const headers = {
@@ -40,7 +40,7 @@ exports.handler = async (event) => {
         }
         
         if (user.role !== 'admin' && !user.can_view_logs) {
-            return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بمشاهدة سجل الحركات' }) };
+            return { statusCode: 403, headers, body: JSON.stringify({ error: 'ط؛ظٹط± ظ…طµط±ط­ ظ„ظƒ ط¨ظ…ط´ط§ظ‡ط¯ط© ط³ط¬ظ„ ط§ظ„ط­ط±ظƒط§طھ' }) };
         }
         
         const searchQuery = event.queryStringParameters?.search || '';
@@ -63,7 +63,7 @@ exports.handler = async (event) => {
         const { data: logs, error: logsError } = await query;
         
         if (logsError) {
-            return { statusCode: 500, headers, body: JSON.stringify({ error: logsError.message }) };
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error' }) };
         }
         
         return {
@@ -73,6 +73,6 @@ exports.handler = async (event) => {
         };
         
     } catch (error) {
-        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error: ' + error.message }) };
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error: '  }) };
     }
 };

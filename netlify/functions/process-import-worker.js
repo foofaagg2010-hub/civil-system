@@ -1,12 +1,15 @@
-const { createClient } = require('@supabase/supabase-js');
+﻿const { createClient } = require('@supabase/supabase-js');
 const XLSX = require('xlsx');
 
 exports.handler = async (event) => {
+    const requestOrigin = event.headers.origin || '';
+    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
+    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     if (event.httpMethod === 'OPTIONS') {
         return {
             statusCode: 204,
             headers: {
-                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Origin': allowedOrigin,
                 'Access-Control-Allow-Headers': 'Content-Type, x-api-key',
                 'Access-Control-Allow-Methods': 'POST, OPTIONS'
             }
@@ -37,11 +40,11 @@ exports.handler = async (event) => {
         if (jobError || !job) {
             return {
                 statusCode: 200,
-                body: JSON.stringify({ message: 'لا توجد مهام معلقة' })
+                body: JSON.stringify({ message: 'ظ„ط§ طھظˆط¬ط¯ ظ…ظ‡ط§ظ… ظ…ط¹ظ„ظ‚ط©' })
             };
         }
 
-        console.log(`🔄 بدء معالجة Job #${job.id}: ${job.filename}`);
+        console.log(`ًں”„ ط¨ط¯ط، ظ…ط¹ط§ظ„ط¬ط© Job #${job.id}: ${job.filename}`);
 
         await supabase
             .from('import_jobs')
@@ -53,14 +56,14 @@ exports.handler = async (event) => {
             .download(job.storage_path);
 
         if (downloadError) {
-            throw new Error(`فشل تحميل الملف: ${downloadError.message}`);
+            throw new Error(`ظپط´ظ„ طھط­ظ…ظٹظ„ ط§ظ„ظ…ظ„ظپ: ${downloadError.message}`);
         }
 
         const workbook = XLSX.read(await fileData.arrayBuffer(), { type: 'buffer' });
         const records = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
         if (!records || records.length === 0) {
-            throw new Error('الملف فارغ');
+            throw new Error('ط§ظ„ظ…ظ„ظپ ظپط§ط±ط؛');
         }
 
         const totalRows = records.length;
@@ -70,14 +73,14 @@ exports.handler = async (event) => {
             .eq('id', job.id);
         const { data: existingRequests } = await supabase
             .from('requests')
-            .select('"رقم الطلب", id, "حالة الطلب"');
+            .select('"ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨", id, "ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨"');
 
         const existingMap = new Map();
         if (existingRequests) {
             existingRequests.forEach(req => {
-                existingMap.set(String(req['رقم الطلب']).trim(), {
+                existingMap.set(String(req['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨']).trim(), {
                     id: req.id,
-                    currentStatus: req['حالة الطلب']
+                    currentStatus: req['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨']
                 });
             });
         }
@@ -90,7 +93,7 @@ exports.handler = async (event) => {
 
         for (const record of records) {
             try {
-                const requestNumber = String(record['رقم الطلب'] || '').trim();
+                const requestNumber = String(record['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨'] || '').trim();
                 if (!requestNumber) {
                     errorRows++;
                     processedRows++;
@@ -98,27 +101,27 @@ exports.handler = async (event) => {
                 }
 
                 const existing = existingMap.get(requestNumber);
-                const newStatus = record['حالة الطلب'] || 'جديد';
+                const newStatus = record['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨'] || 'ط¬ط¯ظٹط¯';
 
                 if (!existing) {
                     await supabase.from('requests').insert({
-                        'رقم الطلب': requestNumber,
-                        'نوع الطلب': record['نوع الطلب'] || '',
-                        'نوع المستند': record['نوع المستند'] || '',
-                        'سبب الطلب': record['سبب الطلب'] || '',
-                        'تاريخ التقديم': record['تاريخ التقديم'] || new Date().toISOString().split('T')[0],
-                        'حالة الطلب': newStatus,
-                        'مصدر الطلب': record['مصدر الطلب'] || '',
-                        'الاسم بالكامل': record['الاسم بالكامل'] || '',
-                        'وحدة التسجيل': record['وحدة التسجيل'] || job.branch,
-                        'مُصدر التسجيل': record['مُصدر التسجيل'] || ''
+                        'ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨': requestNumber,
+                        'ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨': record['ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨'] || '',
+                        'ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯': record['ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯'] || '',
+                        'ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨': record['ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨'] || '',
+                        'طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…': record['طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…'] || new Date().toISOString().split('T')[0],
+                        'ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨': newStatus,
+                        'ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨': record['ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨'] || '',
+                        'ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„': record['ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„'] || '',
+                        'ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„': record['ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„'] || job.branch,
+                        'ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„': record['ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„'] || ''
                     });
                     insertedRows++;
                     existingMap.set(requestNumber, { id: null, currentStatus: newStatus });
                 } else if (existing.currentStatus !== newStatus) {
                     await supabase
                         .from('requests')
-                        .update({ 'حالة الطلب': newStatus })
+                        .update({ 'ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨': newStatus })
                         .eq('id', existing.id);
                     updatedRows++;
                     existingMap.set(requestNumber, { ...existing, currentStatus: newStatus });
@@ -141,7 +144,7 @@ exports.handler = async (event) => {
                     .eq('id', job.id);
 
             } catch (err) {
-                console.error('خطأ في معالجة سجل:', err);
+                console.error('ط®ط·ط£ ظپظٹ ظ…ط¹ط§ظ„ط¬ط© ط³ط¬ظ„:', err);
                 errorRows++;
                 processedRows++;
             }
@@ -160,7 +163,7 @@ exports.handler = async (event) => {
             })
             .eq('id', job.id);
 
-        console.log(`✅ Job #${job.id} اكتمل: +${insertedRows} جديد, ${updatedRows} تحديث, ${skippedRows} مكرر`);
+        console.log(`âœ… Job #${job.id} ط§ظƒطھظ…ظ„: +${insertedRows} ط¬ط¯ظٹط¯, ${updatedRows} طھط­ط¯ظٹط«, ${skippedRows} ظ…ظƒط±ط±`);
 
         return {
             statusCode: 200,
@@ -174,7 +177,7 @@ exports.handler = async (event) => {
         };
 
     } catch (error) {
-        console.error('❌ Worker error:', error);
+        console.error('â‌Œ Worker error:', error);
 
         try {
             const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
@@ -190,7 +193,7 @@ exports.handler = async (event) => {
 
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: error.message })
+            body: JSON.stringify({ error: 'Internal server error' })
         };
     }
 };

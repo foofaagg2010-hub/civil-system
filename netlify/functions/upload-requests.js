@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+﻿const { createClient } = require('@supabase/supabase-js');
 const XLSX = require('xlsx');
 function normalizeRequestNumber(value) {
     if (!value) return '';
@@ -41,7 +41,7 @@ async function fetchAllRequests(supabase) {
     const pageSize = 1000;
     let hasMore = true;
     
-    console.log('📥 جلب جميع السجلات من قاعدة البيانات...');
+    console.log('ًں“¥ ط¬ظ„ط¨ ط¬ظ…ظٹط¹ ط§ظ„ط³ط¬ظ„ط§طھ ظ…ظ† ظ‚ط§ط¹ط¯ط© ط§ظ„ط¨ظٹط§ظ†ط§طھ...');
     
     while (hasMore) {
         const from = page * pageSize;
@@ -53,31 +53,34 @@ async function fetchAllRequests(supabase) {
             .range(from, to);
         
         if (error) {
-            console.error('خطأ في جلب البيانات:', error);
+            console.error('ط®ط·ط£ ظپظٹ ط¬ظ„ط¨ ط§ظ„ط¨ظٹط§ظ†ط§طھ:', error);
             throw error;
         }
         
         if (data && data.length > 0) {
             allRequests = allRequests.concat(data);
-            console.log(`   ✅ تم جلب ${allRequests.length} سجل (الصفحة ${page + 1})`);
+            console.log(`   âœ… طھظ… ط¬ظ„ط¨ ${allRequests.length} ط³ط¬ظ„ (ط§ظ„طµظپط­ط© ${page + 1})`);
             page++;
         }
         if (!data || data.length < pageSize) {
             hasMore = false;
         }
         if (page > 100) {
-            console.log('⚠️ تم الوصول للحد الأقصى من الصفحات (100)');
+            console.log('âڑ ï¸ڈ طھظ… ط§ظ„ظˆطµظˆظ„ ظ„ظ„ط­ط¯ ط§ظ„ط£ظ‚طµظ‰ ظ…ظ† ط§ظ„طµظپط­ط§طھ (100)');
             hasMore = false;
         }
     }
     
-    console.log(`📦 إجمالي السجلات في قاعدة البيانات: ${allRequests.length}`);
+    console.log(`ًں“¦ ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ط³ط¬ظ„ط§طھ ظپظٹ ظ‚ط§ط¹ط¯ط© ط§ظ„ط¨ظٹط§ظ†ط§طھ: ${allRequests.length}`);
     return allRequests;
 }
 
 exports.handler = async (event) => {
+    const requestOrigin = event.headers.origin || '';
+    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
+    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     const headers = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': allowedOrigin,
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Content-Type': 'application/json'
@@ -141,7 +144,7 @@ exports.handler = async (event) => {
             return {
                 statusCode: 403,
                 headers,
-                body: JSON.stringify({ error: 'ليس لديك صلاحية لإضافة أو تعديل البيانات' })
+                body: JSON.stringify({ error: 'ظ„ظٹط³ ظ„ط¯ظٹظƒ طµظ„ط§ط­ظٹط© ظ„ط¥ط¶ط§ظپط© ط£ظˆ طھط¹ط¯ظٹظ„ ط§ظ„ط¨ظٹط§ظ†ط§طھ' })
             };
         }
         let file, branch, filename;
@@ -151,11 +154,11 @@ exports.handler = async (event) => {
             branch = body.branch;
             filename = body.filename;
         } catch (err) {
-            console.error('خطأ في تحليل JSON:', err);
+            console.error('ط®ط·ط£ ظپظٹ طھط­ظ„ظٹظ„ JSON:', err);
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({ error: 'بيانات غير صالحة: ' + err.message })
+                body: JSON.stringify({ error: 'ط¨ظٹط§ظ†ط§طھ ط؛ظٹط± طµط§ظ„ط­ط©: '  })
             };
         }
         
@@ -163,7 +166,7 @@ exports.handler = async (event) => {
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({ error: 'لم يتم إرسال ملف' })
+                body: JSON.stringify({ error: 'ظ„ظ… ظٹطھظ… ط¥ط±ط³ط§ظ„ ظ…ظ„ظپ' })
             };
         }
         const fileBuffer = Buffer.from(file, 'base64');
@@ -175,11 +178,11 @@ exports.handler = async (event) => {
             const worksheet = workbook.Sheets[sheetName];
             data = XLSX.utils.sheet_to_json(worksheet);
         } catch (err) {
-            console.error('خطأ في قراءة الملف:', err);
+            console.error('ط®ط·ط£ ظپظٹ ظ‚ط±ط§ط،ط© ط§ظ„ظ…ظ„ظپ:', err);
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({ error: 'الملف غير صالح أو تالف: ' + err.message })
+                body: JSON.stringify({ error: 'ط§ظ„ظ…ظ„ظپ ط؛ظٹط± طµط§ظ„ط­ ط£ظˆ طھط§ظ„ظپ: '  })
             };
         }
         
@@ -187,32 +190,32 @@ exports.handler = async (event) => {
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({ error: 'الملف فارغ أو لا يحتوي على بيانات' })
+                body: JSON.stringify({ error: 'ط§ظ„ظ…ظ„ظپ ظپط§ط±ط؛ ط£ظˆ ظ„ط§ ظٹط­طھظˆظٹ ط¹ظ„ظ‰ ط¨ظٹط§ظ†ط§طھ' })
             };
         }
         
-        console.log(`📊 تم قراءة ${data.length} سجل من الملف: ${filename}`);
+        console.log(`ًں“ٹ طھظ… ظ‚ط±ط§ط،ط© ${data.length} ط³ط¬ظ„ ظ…ظ† ط§ظ„ظ…ظ„ظپ: ${filename}`);
         let existingMap = new Map();
         
         try {
             const allExistingRequests = await fetchAllRequests(supabase);
             
             allExistingRequests.forEach(req => {
-                const normalizedRequestNumber = normalizeRequestNumber(req['رقم الطلب']);
+                const normalizedRequestNumber = normalizeRequestNumber(req['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨']);
                 existingMap.set(normalizedRequestNumber, {
                     id: req.id,
-                    currentStatus: req['حالة الطلب'],
+                    currentStatus: req['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨'],
                     originalData: req
                 });
             });
             
-            console.log(`📦 تم جلب ${existingMap.size} سجل من قاعدة البيانات`);
+            console.log(`ًں“¦ طھظ… ط¬ظ„ط¨ ${existingMap.size} ط³ط¬ظ„ ظ…ظ† ظ‚ط§ط¹ط¯ط© ط§ظ„ط¨ظٹط§ظ†ط§طھ`);
         } catch (err) {
-            console.error('❌ خطأ في جلب البيانات:', err);
+            console.error('â‌Œ ط®ط·ط£ ظپظٹ ط¬ظ„ط¨ ط§ظ„ط¨ظٹط§ظ†ط§طھ:', err);
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({ error: 'خطأ في جلب البيانات: ' + err.message })
+                body: JSON.stringify({ error: 'ط®ط·ط£ ظپظٹ ط¬ظ„ط¨ ط§ظ„ط¨ظٹط§ظ†ط§طھ: '  })
             };
         }
         const newRecords = [];
@@ -221,57 +224,57 @@ exports.handler = async (event) => {
         let skippedCount = 0;
         let recordsWithoutNumber = 0;
         
-        const validStatuses = ['جديد', 'مرسل للتصديق', 'مرسل للطباعة', 'تمت الطباعة', 'تم التسليم', 'مرفوض', 'مرفوض من التصديق', 'تحت المعالجة', 'طلبات تم إلغائها'];
+        const validStatuses = ['ط¬ط¯ظٹط¯', 'ظ…ط±ط³ظ„ ظ„ظ„طھطµط¯ظٹظ‚', 'ظ…ط±ط³ظ„ ظ„ظ„ط·ط¨ط§ط¹ط©', 'طھظ…طھ ط§ظ„ط·ط¨ط§ط¹ط©', 'طھظ… ط§ظ„طھط³ظ„ظٹظ…', 'ظ…ط±ظپظˆط¶', 'ظ…ط±ظپظˆط¶ ظ…ظ† ط§ظ„طھطµط¯ظٹظ‚', 'طھط­طھ ط§ظ„ظ…ط¹ط§ظ„ط¬ط©', 'ط·ظ„ط¨ط§طھ طھظ… ط¥ظ„ط؛ط§ط¦ظ‡ط§'];
         
         for (let i = 0; i < data.length; i++) {
             const record = data[i];
-            const originalRequestNumber = record['رقم الطلب'];
+            const originalRequestNumber = record['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨'];
             const normalizedRequestNumber = normalizeRequestNumber(originalRequestNumber);
             const rowNumber = i + 2;
             if (!normalizedRequestNumber) {
                 recordsWithoutNumber++;
                 errorRecords.push({
                     row: rowNumber,
-                    error: 'رقم الطلب فارغ'
+                    error: 'ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨ ظپط§ط±ط؛'
                 });
                 continue;
             }
-            const newStatus = record['حالة الطلب'];
+            const newStatus = record['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨'];
             if (!newStatus) {
                 errorRecords.push({
                     row: rowNumber,
                     requestNumber: originalRequestNumber,
-                    error: 'حالة الطلب فارغة'
+                    error: 'ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨ ظپط§ط±ط؛ط©'
                 });
                 continue;
             }
             let formattedDate;
             try {
-                formattedDate = convertToISO(record['تاريخ التقديم']);
+                formattedDate = convertToISO(record['طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…']);
             } catch (err) {
                 formattedDate = new Date().toISOString();
             }
             const recordData = {
-                'رقم الطلب': normalizedRequestNumber,
-                'نوع الطلب': record['نوع الطلب'] || '',
-                'نوع المستند': record['نوع المستند'] || '',
-                'سبب الطلب': record['سبب الطلب'] || '',
-                'تاريخ التقديم': formattedDate,
-                'حالة الطلب': newStatus,
-                'مصدر الطلب': record['مصدر الطلب'] || '',
-                'الاسم بالكامل': record['الاسم بالكامل'] || '',
-                'وحدة التسجيل': record['وحدة التسجيل'] || branch,
-                'مُصدر التسجيل': record['مُصدر التسجيل'] || ''
+                'ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨': normalizedRequestNumber,
+                'ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨': record['ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨'] || '',
+                'ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯': record['ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯'] || '',
+                'ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨': record['ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨'] || '',
+                'طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…': formattedDate,
+                'ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨': newStatus,
+                'ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨': record['ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨'] || '',
+                'ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„': record['ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„'] || '',
+                'ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„': record['ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„'] || branch,
+                'ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„': record['ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„'] || ''
             };
             
             const existing = existingMap.get(normalizedRequestNumber);
             
             if (!existing) {
                 newRecords.push(recordData);
-                console.log(`➕ [جديد] رقم الطلب: ${normalizedRequestNumber}`);
+                console.log(`â‍• [ط¬ط¯ظٹط¯] ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨: ${normalizedRequestNumber}`);
             } else if (existing.currentStatus === newStatus) {
                 skippedCount++;
-                console.log(`⏭️ [تخطي] رقم الطلب: ${normalizedRequestNumber} - الحالة متطابقة: "${newStatus}"`);
+                console.log(`âڈ­ï¸ڈ [طھط®ط·ظٹ] ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨: ${normalizedRequestNumber} - ط§ظ„ط­ط§ظ„ط© ظ…طھط·ط§ط¨ظ‚ط©: "${newStatus}"`);
             } else {
                 updateStatusRecords.push({
                     id: existing.id,
@@ -279,17 +282,17 @@ exports.handler = async (event) => {
                     oldStatus: existing.currentStatus,
                     newStatus: newStatus
                 });
-                console.log(`🔄 [تحديث حالة] رقم الطلب: ${normalizedRequestNumber} - من "${existing.currentStatus}" إلى "${newStatus}"`);
+                console.log(`ًں”„ [طھط­ط¯ظٹط« ط­ط§ظ„ط©] ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨: ${normalizedRequestNumber} - ظ…ظ† "${existing.currentStatus}" ط¥ظ„ظ‰ "${newStatus}"`);
             }
         }
         
         console.log('='.repeat(50));
-        console.log(`📊 خلاصة المعالجة:`);
-        console.log(`   ➕ سجلات جديدة: ${newRecords.length}`);
-        console.log(`   🔄 تحديث حالة: ${updateStatusRecords.length}`);
-        console.log(`   ⏭️ سجلات متطابقة: ${skippedCount}`);
-        console.log(`   ❌ أخطاء: ${errorRecords.length}`);
-        console.log(`   ⚠️ بدون رقم طلب: ${recordsWithoutNumber}`);
+        console.log(`ًں“ٹ ط®ظ„ط§طµط© ط§ظ„ظ…ط¹ط§ظ„ط¬ط©:`);
+        console.log(`   â‍• ط³ط¬ظ„ط§طھ ط¬ط¯ظٹط¯ط©: ${newRecords.length}`);
+        console.log(`   ًں”„ طھط­ط¯ظٹط« ط­ط§ظ„ط©: ${updateStatusRecords.length}`);
+        console.log(`   âڈ­ï¸ڈ ط³ط¬ظ„ط§طھ ظ…طھط·ط§ط¨ظ‚ط©: ${skippedCount}`);
+        console.log(`   â‌Œ ط£ط®ط·ط§ط،: ${errorRecords.length}`);
+        console.log(`   âڑ ï¸ڈ ط¨ط¯ظˆظ† ط±ظ‚ظ… ط·ظ„ط¨: ${recordsWithoutNumber}`);
         let insertedCount = 0;
         if (newRecords.length > 0) {
             const { error: insertError } = await supabase
@@ -297,52 +300,52 @@ exports.handler = async (event) => {
                 .insert(newRecords);
             
             if (insertError) {
-                console.error('خطأ في إضافة السجلات الجديدة:', insertError);
+                console.error('ط®ط·ط£ ظپظٹ ط¥ط¶ط§ظپط© ط§ظ„ط³ط¬ظ„ط§طھ ط§ظ„ط¬ط¯ظٹط¯ط©:', insertError);
                 errorRecords.push({
-                    row: 'متعدد',
-                    error: 'خطأ في إضافة سجلات جديدة: ' + insertError.message
+                    row: 'ظ…طھط¹ط¯ط¯',
+                    error: 'ط®ط·ط£ ظپظٹ ط¥ط¶ط§ظپط© ط³ط¬ظ„ط§طھ ط¬ط¯ظٹط¯ط©: ' 
                 });
             } else {
                 insertedCount = newRecords.length;
-                console.log(`✅ تم إضافة ${insertedCount} سجل جديد`);
+                console.log(`âœ… طھظ… ط¥ط¶ط§ظپط© ${insertedCount} ط³ط¬ظ„ ط¬ط¯ظٹط¯`);
             }
         }
         let updatedCount = 0;
         for (const item of updateStatusRecords) {
             const { error: updateError } = await supabase
                 .from('requests')
-                .update({ 'حالة الطلب': item.newStatus })
+                .update({ 'ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨': item.newStatus })
                 .eq('id', item.id);
             
             if (updateError) {
-                console.error(`❌ خطأ في تحديث حالة الطلب ${item.requestNumber}:`, updateError);
+                console.error(`â‌Œ ط®ط·ط£ ظپظٹ طھط­ط¯ظٹط« ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨ ${item.requestNumber}:`, updateError);
                 errorRecords.push({
-                    row: 'غير معروف',
+                    row: 'ط؛ظٹط± ظ…ط¹ط±ظˆظپ',
                     requestNumber: item.requestNumber,
-                    error: `فشل تحديث الحالة: ${updateError.message}`
+                    error: `ظپط´ظ„ طھط­ط¯ظٹط« ط§ظ„ط­ط§ظ„ط©: `
                 });
             } else {
                 updatedCount++;
             }
         }
-        console.log(`✅ تم تحديث حالة ${updatedCount} سجل`);
+        console.log(`âœ… طھظ… طھط­ط¯ظٹط« ط­ط§ظ„ط© ${updatedCount} ط³ط¬ظ„`);
         try {
             await supabase
                 .from('logs')
                 .insert({
                     user_id: session.user_id,
-                    action: 'رفع بيانات من Excel',
-                    details: `تم رفع ملف "${filename || 'غير معروف'}": ${insertedCount} سجل جديد, ${updatedCount} تحديث حالة, ${skippedCount} مكرر, ${errorRecords.length} خطأ`
+                    action: 'ط±ظپط¹ ط¨ظٹط§ظ†ط§طھ ظ…ظ† Excel',
+                    details: `طھظ… ط±ظپط¹ ظ…ظ„ظپ "${filename || 'ط؛ظٹط± ظ…ط¹ط±ظˆظپ'}": ${insertedCount} ط³ط¬ظ„ ط¬ط¯ظٹط¯, ${updatedCount} طھط­ط¯ظٹط« ط­ط§ظ„ط©, ${skippedCount} ظ…ظƒط±ط±, ${errorRecords.length} ط®ط·ط£`
                 });
         } catch (logError) {
-            console.warn('⚠️ فشل تسجيل العملية:', logError.message);
+            console.warn('âڑ ï¸ڈ ظپط´ظ„ طھط³ط¬ظٹظ„ ط§ظ„ط¹ظ…ظ„ظٹط©:', logError.message);
         }
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 success: true,
-                message: `تمت معالجة الملف بنجاح${errorRecords.length > 0 ? ' مع وجود أخطاء' : ''}`,
+                message: `طھظ…طھ ظ…ط¹ط§ظ„ط¬ط© ط§ظ„ظ…ظ„ظپ ط¨ظ†ط¬ط§ط­${errorRecords.length > 0 ? ' ظ…ط¹ ظˆط¬ظˆط¯ ط£ط®ط·ط§ط،' : ''}`,
                 stats: {
                     total: data.length,
                     new: insertedCount,
@@ -356,16 +359,15 @@ exports.handler = async (event) => {
         };
         
     } catch (error) {
-        console.error('❌ خطأ عام في upload-requests:', error);
+        console.error('â‌Œ ط®ط·ط£ ط¹ط§ظ… ظپظٹ upload-requests:', error);
         return {
             statusCode: 500,
             headers: {
-                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Origin': allowedOrigin,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ 
-                error: 'خطأ داخلي: ' + error.message,
-                stack: error.stack 
+                error: 'ط®ط·ط£ ط¯ط§ط®ظ„ظٹ: '  
             })
         };
     }

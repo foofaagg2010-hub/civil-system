@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+﻿const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
@@ -61,7 +61,7 @@ exports.handler = async (event) => {
             statusCode: 429,
             headers,
             body: JSON.stringify({ 
-                error: 'لقد تجاوزت الحد الأقصى للطلبات. يرجى الانتظار دقيقة.'
+                error: 'ظ„ظ‚ط¯ طھط¬ط§ظˆط²طھ ط§ظ„ط­ط¯ ط§ظ„ط£ظ‚طµظ‰ ظ„ظ„ط·ظ„ط¨ط§طھ. ظٹط±ط¬ظ‰ ط§ظ„ط§ظ†طھط¸ط§ط± ط¯ظ‚ظٹظ‚ط©.'
             })
         };
     }
@@ -120,22 +120,22 @@ exports.handler = async (event) => {
                 request_number: request_number,
                 phone_number: validatedPhone,
                 applicant_name: cleanApplicant || '',
-                branch: branch || 'لحج - ردفان',
+                branch: branch || 'ظ„ط­ط¬ - ط±ط¯ظپط§ظ†',
                 notified: false,
                 created_at: new Date().toISOString()
             })
             .select();
 
         if (error) {
-            console.error('❌ Supabase insert error:', error);
+            console.error('â‌Œ Supabase insert error:', error);
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({ error: 'Failed to save notification: ' + error.message })
+                body: JSON.stringify({ error: 'Failed to save notification: '  })
             };
         }
 
-        console.log('✅ تم حفظ طلب الإشعار:', request_number);
+        console.log('âœ… طھظ… ط­ظپط¸ ط·ظ„ط¨ ط§ظ„ط¥ط´ط¹ط§ط±:', request_number);
 
         return {
             statusCode: 200,
@@ -148,11 +148,11 @@ exports.handler = async (event) => {
         };
 
     } catch (err) {
-        console.error('❌ Error in save-notification:', err);
+        console.error('â‌Œ Error in save-notification:', err);
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: 'Internal server error: ' + err.message })
+            body: JSON.stringify({ error: 'Internal server error: '  })
         };
     }
 };

@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+﻿const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
     const headers = {
@@ -40,7 +40,7 @@ exports.handler = async (event) => {
             .single();
 
         if (!user || (user.role !== 'admin' && !user.can_view_logs)) {
-            return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بمشاهدة محاولات الدخول' }) };
+            return { statusCode: 403, headers, body: JSON.stringify({ error: 'ط؛ظٹط± ظ…طµط±ط­ ظ„ظƒ ط¨ظ…ط´ط§ظ‡ط¯ط© ظ…ط­ط§ظˆظ„ط§طھ ط§ظ„ط¯ط®ظˆظ„' }) };
         }
         const { data, error } = await supabase
             .from('login_attempts')
@@ -53,10 +53,10 @@ exports.handler = async (event) => {
                 return {
                     statusCode: 404,
                     headers,
-                    body: JSON.stringify({ error: 'جدول login_attempts غير موجود' })
+                    body: JSON.stringify({ error: 'ط¬ط¯ظˆظ„ login_attempts ط؛ظٹط± ظ…ظˆط¬ظˆط¯' })
                 };
             }
-            return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error' }) };
         }
 
         return {

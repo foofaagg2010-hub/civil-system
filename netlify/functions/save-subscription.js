@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+﻿const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
     if (event.httpMethod !== 'POST') {
@@ -39,7 +39,7 @@ exports.handler = async (event) => {
             console.error('Error saving subscription:', error);
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: error.message })
+                body: JSON.stringify({ error: 'Internal server error' })
             };
         }
         

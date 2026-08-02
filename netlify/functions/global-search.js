@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+﻿const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
     const headers = {
@@ -55,10 +55,10 @@ exports.handler = async (event) => {
         let query = supabase
             .from('requests')
             .select('*')
-            .ilike('الاسم بالكامل', `%${name}%`);
+            .ilike('ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„', `%${name}%`);
 
         if (userData.role === 'supervisor' && userData.branch_name) {
-            query = query.ilike('وحدة التسجيل', `%${userData.branch_name}%`);
+            query = query.ilike('ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„', `%${userData.branch_name}%`);
         }
 
         const { data: requests, error } = await query.order('id', { ascending: false });
@@ -78,6 +78,6 @@ exports.handler = async (event) => {
         };
 
     } catch (err) {
-        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error: ' + err.message }) };
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error: '  }) };
     }
 };
