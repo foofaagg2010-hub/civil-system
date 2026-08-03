@@ -2,6 +2,9 @@ const { createClient } = require('@supabase/supabase-js');
 const XLSX = require('xlsx');
 
 exports.handler = async (event) => {
+    const requestOrigin = event.headers.origin || '';
+    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
+    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     if (event.httpMethod === 'OPTIONS') {
         return {
             statusCode: 204,
