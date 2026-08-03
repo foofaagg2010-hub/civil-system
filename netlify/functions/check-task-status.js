@@ -1,10 +1,7 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 
 const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
-    const requestOrigin = event.headers.origin || '';
-    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
-    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     const headers = {
         'Access-Control-Allow-Origin': allowedOrigin,
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
@@ -55,7 +52,7 @@ exports.handler = async (event) => {
         
         const taskId = event.queryStringParameters?.taskId;
         if (!taskId) {
-            return { statusCode: 400, headers, body: JSON.stringify({ error: 'taskId ظ…ط·ظ„ظˆط¨' }) };
+            return { statusCode: 400, headers, body: JSON.stringify({ error: 'taskId مطلوب' }) };
         }
         
         const { data: task, error } = await supabase
@@ -65,7 +62,7 @@ exports.handler = async (event) => {
             .single();
         
         if (error || !task) {
-            return { statusCode: 404, headers, body: JSON.stringify({ error: 'ط§ظ„ظ…ظ‡ظ…ط© ط؛ظٹط± ظ…ظˆط¬ظˆط¯ط©' }) };
+            return { statusCode: 404, headers, body: JSON.stringify({ error: 'المهمة غير موجودة' }) };
         }
         
         return {

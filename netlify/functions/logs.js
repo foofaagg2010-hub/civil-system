@@ -1,4 +1,4 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 
 const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
@@ -52,7 +52,7 @@ exports.handler = async (event) => {
         }
         
         if (user.role !== 'admin' && !user.can_view_logs) {
-            return { statusCode: 403, headers, body: JSON.stringify({ error: 'ط؛ظٹط± ظ…طµط±ط­ ظ„ظƒ ط¨ظ…ط´ط§ظ‡ط¯ط© ط³ط¬ظ„ ط§ظ„ط­ط±ظƒط§طھ' }) };
+            return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بمشاهدة سجل الحركات' }) };
         }
         
         const searchQuery = event.queryStringParameters?.search || '';

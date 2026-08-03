@@ -1,4 +1,4 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 
 const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
@@ -52,7 +52,7 @@ exports.handler = async (event) => {
             .single();
 
         if (!user || (user.role !== 'admin' && !user.can_view_logs)) {
-            return { statusCode: 403, headers, body: JSON.stringify({ error: 'ط؛ظٹط± ظ…طµط±ط­ ظ„ظƒ ط¨ظ…ط´ط§ظ‡ط¯ط© ظ…ط­ط§ظˆظ„ط§طھ ط§ظ„ط¯ط®ظˆظ„' }) };
+            return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بمشاهدة محاولات الدخول' }) };
         }
         const { data, error } = await supabase
             .from('login_attempts')
@@ -61,11 +61,11 @@ exports.handler = async (event) => {
             .limit(200);
 
         if (error) {
-            if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+            if (error.code === 'PGRST116' || error?.includes('relation') || error?.includes('does not exist')) {
                 return {
                     statusCode: 404,
                     headers,
-                    body: JSON.stringify({ error: 'ط¬ط¯ظˆظ„ login_attempts ط؛ظٹط± ظ…ظˆط¬ظˆط¯' })
+                    body: JSON.stringify({ error: 'جدول login_attempts غير موجود' })
                 };
             }
             return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error' }) };

@@ -1,4 +1,4 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 
 const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
@@ -54,7 +54,7 @@ exports.handler = async (event) => {
         if (user.role !== 'admin' && user.role !== 'supervisor') {
             return {
                 statusCode: 403,
-                body: JSON.stringify({ error: 'ط؛ظٹط± ظ…طµط±ط­ ظ„ظƒ ط¨ظ…ط´ط§ظ‡ط¯ط© ط¥ط­طµط§ط¦ظٹط§طھ ط§ظ„ظپط±ظˆط¹' })
+                body: JSON.stringify({ error: 'غير مصرح لك بمشاهدة إحصائيات الفروع' })
             };
         }
         const { data: branches, error } = await supabase

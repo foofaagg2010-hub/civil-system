@@ -1,11 +1,8 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 const XLSX = require('xlsx');
 
 const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
-    const requestOrigin = event.headers.origin || '';
-    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
-    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     const headers = {
         'Access-Control-Allow-Origin': allowedOrigin,
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
@@ -75,7 +72,7 @@ exports.handler = async (event) => {
             return {
                 statusCode: 403,
                 headers,
-                body: JSON.stringify({ error: 'ظ„ظٹط³ ظ„ط¯ظٹظƒ طµظ„ط§ط­ظٹط© ظ„ط±ظپط¹ ط§ظ„ط¨ظٹط§ظ†ط§طھ' })
+                body: JSON.stringify({ error: 'ليس لديك صلاحية لرفع البيانات' })
             };
         }
         let fileBuffer, fileName, branch;
@@ -85,19 +82,19 @@ exports.handler = async (event) => {
             if (body.file) {
                 fileBuffer = Buffer.from(body.file, 'base64');
                 fileName = body.filename || 'upload.xlsx';
-                branch = body.branch || user.branch_name || 'ظ„ط­ط¬ - ط±ط¯ظپط§ظ†';
+                branch = body.branch || user.branch_name || 'لحج - ردفان';
             } else {
                 return {
                     statusCode: 400,
                     headers,
-                    body: JSON.stringify({ error: 'ظ„ظ… ظٹطھظ… ط¥ط±ط³ط§ظ„ ظ…ظ„ظپ طµط§ظ„ط­' })
+                    body: JSON.stringify({ error: 'لم يتم إرسال ملف صالح' })
                 };
             }
         } catch (parseError) {
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({ error: 'ط¨ظٹط§ظ†ط§طھ ط؛ظٹط± طµط§ظ„ط­ط©' })
+                body: JSON.stringify({ error: 'بيانات غير صالحة' })
             };
         }
         
@@ -105,11 +102,11 @@ exports.handler = async (event) => {
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({ error: 'ط§ظ„ظ…ظ„ظپ ظپط§ط±ط؛' })
+                body: JSON.stringify({ error: 'الملف فارغ' })
             };
         }
         
-        console.log(`ًں“¤ ط¨ط¯ط، ظ…ط¹ط§ظ„ط¬ط© ط§ظ„ظ…ظ„ظپ: ${fileName}`);
+        console.log(`📤 بدء معالجة الملف: ${fileName}`);
         const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
@@ -119,20 +116,20 @@ exports.handler = async (event) => {
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({ error: 'ط§ظ„ظ…ظ„ظپ ظپط§ط±ط؛ ط£ظˆ ظ„ط§ ظٹط­طھظˆظٹ ط¹ظ„ظ‰ ط¨ظٹط§ظ†ط§طھ' })
+                body: JSON.stringify({ error: 'الملف فارغ أو لا يحتوي على بيانات' })
             };
         }
         
         const totalRows = records.length;
-        console.log(`ًں“ٹ طھظ… ظ‚ط±ط§ط،ط© ${totalRows} ط³ط¬ظ„`);
+        console.log(`📊 تم قراءة ${totalRows} سجل`);
         const { data: existingRequests } = await supabase
             .from('requests')
-            .select('"ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨", id');
+            .select('"رقم الطلب", id');
         
         const existingNumbers = new Set();
         if (existingRequests) {
             existingRequests.forEach(req => {
-                existingNumbers.add(String(req['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨']).trim());
+                existingNumbers.add(String(req['رقم الطلب']).trim());
             });
         }
         
@@ -141,27 +138,27 @@ exports.handler = async (event) => {
         let errorRows = 0;
         for (const record of records) {
             try {
-                const requestNumber = String(record['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨'] || '').trim();
+                const requestNumber = String(record['رقم الطلب'] || '').trim();
                 if (!requestNumber) {
                     errorRows++;
                     continue;
                 }
                 
                 const newRecord = {
-                    'ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨': requestNumber,
-                    'ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨': record['ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨'] || '',
-                    'ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯': record['ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯'] || '',
-                    'ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨': record['ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨'] || '',
-                    'طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…': record['طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…'] || new Date().toISOString().split('T')[0],
-                    'ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨': record['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨'] || 'ط¬ط¯ظٹط¯',
-                    'ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨': record['ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨'] || '',
-                    'ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„': record['ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„'] || '',
-                    'ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„': record['ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„'] || branch,
-                    'ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„': record['ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„'] || ''
+                    'رقم الطلب': requestNumber,
+                    'نوع الطلب': record['نوع الطلب'] || '',
+                    'نوع المستند': record['نوع المستند'] || '',
+                    'سبب الطلب': record['سبب الطلب'] || '',
+                    'تاريخ التقديم': record['تاريخ التقديم'] || new Date().toISOString().split('T')[0],
+                    'حالة الطلب': record['حالة الطلب'] || 'جديد',
+                    'مصدر الطلب': record['مصدر الطلب'] || '',
+                    'الاسم بالكامل': record['الاسم بالكامل'] || '',
+                    'وحدة التسجيل': record['وحدة التسجيل'] || branch,
+                    'مُصدر التسجيل': record['مُصدر التسجيل'] || ''
                 };
                 
                 if (existingNumbers.has(requestNumber)) {
-                    await supabase.from('requests').delete().eq('ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨', requestNumber);
+                    await supabase.from('requests').delete().eq('رقم الطلب', requestNumber);
                     await supabase.from('requests').insert(newRecord);
                     replacedRows++;
                 } else {
@@ -171,16 +168,16 @@ exports.handler = async (event) => {
                 }
                 
             } catch (err) {
-                console.error('ط®ط·ط£ ظپظٹ ظ…ط¹ط§ظ„ط¬ط© ط³ط¬ظ„:', err);
+                console.error('خطأ في معالجة سجل:', err);
                 errorRows++;
             }
         }
         
-        console.log(`âœ… ط§ظ„ظ†طھظٹط¬ط©: +${insertedRows} ط¬ط¯ظٹط¯, ًں”„ ${replacedRows} ط§ط³طھط¨ط¯ط§ظ„, â‌Œ ${errorRows} ط£ط®ط·ط§ط،`);
+        console.log(`✅ النتيجة: +${insertedRows} جديد, 🔄 ${replacedRows} استبدال, ❌ ${errorRows} أخطاء`);
         await supabase.from('logs').insert({
             user_id: session.user_id,
-            action: 'ط±ظپط¹ ط¨ظٹط§ظ†ط§طھ ظ…ظ† Excel',
-            details: `طھظ… ط±ظپط¹ ظ…ظ„ظپ "${fileName}": ${insertedRows} ط¬ط¯ظٹط¯, ${replacedRows} ط§ط³طھط¨ط¯ط§ظ„`
+            action: 'رفع بيانات من Excel',
+            details: `تم رفع ملف "${fileName}": ${insertedRows} جديد, ${replacedRows} استبدال`
         });
         
         return {
@@ -188,7 +185,7 @@ exports.handler = async (event) => {
             headers,
             body: JSON.stringify({
                 success: true,
-                message: 'طھظ…طھ ظ…ط¹ط§ظ„ط¬ط© ط§ظ„ظ…ظ„ظپ ط¨ظ†ط¬ط§ط­',
+                message: 'تمت معالجة الملف بنجاح',
                 stats: {
                     total: totalRows,
                     new: insertedRows,
@@ -199,7 +196,7 @@ exports.handler = async (event) => {
         };
         
     } catch (error) {
-        console.error('â‌Œ ط®ط·ط£ ط¹ط§ظ…:', error);
+        console.error('❌ خطأ عام:', error);
         return {
             statusCode: 500,
             headers,

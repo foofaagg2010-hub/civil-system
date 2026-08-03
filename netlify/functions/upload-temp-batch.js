@@ -1,10 +1,7 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 
 const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
-    const requestOrigin = event.headers.origin || '';
-    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
-    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     const headers = { 'Access-Control-Allow-Origin': allowedOrigin, 'Content-Type': 'application/json' };
     if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers };
     if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
@@ -41,27 +38,27 @@ exports.handler = async (event) => {
             return { statusCode: 400, headers, body: JSON.stringify({ error: 'No records' }) };
         }
         
-        console.log(`ًں“¥ ط§ط³طھظ„ط§ظ… ط¯ظپط¹ط© ${batchNumber}/${totalBatches} (${records.length} ط³ط¬ظ„)`);
+        console.log(`📥 استلام دفعة ${batchNumber}/${totalBatches} (${records.length} سجل)`);
         const cleanedRecords = records.map(r => ({
-            "ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨": String(r['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨'] || '').trim(),
-            "ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨": r['ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨'] || '',
-            "ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯": r['ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯'] || '',
-            "ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨": r['ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨'] || '',
-            "طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…": r['طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…'] || new Date().toISOString(),
-            "ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨": r['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨'] || '',
-            "ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„": r['ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„'] || '',
-            "ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„": r['ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„'] || branch,
-            "ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨": r['ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨'] || '',
-            "ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„": r['ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„'] || ''
-        })).filter(r => r["ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨"] !== '');
+            "رقم الطلب": String(r['رقم الطلب'] || '').trim(),
+            "نوع الطلب": r['نوع الطلب'] || '',
+            "نوع المستند": r['نوع المستند'] || '',
+            "سبب الطلب": r['سبب الطلب'] || '',
+            "تاريخ التقديم": r['تاريخ التقديم'] || new Date().toISOString(),
+            "حالة الطلب": r['حالة الطلب'] || '',
+            "الاسم بالكامل": r['الاسم بالكامل'] || '',
+            "وحدة التسجيل": r['وحدة التسجيل'] || branch,
+            "مصدر الطلب": r['مصدر الطلب'] || '',
+            "مُصدر التسجيل": r['مُصدر التسجيل'] || ''
+        })).filter(r => r["رقم الطلب"] !== '');
         
         if (cleanedRecords.length === 0) {
-            return { statusCode: 400, headers, body: JSON.stringify({ error: 'ظ„ط§ طھظˆط¬ط¯ ط³ط¬ظ„ط§طھ طµط§ظ„ط­ط©' }) };
+            return { statusCode: 400, headers, body: JSON.stringify({ error: 'لا توجد سجلات صالحة' }) };
         }
         const { error, data } = await supabase
             .from('requests_duplicate')
             .upsert(cleanedRecords, { 
-                onConflict: 'ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨', 
+                onConflict: 'رقم الطلب', 
                 ignoreDuplicates: false 
             });
         
@@ -70,7 +67,7 @@ exports.handler = async (event) => {
             throw error;
         }
         
-        console.log(`âœ… طھظ…طھ ظ…ط¹ط§ظ„ط¬ط© ط§ظ„ط¯ظپط¹ط© ${batchNumber}/${totalBatches}`);
+        console.log(`✅ تمت معالجة الدفعة ${batchNumber}/${totalBatches}`);
         
         return {
             statusCode: 200,

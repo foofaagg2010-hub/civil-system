@@ -1,4 +1,4 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 
 const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
@@ -33,7 +33,7 @@ exports.handler = async (event) => {
             process.env.SUPABASE_SERVICE_KEY
         );
         
-        console.log('ًں”چ ط§ظ„طھط­ظ‚ظ‚ ظ…ظ† ط§ظ„ط¬ظ„ط³ط©...');
+        console.log('🔍 التحقق من الجلسة...');
         const { data: session, error: sessionError } = await supabase
             .from('admin_sessions')
             .select('user_id')
@@ -42,15 +42,15 @@ exports.handler = async (event) => {
             .single();
         
         if (sessionError || !session) {
-            console.error('â‌Œ ط®ط·ط£ ظپظٹ ط§ظ„ط¬ظ„ط³ط©:', sessionError);
+            console.error('❌ خطأ في الجلسة:', sessionError);
             return {
                 statusCode: 401,
                 body: JSON.stringify({ error: 'Invalid or expired session' })
             };
         }
         
-        console.log(`âœ… طھظ… ط§ظ„طھط­ظ‚ظ‚ ظ…ظ† ط§ظ„ط¬ظ„ط³ط© - user_id: ${session.user_id}`);
-        console.log('ًں”چ ط§ظ„طھط­ظ‚ظ‚ ظ…ظ† طµظ„ط§ط­ظٹط© ط§ظ„ظ…ط³طھط®ط¯ظ…...');
+        console.log(`✅ تم التحقق من الجلسة - user_id: ${session.user_id}`);
+        console.log('🔍 التحقق من صلاحية المستخدم...');
         const { data: user, error: userError } = await supabase
             .from('users')
             .select('can_edit, username, role')
@@ -58,67 +58,67 @@ exports.handler = async (event) => {
             .single();
         
         if (userError || !user) {
-            console.error('â‌Œ ط®ط·ط£ ظپظٹ ط¬ظ„ط¨ ط§ظ„ظ…ط³طھط®ط¯ظ…:', userError);
+            console.error('❌ خطأ في جلب المستخدم:', userError);
             return {
                 statusCode: 401,
                 body: JSON.stringify({ error: 'User not found' })
             };
         }
         
-        console.log(`ًں‘¤ ط§ظ„ظ…ط³طھط®ط¯ظ…: ${user.username}, can_edit: ${user.can_edit}, role: ${user.role}`);
+        console.log(`👤 المستخدم: ${user.username}, can_edit: ${user.can_edit}, role: ${user.role}`);
         
         if (!user.can_edit && user.role !== 'admin') {
-            console.log('â‌Œ ظ„ط§ طھظˆط¬ط¯ طµظ„ط§ط­ظٹط© ظ„ظ„طھط¹ط¯ظٹظ„');
+            console.log('❌ لا توجد صلاحية للتعديل');
             return {
                 statusCode: 403,
-                body: JSON.stringify({ error: 'ظ„ظٹط³ ظ„ط¯ظٹظƒ طµظ„ط§ط­ظٹط© ظ„طھط¹ط¯ظٹظ„ ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨ط§طھ' })
+                body: JSON.stringify({ error: 'ليس لديك صلاحية لتعديل حالة الطلبات' })
             };
         }
         const { requestNumber, status } = JSON.parse(event.body);
         
-        console.log(`ًں“‌ ظ…ط­ط§ظˆظ„ط© طھط­ط¯ظٹط« ط§ظ„ط·ظ„ط¨: ${requestNumber} ط¥ظ„ظ‰ ط§ظ„ط­ط§ظ„ط©: ${status}`);
+        console.log(`📝 محاولة تحديث الطلب: ${requestNumber} إلى الحالة: ${status}`);
         
         if (!requestNumber || !status) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ error: 'ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨ ظˆط§ظ„ط­ط§ظ„ط© ظ…ط·ظ„ظˆط¨ظٹظ†' })
+                body: JSON.stringify({ error: 'رقم الطلب والحالة مطلوبين' })
             };
         }
-        console.log('ًں”چ ط§ظ„ط¨ط­ط« ط¹ظ† ط§ظ„ط·ظ„ط¨...');
+        console.log('🔍 البحث عن الطلب...');
         const { data: existingRequest, error: checkError } = await supabase
             .from('requests')
             .select('*')
-            .eq('ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨', requestNumber)
+            .eq('رقم الطلب', requestNumber)
             .single();
         
         if (checkError || !existingRequest) {
-            console.error('â‌Œ ط§ظ„ط·ظ„ط¨ ط؛ظٹط± ظ…ظˆط¬ظˆط¯:', checkError);
+            console.error('❌ الطلب غير موجود:', checkError);
             return {
                 statusCode: 404,
-                body: JSON.stringify({ error: 'ط§ظ„ط·ظ„ط¨ ط؛ظٹط± ظ…ظˆط¬ظˆط¯' })
+                body: JSON.stringify({ error: 'الطلب غير موجود' })
             };
         }
         
-        const oldStatus = existingRequest['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨'];
-        const applicantName = existingRequest['ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„'] || '';
-        console.log(`âœ… طھظ… ط§ظ„ط¹ط«ظˆط± ط¹ظ„ظ‰ ط§ظ„ط·ظ„ط¨ - ط§ظ„ط­ط§ظ„ط© ط§ظ„ظ‚ط¯ظٹظ…ط©: ${oldStatus}`);
-        console.log('ًں”„ ط¬ط§ط±ظٹ طھط­ط¯ظٹط« ط§ظ„ط­ط§ظ„ط©...');
+        const oldStatus = existingRequest['حالة الطلب'];
+        const applicantName = existingRequest['الاسم بالكامل'] || '';
+        console.log(`✅ تم العثور على الطلب - الحالة القديمة: ${oldStatus}`);
+        console.log('🔄 جاري تحديث الحالة...');
         const { error: updateError } = await supabase
             .from('requests')
-            .update({ 'ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨': status })
-            .eq('ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨', requestNumber);
+            .update({ 'حالة الطلب': status })
+            .eq('رقم الطلب', requestNumber);
         
         if (updateError) {
-            console.error('â‌Œ ط®ط·ط£ ظپظٹ ط§ظ„طھط­ط¯ظٹط«:', updateError);
+            console.error('❌ خطأ في التحديث:', updateError);
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: 'ظپط´ظ„ طھط­ط¯ظٹط« ط§ظ„ط­ط§ظ„ط©: '  })
+                body: JSON.stringify({ error: 'فشل تحديث الحالة: '  })
             };
         }
         
-        console.log('âœ… طھظ… طھط­ط¯ظٹط« ط§ظ„ط­ط§ظ„ط© ط¨ظ†ط¬ط§ط­');
-        if (status === 'طھظ… ط§ظ„طھط³ظ„ظٹظ…' && oldStatus !== 'طھظ… ط§ظ„طھط³ظ„ظٹظ…') {
-            console.log('ًں“¢ ط§ظ„ط­ط§ظ„ط© طھط؛ظٹط±طھ ط¥ظ„ظ‰ "طھظ… ط§ظ„طھط³ظ„ظٹظ…" - ط¬ط§ط±ظٹ ط¥ط±ط³ط§ظ„ ط§ظ„ط¥ط´ط¹ط§ط±ط§طھ...');
+        console.log('✅ تم تحديث الحالة بنجاح');
+        if (status === 'تم التسليم' && oldStatus !== 'تم التسليم') {
+            console.log('📢 الحالة تغيرت إلى "تم التسليم" - جاري إرسال الإشعارات...');
             const { data: subscriptions, error: subError } = await supabase
                 .from('notification_subscriptions')
                 .select('*')
@@ -126,7 +126,7 @@ exports.handler = async (event) => {
                 .eq('notified', false);
             
             if (!subError && subscriptions && subscriptions.length > 0) {
-                console.log(`ًں“± طھظ… ط§ظ„ط¹ط«ظˆط± ط¹ظ„ظ‰ ${subscriptions.length} ط§ط´طھط±ط§ظƒ ظ„ظ„ط·ظ„ط¨ ${requestNumber}`);
+                console.log(`📱 تم العثور على ${subscriptions.length} اشتراك للطلب ${requestNumber}`);
                 const siteUrl = process.env.URL || 'https://id-yemen.org';
                 fetch(`${siteUrl}/.netlify/functions/send-notification`, {
                     method: 'POST',
@@ -141,44 +141,44 @@ exports.handler = async (event) => {
                     })
                 }).then(async (response) => {
                     const result = await response.json();
-                    console.log(`ًں“¢ ظ†طھظٹط¬ط© ط¥ط±ط³ط§ظ„ ط§ظ„ط¥ط´ط¹ط§ط±ط§طھ:`, result);
+                    console.log(`📢 نتيجة إرسال الإشعارات:`, result);
                 }).catch(err => {
-                    console.error('â‌Œ ط®ط·ط£ ظپظٹ ط¥ط±ط³ط§ظ„ ط§ظ„ط¥ط´ط¹ط§ط±ط§طھ:', err);
+                    console.error('❌ خطأ في إرسال الإشعارات:', err);
                 });
             } else {
-                console.log(`ًں“­ ظ„ط§ طھظˆط¬ط¯ ط§ط´طھط±ط§ظƒط§طھ ظ…ط³ط¬ظ„ط© ظ„ظ„ط·ظ„ط¨ ${requestNumber}`);
+                console.log(`📭 لا توجد اشتراكات مسجلة للطلب ${requestNumber}`);
             }
         }
-        console.log('ًں“‌ ط¬ط§ط±ظٹ طھط³ط¬ظٹظ„ ط§ظ„ط­ط±ظƒط©...');
+        console.log('📝 جاري تسجيل الحركة...');
         const { error: logError } = await supabase
             .from('logs')
             .insert({
                 user_id: session.user_id,
-                action: 'طھط­ط¯ظٹط« ط­ط§ظ„ط© ط·ظ„ط¨',
-                details: `طھظ… طھط؛ظٹظٹط± ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨ ${requestNumber} ظ…ظ† "${oldStatus}" ط¥ظ„ظ‰ "${status}"`
+                action: 'تحديث حالة طلب',
+                details: `تم تغيير حالة الطلب ${requestNumber} من "${oldStatus}" إلى "${status}"`
             });
         
         if (logError) {
-            console.warn('âڑ ï¸ڈ طھط­ط°ظٹط±: ظپط´ظ„ طھط³ط¬ظٹظ„ ط§ظ„ط­ط±ظƒط©:', logError.message);
+            console.warn('⚠️ تحذير: فشل تسجيل الحركة:', logError.message);
         } else {
-            console.log('âœ… طھظ… طھط³ط¬ظٹظ„ ط§ظ„ط­ط±ظƒط© ط¨ظ†ط¬ط§ط­');
+            console.log('✅ تم تسجيل الحركة بنجاح');
         }
         
         return {
             statusCode: 200,
             body: JSON.stringify({ 
                 success: true, 
-                message: 'طھظ… طھط­ط¯ظٹط« ط§ظ„ط­ط§ظ„ط© ط¨ظ†ط¬ط§ط­',
+                message: 'تم تحديث الحالة بنجاح',
                 oldStatus: oldStatus,
                 newStatus: status
             })
         };
         
     } catch (error) {
-        console.error('â‌Œ ط®ط·ط£ ط¹ط§ظ… ظپظٹ update-status:', error);
+        console.error('❌ خطأ عام في update-status:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'ط®ط·ط£ ط¯ط§ط®ظ„ظٹ ظپظٹ ط§ظ„ط®ط§ط¯ظ…: '  })
+            body: JSON.stringify({ error: 'خطأ داخلي في الخادم: '  })
         };
     }
 };

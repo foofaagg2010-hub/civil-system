@@ -1,10 +1,7 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 
 const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
-    const requestOrigin = event.headers.origin || '';
-    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
-    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     const headers = { 'Access-Control-Allow-Origin': allowedOrigin, 'Content-Type': 'application/json' };
     
     if (event.httpMethod === 'OPTIONS') {
@@ -56,7 +53,7 @@ exports.handler = async (event) => {
         const { error } = await supabase
             .from('requests')
             .upsert(records, {
-                onConflict: 'ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨',
+                onConflict: 'رقم الطلب',
                 ignoreDuplicates: false
             });
         

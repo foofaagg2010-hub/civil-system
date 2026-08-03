@@ -1,4 +1,4 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 const XLSX = require('xlsx');
 
 const { checkRateLimit } = require('./shared/rate-limit');
@@ -56,13 +56,13 @@ exports.handler = async (event) => {
         if (!user.can_edit) {
             return {
                 statusCode: 403,
-                body: JSON.stringify({ error: 'ظ„ظٹط³ ظ„ط¯ظٹظƒ طµظ„ط§ط­ظٹط© ظ„ط¥ط¶ط§ظپط© ط§ظ„ط¨ظٹط§ظ†ط§طھ' })
+                body: JSON.stringify({ error: 'ليس لديك صلاحية لإضافة البيانات' })
             };
         }
         
         const { fileName, branch, originalName } = JSON.parse(event.body);
         
-        console.log(`ًں“¥ ظ…ط¹ط§ظ„ط¬ط© ط§ظ„ظ…ظ„ظپ: ${fileName}`);
+        console.log(`📥 معالجة الملف: ${fileName}`);
         const fileResponse = await fetch(
             `${process.env.SUPABASE_URL}/storage/v1/object/excel-uploads/${fileName}`,
             {
@@ -76,7 +76,7 @@ exports.handler = async (event) => {
         if (!fileResponse.ok) {
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: 'ظپط´ظ„ طھط­ظ…ظٹظ„ ط§ظ„ظ…ظ„ظپ ظ…ظ† ط§ظ„طھط®ط²ظٹظ†' })
+                body: JSON.stringify({ error: 'فشل تحميل الملف من التخزين' })
             };
         }
         
@@ -89,26 +89,26 @@ exports.handler = async (event) => {
         if (!records || records.length === 0) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ error: 'ط§ظ„ظ…ظ„ظپ ظپط§ط±ط؛ ط£ظˆ ظ„ط§ ظٹط­طھظˆظٹ ط¹ظ„ظ‰ ط¨ظٹط§ظ†ط§طھ' })
+                body: JSON.stringify({ error: 'الملف فارغ أو لا يحتوي على بيانات' })
             };
         }
         
-        console.log(`ًں“ٹ طھظ… ظ‚ط±ط§ط،ط© ${records.length} ط³ط¬ظ„ ظ…ظ† ${originalName}`);
+        console.log(`📊 تم قراءة ${records.length} سجل من ${originalName}`);
         const { data: existingRequests } = await supabase
             .from('requests')
             .select('*')
-            .eq('ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„', branch);
+            .eq('وحدة التسجيل', branch);
         
         const existingMap = new Map();
         if (existingRequests) {
             existingRequests.forEach(req => {
-                existingMap.set(req['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨'], req);
+                existingMap.set(req['رقم الطلب'], req);
             });
         }
         
         const fieldsToCompare = [
-            'ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨', 'ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯', 'ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨', 'ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨',
-            'ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨', 'ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„', 'ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„', 'ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„'
+            'نوع الطلب', 'نوع المستند', 'سبب الطلب', 'حالة الطلب',
+            'مصدر الطلب', 'الاسم بالكامل', 'وحدة التسجيل', 'مُصدر التسجيل'
         ];
         
         const newRecords = [];
@@ -116,16 +116,16 @@ exports.handler = async (event) => {
         let skippedCount = 0;
         
         for (const record of records) {
-            const requestNumber = record['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨'];
+            const requestNumber = record['رقم الطلب'];
             
             if (!requestNumber) {
                 skippedCount++;
                 continue;
             }
             
-            if (!record['ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„']) record['ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„'] = branch;
-            if (!record['طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…']) record['طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…'] = new Date().toISOString().split('T')[0];
-            if (!record['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨']) record['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨'] = 'ط¬ط¯ظٹط¯';
+            if (!record['وحدة التسجيل']) record['وحدة التسجيل'] = branch;
+            if (!record['تاريخ التقديم']) record['تاريخ التقديم'] = new Date().toISOString().split('T')[0];
+            if (!record['حالة الطلب']) record['حالة الطلب'] = 'جديد';
             
             const existing = existingMap.get(requestNumber);
             
@@ -150,7 +150,7 @@ exports.handler = async (event) => {
             }
         }
         
-        console.log(`ًں“‌ ط¬ط¯ظٹط¯: ${newRecords.length}, ظ…ط­ط¯ط«: ${updatedRecords.length}, ظ…ظƒط±ط±: ${skippedCount}`);
+        console.log(`📝 جديد: ${newRecords.length}, محدث: ${updatedRecords.length}, مكرر: ${skippedCount}`);
         const BATCH_SIZE = 500;
         let insertedCount = 0;
         
@@ -161,7 +161,7 @@ exports.handler = async (event) => {
                 .insert(batch);
             
             if (insertError) {
-                console.error('ط®ط·ط£ ظپظٹ ط§ظ„ط¥ط¶ط§ظپط©:', insertError);
+                console.error('خطأ في الإضافة:', insertError);
             } else {
                 insertedCount += batch.length;
             }
@@ -172,15 +172,15 @@ exports.handler = async (event) => {
             const { error: updateError } = await supabase
                 .from('requests')
                 .update({
-                    'ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨': updateData['ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨'],
-                    'ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯': updateData['ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯'],
-                    'ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨': updateData['ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨'],
-                    'طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…': updateData['طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…'],
-                    'ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨': updateData['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨'],
-                    'ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨': updateData['ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨'],
-                    'ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„': updateData['ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„'],
-                    'ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„': updateData['ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„'],
-                    'ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„': updateData['ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„']
+                    'نوع الطلب': updateData['نوع الطلب'],
+                    'نوع المستند': updateData['نوع المستند'],
+                    'سبب الطلب': updateData['سبب الطلب'],
+                    'تاريخ التقديم': updateData['تاريخ التقديم'],
+                    'حالة الطلب': updateData['حالة الطلب'],
+                    'مصدر الطلب': updateData['مصدر الطلب'],
+                    'الاسم بالكامل': updateData['الاسم بالكامل'],
+                    'وحدة التسجيل': updateData['وحدة التسجيل'],
+                    'مُصدر التسجيل': updateData['مُصدر التسجيل']
                 })
                 .eq('id', id);
             
@@ -198,15 +198,15 @@ exports.handler = async (event) => {
         );
         await supabase.from('logs').insert({
             user_id: session.user_id,
-            action: 'ط±ظپط¹ ط¨ظٹط§ظ†ط§طھ ظ…ظ† Excel',
-            details: `طھظ… ط±ظپط¹ ظ…ظ„ظپ "${originalName}": ${insertedCount} ط¬ط¯ظٹط¯, ${updatedCount} ظ…ط­ط¯ط«, ${skippedCount} ظ…ظƒط±ط±`
+            action: 'رفع بيانات من Excel',
+            details: `تم رفع ملف "${originalName}": ${insertedCount} جديد, ${updatedCount} محدث, ${skippedCount} مكرر`
         });
         
         return {
             statusCode: 200,
             body: JSON.stringify({
                 success: true,
-                message: 'طھظ…طھ ظ…ط¹ط§ظ„ط¬ط© ط§ظ„ظ…ظ„ظپ ط¨ظ†ط¬ط§ط­',
+                message: 'تمت معالجة الملف بنجاح',
                 stats: {
                     total: records.length,
                     new: insertedCount,
@@ -220,7 +220,7 @@ exports.handler = async (event) => {
         console.error('Process Excel error:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'ط®ط·ط£ ط¯ط§ط®ظ„ظٹ: '  })
+            body: JSON.stringify({ error: 'خطأ داخلي: '  })
         };
     }
 };

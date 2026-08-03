@@ -1,4 +1,4 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 
 const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
@@ -61,20 +61,20 @@ exports.handler = async (event) => {
         let query = supabase.from('requests').select('*', { count: 'exact' });
         if (user.role === 'admin') {
             if (branch) {
-                query = query.eq('ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„', branch);
+                query = query.eq('وحدة التسجيل', branch);
             }
         } 
         else {
-            query = query.eq('ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„', user.branch_name);
+            query = query.eq('وحدة التسجيل', user.branch_name);
         }
         if (status && status !== 'all') {
-            query = query.eq('ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨', status);
+            query = query.eq('حالة الطلب', status);
         }
         if (search) {
-            query = query.or(`ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„.ilike.%${search}%,ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨.ilike.%${search}%`);
+            query = query.or(`الاسم بالكامل.ilike.%${search}%,رقم الطلب.ilike.%${search}%`);
         }
         
-        console.log('ط¬ظ„ط¨ ط§ظ„ط·ظ„ط¨ط§طھ - ط§ظ„ظ…ط³طھط®ط¯ظ…:', user.role, 'ط¨ط­ط«:', search || 'ظ„ط§ ظٹظˆط¬ط¯');
+        console.log('جلب الطلبات - المستخدم:', user.role, 'بحث:', search || 'لا يوجد');
         
         const { data: requests, error, count } = await query
             .order('id', { ascending: false })

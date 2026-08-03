@@ -1,4 +1,4 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 
 const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
@@ -67,10 +67,10 @@ exports.handler = async (event) => {
         let query = supabase
             .from('requests')
             .select('*')
-            .ilike('ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„', `%${name}%`);
+            .ilike('الاسم بالكامل', `%${name}%`);
 
         if (userData.role === 'supervisor' && userData.branch_name) {
-            query = query.ilike('ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„', `%${userData.branch_name}%`);
+            query = query.ilike('وحدة التسجيل', `%${userData.branch_name}%`);
         }
 
         const { data: requests, error } = await query.order('id', { ascending: false });

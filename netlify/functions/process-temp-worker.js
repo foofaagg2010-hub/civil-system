@@ -1,9 +1,6 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
-    const requestOrigin = event.headers.origin || '';
-    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
-    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     if (event.httpMethod === 'OPTIONS') {
         return {
             statusCode: 204,
@@ -32,11 +29,11 @@ exports.handler = async (event) => {
         if (jobError || !job) {
             return {
                 statusCode: 200,
-                body: JSON.stringify({ message: 'ظ„ط§ طھظˆط¬ط¯ ظ…ظ‡ط§ظ… ظ…ط¹ظ„ظ‚ط©' })
+                body: JSON.stringify({ message: 'لا توجد مهام معلقة' })
             };
         }
 
-        console.log(`ًں”„ ط¨ط¯ط، ظ…ط¹ط§ظ„ط¬ط© Job #${job.id}: ${job.filename}`);
+        console.log(`🔄 بدء معالجة Job #${job.id}: ${job.filename}`);
         await supabase
             .from('import_jobs')
             .update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 })
@@ -52,19 +49,19 @@ exports.handler = async (event) => {
                 .from('import_jobs')
                 .update({ status: 'completed', progress: 100, finished_at: new Date().toISOString() })
                 .eq('id', job.id);
-            return { statusCode: 200, body: JSON.stringify({ message: 'ظ„ط§ طھظˆط¬ط¯ ط³ط¬ظ„ط§طھ ظ„ظ„ظ…ط¹ط§ظ„ط¬ط©' }) };
+            return { statusCode: 200, body: JSON.stringify({ message: 'لا توجد سجلات للمعالجة' }) };
         }
 
         const totalRows = tempRecords.length;
-        console.log(`ًں“ٹ ط¬ط§ط±ظٹ ظ…ط¹ط§ظ„ط¬ط© ${totalRows} ط³ط¬ظ„`);
+        console.log(`📊 جاري معالجة ${totalRows} سجل`);
         const { data: existingRequests } = await supabase
             .from('requests')
-            .select('"ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨", id');
+            .select('"رقم الطلب", id');
 
         const existingNumbers = new Set();
         if (existingRequests) {
             existingRequests.forEach(req => {
-                existingNumbers.add(String(req['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨']).trim());
+                existingNumbers.add(String(req['رقم الطلب']).trim());
             });
         }
 
@@ -75,7 +72,7 @@ exports.handler = async (event) => {
         for (const temp of tempRecords) {
             try {
                 const record = temp.record_data;
-                const requestNumber = String(record['ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨'] || '').trim();
+                const requestNumber = String(record['رقم الطلب'] || '').trim();
 
                 if (!requestNumber) {
                     errorRows++;
@@ -85,23 +82,23 @@ exports.handler = async (event) => {
                 }
 
                 const newRecord = {
-                    'ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨': requestNumber,
-                    'ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨': record['ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨'] || '',
-                    'ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯': record['ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯'] || '',
-                    'ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨': record['ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨'] || '',
-                    'طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…': record['طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…'] || new Date().toISOString().split('T')[0],
-                    'ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨': record['ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨'] || 'ط¬ط¯ظٹط¯',
-                    'ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨': record['ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨'] || '',
-                    'ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„': record['ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„'] || '',
-                    'ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„': record['ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„'] || job.branch,
-                    'ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„': record['ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„'] || ''
+                    'رقم الطلب': requestNumber,
+                    'نوع الطلب': record['نوع الطلب'] || '',
+                    'نوع المستند': record['نوع المستند'] || '',
+                    'سبب الطلب': record['سبب الطلب'] || '',
+                    'تاريخ التقديم': record['تاريخ التقديم'] || new Date().toISOString().split('T')[0],
+                    'حالة الطلب': record['حالة الطلب'] || 'جديد',
+                    'مصدر الطلب': record['مصدر الطلب'] || '',
+                    'الاسم بالكامل': record['الاسم بالكامل'] || '',
+                    'وحدة التسجيل': record['وحدة التسجيل'] || job.branch,
+                    'مُصدر التسجيل': record['مُصدر التسجيل'] || ''
                 };
 
                 if (existingNumbers.has(requestNumber)) {
                     const { error: deleteError } = await supabase
                         .from('requests')
                         .delete()
-                        .eq('ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨', requestNumber);
+                        .eq('رقم الطلب', requestNumber);
                     
                     if (deleteError) throw deleteError;
                     const { error: insertError } = await supabase
@@ -141,7 +138,7 @@ exports.handler = async (event) => {
                 }
 
             } catch (err) {
-                console.error('ط®ط·ط£ ظپظٹ ظ…ط¹ط§ظ„ط¬ط© ط³ط¬ظ„:', err);
+                console.error('خطأ في معالجة سجل:', err);
                 errorRows++;
                 await supabase.from('temp_uploads').update({ status: 'error' }).eq('id', temp.id);
                 processedRows++;
@@ -153,9 +150,9 @@ exports.handler = async (event) => {
             .eq('job_id', job.id);
 
         if (deleteTempError) {
-            console.error('â‌Œ ط®ط·ط£ ظپظٹ ط­ط°ظپ temp:', deleteTempError);
+            console.error('❌ خطأ في حذف temp:', deleteTempError);
         } else {
-            console.log(`ًں—‘ï¸ڈ طھظ… ط­ط°ظپ ${totalRows} ط³ط¬ظ„ ظ…ظ† temp_uploads ظ„ظ„ظ…ظ‡ظ…ط© #${job.id}`);
+            console.log(`🗑️ تم حذف ${totalRows} سجل من temp_uploads للمهمة #${job.id}`);
         }
         await supabase
             .from('import_jobs')
@@ -170,7 +167,7 @@ exports.handler = async (event) => {
             })
             .eq('id', job.id);
 
-        console.log(`âœ… Job #${job.id} ط§ظƒطھظ…ظ„: +${insertedRows} ط¬ط¯ظٹط¯, ًں”„ ${replacedRows} ط§ط³طھط¨ط¯ط§ظ„, â‌Œ ${errorRows} ط£ط®ط·ط§ط،`);
+        console.log(`✅ Job #${job.id} اكتمل: +${insertedRows} جديد, 🔄 ${replacedRows} استبدال, ❌ ${errorRows} أخطاء`);
 
         return {
             statusCode: 200,
@@ -183,7 +180,7 @@ exports.handler = async (event) => {
         };
 
     } catch (error) {
-        console.error('â‌Œ Worker error:', error);
+        console.error('❌ Worker error:', error);
 
         try {
             const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
@@ -192,7 +189,7 @@ exports.handler = async (event) => {
                 .update({
                     status: 'failed',
                     finished_at: new Date().toISOString(),
-                    error_message: error.message
+                    error_message: error
                 })
                 .eq('status', 'processing');
         } catch (e) { }

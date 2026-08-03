@@ -1,10 +1,7 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 
 const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
-    const requestOrigin = event.headers.origin || '';
-    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
-    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     const headers = { 'Access-Control-Allow-Origin': allowedOrigin, 'Content-Type': 'application/json' };
     if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers };
     if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
@@ -35,7 +32,7 @@ exports.handler = async (event) => {
         
         if (!session) return { statusCode: 401, headers, body: JSON.stringify({ error: 'Invalid session' }) };
         
-        const { error } = await supabase.from('requests_duplicate').delete().neq('"ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨"', '');
+        const { error } = await supabase.from('requests_duplicate').delete().neq('"رقم الطلب"', '');
         if (error) throw error;
         
         return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };

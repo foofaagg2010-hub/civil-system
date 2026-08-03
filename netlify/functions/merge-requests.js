@@ -1,10 +1,7 @@
-﻿const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 
 const { checkRateLimit } = require('./shared/rate-limit');
 exports.handler = async (event) => {
-    const requestOrigin = event.headers.origin || '';
-    const allowedOrigins = [process.env.SITE_URL, 'https://id-yemen.org', 'https://radfan.netlify.app'].filter(Boolean);
-    const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     const headers = { 'Access-Control-Allow-Origin': allowedOrigin, 'Content-Type': 'application/json' };
     if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers };
     if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
@@ -56,7 +53,7 @@ exports.handler = async (event) => {
             }
         }
         
-        console.log(`ًں“ٹ طھظ… ط¬ظ„ط¨ ${allTempRecords.length} ط³ط¬ظ„ ظ…ظ† ط§ظ„ط¬ط¯ظˆظ„ ط§ظ„ظ…ط¤ظ‚طھ`);
+        console.log(`📊 تم جلب ${allTempRecords.length} سجل من الجدول المؤقت`);
         
         if (allTempRecords.length === 0) {
             return {
@@ -65,37 +62,37 @@ exports.handler = async (event) => {
                 body: JSON.stringify({ 
                     success: true, 
                     stats: { total_merged: 0, updated: 0, inserted: 0 },
-                    message: 'ط§ظ„ط¬ط¯ظˆظ„ ط§ظ„ظ…ط¤ظ‚طھ ظپط§ط±ط؛'
+                    message: 'الجدول المؤقت فارغ'
                 })
             };
         }
         const recordsToMerge = allTempRecords.map(r => ({
-            "ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨": r["ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨"],
-            "ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨": r["ظ†ظˆط¹ ط§ظ„ط·ظ„ط¨"],
-            "ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯": r["ظ†ظˆط¹ ط§ظ„ظ…ط³طھظ†ط¯"],
-            "ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨": r["ط³ط¨ط¨ ط§ظ„ط·ظ„ط¨"],
-            "طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…": r["طھط§ط±ظٹط® ط§ظ„طھظ‚ط¯ظٹظ…"],
-            "ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨": r["ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨"],
-            "ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„": r["ط§ظ„ط§ط³ظ… ط¨ط§ظ„ظƒط§ظ…ظ„"],
-            "ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„": r["ظˆط­ط¯ط© ط§ظ„طھط³ط¬ظٹظ„"],
-            "ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨": r["ظ…طµط¯ط± ط§ظ„ط·ظ„ط¨"],
-            "ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„": r["ظ…ظڈطµط¯ط± ط§ظ„طھط³ط¬ظٹظ„"]
+            "رقم الطلب": r["رقم الطلب"],
+            "نوع الطلب": r["نوع الطلب"],
+            "نوع المستند": r["نوع المستند"],
+            "سبب الطلب": r["سبب الطلب"],
+            "تاريخ التقديم": r["تاريخ التقديم"],
+            "حالة الطلب": r["حالة الطلب"],
+            "الاسم بالكامل": r["الاسم بالكامل"],
+            "وحدة التسجيل": r["وحدة التسجيل"],
+            "مصدر الطلب": r["مصدر الطلب"],
+            "مُصدر التسجيل": r["مُصدر التسجيل"]
         }));
-        const sampleNumbers = recordsToMerge.slice(0, 1000).map(r => r["ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨"]);
+        const sampleNumbers = recordsToMerge.slice(0, 1000).map(r => r["رقم الطلب"]);
         const { data: existingSample } = await supabase
             .from('requests')
-            .select('"ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨", "ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨"')
-            .in('"ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨"', sampleNumbers);
+            .select('"رقم الطلب", "حالة الطلب"')
+            .in('"رقم الطلب"', sampleNumbers);
         
         const existingMap = new Map();
         if (existingSample) {
-            existingSample.forEach(r => existingMap.set(r["ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨"], r["ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨"]));
+            existingSample.forEach(r => existingMap.set(r["رقم الطلب"], r["حالة الطلب"]));
         }
         
         let updated = 0, inserted = 0;
         for (const record of recordsToMerge) {
-            if (existingMap.has(record["ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨"])) {
-                if (existingMap.get(record["ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨"]) !== record["ط­ط§ظ„ط© ط§ظ„ط·ظ„ط¨"]) updated++;
+            if (existingMap.has(record["رقم الطلب"])) {
+                if (existingMap.get(record["رقم الطلب"]) !== record["حالة الطلب"]) updated++;
             } else {
                 inserted++;
             }
@@ -108,12 +105,12 @@ exports.handler = async (event) => {
             const batchNum = Math.floor(i / MERGE_BATCH_SIZE) + 1;
             const totalBatches = Math.ceil(recordsToMerge.length / MERGE_BATCH_SIZE);
             
-            console.log(`ًں”„ ط¯ظ…ط¬ ط§ظ„ط¯ظپط¹ط© ${batchNum}/${totalBatches} (${batch.length} ط³ط¬ظ„)...`);
+            console.log(`🔄 دمج الدفعة ${batchNum}/${totalBatches} (${batch.length} سجل)...`);
             
             const { error: upsertError } = await supabase
                 .from('requests')
                 .upsert(batch, { 
-                    onConflict: '"ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨"', 
+                    onConflict: '"رقم الطلب"', 
                     ignoreDuplicates: false 
                 });
             
@@ -123,18 +120,18 @@ exports.handler = async (event) => {
             }
             
             merged += batch.length;
-            console.log(`âœ… طھظ… ط¯ظ…ط¬ ${merged}/${recordsToMerge.length} ط³ط¬ظ„`);
+            console.log(`✅ تم دمج ${merged}/${recordsToMerge.length} سجل`);
         }
         const { error: clearError } = await supabase
             .from('requests_duplicate')
             .delete()
-            .neq('"ط±ظ‚ظ… ط§ظ„ط·ظ„ط¨"', '');
+            .neq('"رقم الطلب"', '');
         
         if (clearError) {
             console.warn('Warning: Could not clear temp table:', clearError);
         }
         
-        console.log(`ًںژ‰ ط§ظƒطھظ…ظ„ ط§ظ„ط¯ظ…ط¬: ${updated} طھط­ط¯ظٹط«طŒ ${inserted} ط¥ط¶ط§ظپط© ط¬ط¯ظٹط¯ط©`);
+        console.log(`🎉 اكتمل الدمج: ${updated} تحديث، ${inserted} إضافة جديدة`);
         
         return {
             statusCode: 200,
@@ -146,7 +143,7 @@ exports.handler = async (event) => {
                     updated: updated,
                     inserted: inserted
                 },
-                message: `طھظ… ط¯ظ…ط¬ ${recordsToMerge.length} ط³ط¬ظ„ (${updated} طھط­ط¯ظٹط«طŒ ${inserted} ط¥ط¶ط§ظپط©)`
+                message: `تم دمج ${recordsToMerge.length} سجل (${updated} تحديث، ${inserted} إضافة)`
             })
         };
         
