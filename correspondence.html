@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <meta name="robots" content="noindex, nofollow">
+    <title>المراسلات - الطلبات الموقوفة</title>
+    <link rel="icon" type="image/png" href="images.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; font-size: 14px; transition: background 0.3s, color 0.3s; }
+        body.light-mode { background: #f0f2f5; color: #1a1a2e; }
+        body.dark-mode { background: #121212; color: #ecf0f1; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 14px 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 10px; }
+        body.light-mode .navbar { background: linear-gradient(135deg, #1a252f, #0f1420); color: white; }
+        body.dark-mode .navbar { background: linear-gradient(135deg, #1f242e, #12161c); color: white; }
+        .logo { display: flex; align-items: center; gap: 10px; }
+        .logo i { font-size: 26px; color: #3498db; }
+        .logo h3 { font-size: 17px; }
+        .logo p { font-size: 11px; opacity: 0.85; }
+        .user-info { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .user-badge { background: rgba(0,0,0,0.15); padding: 6px 12px; border-radius: 30px; font-size: 12px; }
+        body.dark-mode .user-badge { background: rgba(255,255,255,0.12); }
+        .btn { border: none; border-radius: 8px; padding: 9px 16px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 13px; display: inline-flex; align-items: center; gap: 7px; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-warning { background: #f39c12; color: #1a1a2e; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-outline { background: transparent; border: 1px solid #bbb; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 16px; }
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+        .tab-btn { padding: 10px 18px; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 7px; }
+        body.light-mode .tab-btn, body.light-mode .card, body.light-mode .modal-content, body.light-mode .msg { background: white; color: #1a1a2e; }
+        body.dark-mode .tab-btn, body.dark-mode .card, body.dark-mode .modal-content, body.dark-mode .msg { background: #1e1e1e; color: #ecf0f1; }
+        body.light-mode .tab-btn.active { background: #3498db; color: white; }
+        body.dark-mode .tab-btn.active { background: #3498db; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { border-radius: 14px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 16px; }
+        .tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+        .tools input[type=text] { flex: 1; min-width: 200px; padding: 10px 12px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; }
+        body.dark-mode .tools input[type=text] { background: #2a2a2a; border-color: #444; color: #ecf0f1; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 700; font-size: 13px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; font-size: 13px; }
+        body.dark-mode .form-group input, body.dark-mode .form-group textarea { background: #2a2a2a; border-color: #444; color: #ecf0f1; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { padding: 10px 8px; text-align: right; }
+        body.light-mode th { background: #f8f9fa; }
+        body.dark-mode th { background: #2a2a2a; }
+        td { padding: 10px 8px; border-bottom: 1px solid #eee; }
+        body.dark-mode td { border-color: #333; }
+        tr:hover { background: rgba(52,152,219,0.06); }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; color: #fff; }
+        .st-sent { background: #f39c12; }
+        .st-answered { background: #2980b9; }
+        .st-closed { background: #27ae60; }
+        .link-btn { background: none; border: none; color: #3498db; cursor: pointer; font-size: 12px; font-family: inherit; font-weight: 700; }
+        .no-data { text-align: center; padding: 30px; color: #888; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 16px; overflow: auto; }
+        .modal.show { display: flex; }
+        .modal-content { border-radius: 14px; padding: 20px; width: 100%; max-width: 720px; max-height: 92vh; overflow: auto; }
+        .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .msg { border-radius: 10px; padding: 12px; margin-bottom: 10px; border: 1px solid #ececec; }
+        body.dark-mode .msg { border-color: #333; }
+        .byline { font-size: 11px; color: #888; margin-bottom: 4px; }
+        .file-chip { display: inline-flex; align-items: center; gap: 6px; background: #eef; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin: 3px; cursor: pointer; text-decoration: none; color: #2563eb; }
+        body.dark-mode .file-chip { background: #333; }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+        .toast-holder { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 300; }
+        .toast { padding: 12px 22px; border-radius: 10px; color: white; margin-bottom: 8px; font-weight: 700; box-shadow: 0 3px 12px rgba(0,0,0,0.2); }
+        .toast.ok { background: #27ae60; }
+        .toast.err { background: #e74c3c; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-bottom: 14px; }
+        .info-grid div { padding: 8px 12px; border-radius: 8px; }
+        body.light-mode .info-grid div { background: #f8f9fa; }
+        body.dark-mode .info-grid div { background: #2a2a2a; }
+        .info-grid b { color: #3498db; }
+        @media print { .navbar, .tabs, .actions, .tools, .modal-head .btn { display: none !important; } .container { margin: 0; max-width: 100%; } .card { box-shadow: none; border: 1px solid #ccc; } }
+    </style>
+</head>
+<body class="light-mode">
+    <div class="navbar">
+        <div class="logo"><i class="fas fa-envelope-open-text"></i><div><h3>المراسلات</h3><p>الطلبات الموقوفة - الأحوال المدنية</p></div></div>
+        <div class="user-info">
+            <button class="btn" style="background:rgba(0,0,0,0.2);color:white;" onclick="toggleTheme()"><i class="fas fa-moon"></i> <span id="themeLabel">ليلي</span></button>
+            <div class="user-badge"><i class="fas fa-user"></i> <span id="adminName">مرحباً</span></div>
+            <div class="user-badge"><i class="fas fa-building"></i> <span id="adminBranch">-</span></div>
+            <div class="user-badge" id="centerBadge" style="display:none;background:#27ae60;color:#fff;"><i class="fas fa-server"></i> المركز</div>
+            <button class="btn btn-warning" onclick="goBack()"><i class="fas fa-arrow-right"></i> اللوحة</button>
+            <button class="btn btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+        </div>
+    </div>
+    <div id="toastHolder"></div>
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('inbox')"><i class="fas fa-inbox"></i> <span id="inboxLabel">المراسلات</span></button>
+            <button class="tab-btn" onclick="showTab('archive')"><i class="fas fa-archive"></i> الأرشيف</button>
+            <button class="tab-btn" id="createTabBtn" onclick="showTab('create')"><i class="fas fa-plus-circle"></i> إرسال طلب</button>
+        </div>
+        <div id="inbox" class="tab-content">
+        <div class="card">
+            <div class="tools">
+                <input type="text" id="searchInput" placeholder="بحث برقم الطلب / الرقم الوطني / الاسم" oninput="loadList()">
+                <button class="btn btn-outline" onclick="loadList()"><i class="fas fa-sync"></i> تحديث</button>
+            </div>
+            <table>
+                <thead><tr><th>رقم الطلب</th><th>الاسم</th><th>الفرع</th><th>سبب التوقيف</th><th>الحالة</th><th>التاريخ</th><th></th></tr></thead>
+                <tbody id="listBody"><tr><td colspan="7" class="no-data">جارٍ التحميل...</td></tr></tbody>
+            </table>
+            <div id="listEmpty" class="no-data" style="display:none;">لا توجد مراسلات</div>
+        </div>
+    </div>
+
+    <div id="archive" class="tab-content">
+        <div class="card">
+            <div class="tools"><input type="text" id="archiveSearchInput" placeholder="بحث في الأرشيف برقم الطلب / الاسم" oninput="loadArchived()"></div>
+            <table>
+                <thead><tr><th>رقم الطلب</th><th>الاسم</th><th>الفرع</th><th>الحالة</th><th>تاريخ الإغلاق</th><th></th></tr></thead>
+                <tbody id="archiveBody"></tbody>
+            </table>
+            <div id="archiveEmpty" class="no-data" style="display:none;">لا توجد مراسلات مغلقة</div>
+        </div>
+    </div>
+
+    <div id="create" class="tab-content">
+        <div class="card">
+            <h3>إرسال طلب موقوف</h3>
+            <div class="form-group"><label>رقم الطلب *</label><div style="display:flex;gap:8px;"><input type="text" id="fRequestNumber"><button class="btn btn-primary" onclick="lookupRequest()">تعبئة تلقائية</button></div></div>
+            <div class="form-row">
+                <div class="form-group"><label>الرقم الوطني</label><input type="text" id="fNational"></div>
+                <div class="form-group"><label>الاسم</label><input type="text" id="fName"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>الفرع *</label><input type="text" id="fBranch"></div>
+                <div class="form-group"><label>سبب التوقيف *</label><input type="text" id="fReason"></div>
+            </div>
+            <div class="actions">
+                <button class="btn btn-success" onclick="submitCreate()"><i class="fas fa-paper-plane"></i> إرسال</button>
+                <button class="btn btn-outline" onclick="clearCreateForm()">مسح</button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="modal" id="detailModal"><div class="modal-content">
+        <div class="modal-head"><h3 id="detailTitle"></h3><button class="btn btn-danger" onclick="closeDetail()">✕</button></div>
+        <div id="detailBody"></div>
+        <div class="actions" id="detailActions"></div>
+    </div></div>
+
+    <div class="modal" id="replyModal"><div class="modal-content">
+        <div class="modal-head"><h3>رد من الفرع</h3><button class="btn btn-danger" onclick="closeReply()">✕</button></div>
+        <div class="form-group"><label>ملفات (PDF/صورة) - حتى 4MB</label><input type="file" id="replyFiles" multiple accept="application/pdf,image/*"></div>
+        <div class="form-group"><label>نص اختياري</label><textarea id="replyText" rows="3"></textarea></div>
+        <div class="actions"><button class="btn btn-success" onclick="submitReply()">إرسال الرد</button><button class="btn btn-outline" onclick="closeReply()">إلغاء</button></div>
+    </div></div>
+
+    <div class="modal" id="followModal"><div class="modal-content">
+        <div class="modal-head"><h3>متابعة من المركز</h3><button class="btn btn-danger" onclick="closeFollow()">✕</button></div>
+        <div class="form-group"><label>نص المتابعة *</label><textarea id="followText" rows="3"></textarea></div>
+        <div class="actions"><button class="btn btn-primary" onclick="submitFollow()">إرسال المتابعة</button><button class="btn btn-outline" onclick="closeFollow()">إلغاء</button></div>
+    </div></div>
+
+    <script src="correspondence.js"></script>
+</body>
+</html>
