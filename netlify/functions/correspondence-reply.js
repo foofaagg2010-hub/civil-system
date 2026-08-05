@@ -38,10 +38,10 @@ exports.handler = async (event) => {
 
         const { data: user } = await supabase
             .from('users')
-            .select('id, username, branch_name, is_reserve_center')
+            .select('id, username, branch_name, is_reserve_center, can_correspondence')
             .eq('id', session.user_id)
             .single();
-        if (!user || user.is_reserve_center) {
+        if (!user || user.is_reserve_center || !user.can_correspondence) {
             return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بالرد من الفرع' }) };
         }
 
@@ -120,10 +120,13 @@ exports.handler = async (event) => {
             .update({ status: 'answered' })
             .eq('id', correspondenceId);
 
-        await supabase.from('logs').insert({
+        await supabase.from('admin_logs').insert({
             user_id: user.id,
+            username: user.username,
+            category: 'correspondence',
             action: 'رد على طلب موقوف',
-            details: `رد الفرع على الطلب الموقوف رقم: ${correspondenceId} - عدد الملفات: ${files.length}`
+            details: `رد الفرع على الطلب الموقوف رقم: ${correspondenceId} - عدد الملفات: ${files.length}`,
+            created_at: new Date().toISOString()
         });
 
         return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };

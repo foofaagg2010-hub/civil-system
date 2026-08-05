@@ -101,6 +101,7 @@
             <button class="tab-btn active" onclick="showTab('inbox')"><i class="fas fa-inbox"></i> <span id="inboxLabel">المراسلات</span></button>
             <button class="tab-btn" onclick="showTab('archive')"><i class="fas fa-archive"></i> الأرشيف</button>
             <button class="tab-btn" id="createTabBtn" onclick="showTab('create')"><i class="fas fa-plus-circle"></i> إرسال طلب</button>
+            <button class="tab-btn" id="reportTabBtn" onclick="showTab('report')"><i class="fas fa-chart-bar"></i> التقارير</button>
         </div>
         <div id="inbox" class="tab-content">
         <div class="card">
@@ -143,6 +144,26 @@
                 <button class="btn btn-success" onclick="submitCreate()"><i class="fas fa-paper-plane"></i> إرسال</button>
                 <button class="btn btn-outline" onclick="clearCreateForm()">مسح</button>
             </div>
+        </div>
+    </div>
+    <div id="report" class="tab-content">
+        <div class="card">
+            <h3>تقرير الطلبات الموقوفة</h3>
+            <div class="tools">
+                <input type="date" id="repFrom"> <span>إلى</span> <input type="date" id="repTo">
+                <select id="repStatus" style="flex:1;min-width:150px;padding:10px;border-radius:8px;border:1px solid #ccc;font-family:inherit;">
+                    <option value="all">كل الطلبات</option>
+                    <option value="sent">المرسلة للفروع (قيد المتابعة)</option>
+                    <option value="closed">الطلبات المغلقة</option>
+                </select>
+                <button class="btn btn-primary" onclick="loadReport()"><i class="fas fa-chart-bar"></i> توليد التقرير</button>
+                <button class="btn btn-warning" onclick="printReport()"><i class="fas fa-print"></i> طباعة</button>
+            </div>
+            <div id="reportEmpty" class="no-data" style="display:none;">اختر التاريخ واضغط توليد التقرير</div>
+            <table id="reportTableWrap">
+                <thead><tr><th>رقم الطلب</th><th>الرقم الوطني</th><th>الاسم</th><th>الفرع</th><th>سبب التوقيف</th><th>الحالة</th></tr></thead>
+                <tbody id="reportBody"></tbody>
+            </table>
         </div>
     </div>
     </div>

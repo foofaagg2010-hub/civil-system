@@ -51,6 +51,7 @@ function showTab(id) {
     });
     if (id === 'inbox') loadList();
     else if (id === 'archive') loadArchived();
+    else if (id === 'report') loadReport();
 }
 function goBack() { window.location.href = 'admin-panel.html'; }
 function logout() {
@@ -89,6 +90,7 @@ async function loadList() {
         isCenter = !!S.is_reserve_center;
         document.getElementById('centerBadge').style.display = isCenter ? 'inline-block' : 'none';
         document.getElementById('createTabBtn').style.display = isCenter ? 'inline-block' : 'none';
+        document.getElementById('reportTabBtn').style.display = isCenter ? 'inline-block' : 'none';
         document.getElementById('inboxLabel').textContent = isCenter ? 'قيد المتابعة' : 'طلبات للرد';
         document.getElementById('adminBranch').textContent = S.branch_name || '';
         document.getElementById('adminName').textContent = sessionStorage.getItem('admin_username') || 'مرحباً';
@@ -283,3 +285,35 @@ function checkAuth() {
     loadList();
 }
 window.addEventListener('DOMContentLoaded', checkAuth);
+
+// ===== التقارير (للمركز فقط) =====
+async function loadReport() {
+    const from = document.getElementById('repFrom').value;
+    const to = document.getElementById('repTo').value;
+    const status = document.getElementById('repStatus').value;
+    if (!from && !to) { document.getElementById('reportEmpty').style.display = 'block'; return; }
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    params.set('status', status);
+    const d = await api('correspondence-report?' + params.toString());
+    const records = d.records || [];
+    document.getElementById('reportBody').innerHTML = records.map(r => {
+        const st = STATUS_MAP[r.status] || r.status;
+        const sc = STATUS_CLASS[r.status] || '';
+        return '<tr><td><b>' + esc(r['رقم الطلب']) + '</b></td><td>' + esc(r['الرقم الوطني']) + '</td><td>' + esc(r['الاسم']) + '</td><td>' + esc(r['الفرع']) + '</td><td>' + esc(r['سبب التوقيف']) + '</td><td><span class="badge ' + sc + '">' + esc(st) + '</span></td></tr>';
+    }).join('');
+    document.getElementById('reportEmpty').style.display = 'none';
+}
+function printReport() {
+    const from = document.getElementById('repFrom').value;
+    const to = document.getElementById('repTo').value;
+    const status = document.getElementById('repStatus').value;
+    const statusLabel = { all: 'كل الطلبات', sent: 'المرسلة للفروع (قيد المتابعة)', closed: 'الطلبات المغلقة' }[status] || '';
+    const rows = document.getElementById('reportBody').innerHTML;
+    const head = '<tr><th>رقم الطلب</th><th>الرقم الوطني</th><th>الاسم</th><th>الفرع</th><th>سبب التوقيف</th><th>الحالة</th></tr>';
+    const w = window.open('', '_blank');
+    w.document.write('<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>تقرير الطلبات الموقوفة</title><style>body{font-family:tahoma,arial;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:8px;font-size:13px}th{background:#eee}h2{margin-bottom:4px}.meta{color:#555;margin-bottom:14px}</style></head><body><h2>تقرير الطلبات الموقوفة</h2><div class="meta">الفترة: ' + (from || 'بداية') + ' إلى ' + (to || 'اليوم') + ' | النوع: ' + status + ' | التاريخ: ' + new Date().toLocaleDateString('ar-EG') + '</div><table>' + head + rows + '</table></body></html>');
+    w.document.close();
+    setTimeout(() => { w.print(); }, 300);
+}

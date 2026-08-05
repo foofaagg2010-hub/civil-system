@@ -36,49 +36,37 @@ exports.handler = async (event) => {
 
         const { data: user } = await supabase
             .from('users')
-            .select('id, can_correspondence')
+            .select('id, is_reserve_center, can_correspondence')
             .eq('id', session.user_id)
             .single();
-        if (!user || !user.can_correspondence) {
-            return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بالتعبيئة التلقائية' }) };
+        if (!user || !user.is_reserve_center || !user.can_correspondence) {
+            return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بإنشاء التقارير' }) };
         }
 
-        const requestNumber = (event.queryStringParameters?.request_number || '').trim();
-        if (!requestNumber || !/^[0-9]+$/.test(requestNumber) || requestNumber.length > 30) {
-            return { statusCode: 400, headers, body: JSON.stringify({ error: 'رقم الطلب غير صحيح' }) };
+        const from = (event.queryStringParameters?.from || '').replace(/[^0-9-]/g, '').slice(0, 10);
+        const to = (event.queryStringParameters?.to || '').replace(/[^0-9-]/g, '').slice(0, 10);
+        const statusFilter = (event.queryStringParameters?.status || 'all').slice(0, 20);
+
+        let query = supabase
+            .from('stopped_requests')
+            .select('id, "رقم الطلب", "الرقم الوطني", "الاسم", "الفرع", "سبب التوقيف", status, created_at, closed_at');
+
+        if (from) query = query.gte('created_at', from + 'T00:00:00');
+        if (to) query = query.lte('created_at', to + 'T23:59:59');
+
+        if (statusFilter === 'closed') query = query.eq('status', 'closed');
+        else if (statusFilter === 'sent') query = query.in('status', ['sent', 'answered']);
+
+        const { data, error } = await query.order('created_at', { ascending: false }).limit(2000);
+        if (error) {
+            console.error('correspondence-report error:', error);
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في جلب بيانات التقرير' }) };
         }
 
-        const { data: reqs, error: reqError } = await supabase
-            .from('requests')
-            .select('"رقم الطلب", "الرقم الوطني", "الاسم بالكامل", "وحدة التسجيل", "نوع الطلب", "تاريخ التقديم"')
-            .eq('رقم الطلب', requestNumber)
-            .limit(1);
-        if (reqError) {
-            console.error('correspondence-lookup error:', reqError);
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في جلب بيانات الطلب' }) };
-        }
-
-        if (!reqs || reqs.length === 0) {
-            return { statusCode: 200, headers, body: JSON.stringify({ found: false }) };
-        }
-
-        const r = reqs[0];
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({
-                found: true,
-                request_number: r['رقم الطلب'],
-                national_number: r['الرقم الوطني'] || '',
-                full_name: r['الاسم بالكامل'] || '',
-                branch: r['وحدة التسجيل'] || '',
-                request_type: r['نوع الطلب'] || '',
-                request_date: r['تاريخ التقديم'] || ''
-            })
-        };
+        return { statusCode: 200, headers, body: JSON.stringify({ records: data || [] }) };
 
     } catch (error) {
-        console.error('correspondence-lookup error:', error);
+        console.error('correspondence-report error:', error);
         return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ داخلي في النظام' }) };
     }
 };

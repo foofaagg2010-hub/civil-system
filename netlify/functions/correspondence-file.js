@@ -39,10 +39,10 @@ exports.handler = async (event) => {
 
         const { data: user } = await supabase
             .from('users')
-            .select('id, branch_name, is_reserve_center')
+            .select('id, branch_name, is_reserve_center, can_correspondence')
             .eq('id', session.user_id)
             .single();
-        if (!user) return { statusCode: 401, headers, body: JSON.stringify({ error: 'Invalid session' }) };
+        if (!user || !user.can_correspondence) return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بمشاهدة الملفات' }) };
 
         const fileId = parseInt(event.queryStringParameters?.fileId, 10);
         if (!fileId) return { statusCode: 400, headers, body: JSON.stringify({ error: 'معرف الملف مطلوب' }) };

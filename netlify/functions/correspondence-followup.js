@@ -36,10 +36,10 @@ exports.handler = async (event) => {
 
         const { data: user } = await supabase
             .from('users')
-            .select('id, username, is_reserve_center')
+            .select('id, username, is_reserve_center, can_correspondence')
             .eq('id', session.user_id)
             .single();
-        if (!user || !user.is_reserve_center) {
+        if (!user || !user.is_reserve_center || !user.can_correspondence) {
             return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك' }) };
         }
 
@@ -88,10 +88,13 @@ exports.handler = async (event) => {
             .update({ status: 'sent' })
             .eq('id', correspondenceId);
 
-        await supabase.from('logs').insert({
+        await supabase.from('admin_logs').insert({
             user_id: user.id,
+            username: user.username,
+            category: 'correspondence',
             action: 'متابعة طلب موقوف',
-            details: `متابعة من المركز للمراسلة رقم: ${correspondenceId}`
+            details: `متابعة من المركز للمراسلة رقم: ${correspondenceId}`,
+            created_at: new Date().toISOString()
         });
 
         return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };

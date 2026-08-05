@@ -36,10 +36,10 @@ exports.handler = async (event) => {
 
         const { data: user } = await supabase
             .from('users')
-            .select('id, username, branch_name, is_reserve_center')
+            .select('id, username, branch_name, is_reserve_center, can_correspondence')
             .eq('id', session.user_id)
             .single();
-        if (!user) return { statusCode: 401, headers, body: JSON.stringify({ error: 'Invalid session' }) };
+        if (!user || !user.can_correspondence) return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بمشاهدة المراسلات' }) };
 
         const id = parseInt(event.queryStringParameters?.id, 10);
         if (!id) return { statusCode: 400, headers, body: JSON.stringify({ error: 'معرف المراسلة مطلوب' }) };

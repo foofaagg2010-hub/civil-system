@@ -714,7 +714,7 @@
             <div class="user-badge user-role-badge"><i class="fas fa-tag"></i> <span id="adminRole">-</span></div>
             <div class="user-badge"><i class="fas fa-building"></i> <span id="adminBranch">-</span></div>
             <button class="btn btn-warning btn-sm" onclick="openPasswordModal()" style="background:#f39c12;color:#1a1a2e;border:none;padding:8px 16px;border-radius:40px;cursor:pointer;font-weight:bold;font-size:13px;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-key"></i> تغيير كلمة المرور</button>
-            <button class="logout-btn" onclick="window.location.href='correspondence.html'" style="background:#2980b9;"><i class="fas fa-envelope"></i> المراسلات</button>
+            <button class="logout-btn" id="correspondenceBtn" onclick="window.location.href='correspondence.html'" style="background:#2980b9;display:none;"><i class="fas fa-envelope"></i> المراسلات</button>
             <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
         </div>
     </div>
@@ -866,12 +866,13 @@
                             <th>رقم المدير</th>
                             <th>رقم الفني</th>
                             <th>واتساب</th>
+                            <th>المراسلات</th>
                             <th>الحالة</th>
                             <th>إجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
-                        <tr><td colspan="8" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>
+                        <tr><td colspan="9" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -886,6 +887,9 @@
                 </button>
                 <button class="btn" onclick="showLogType('login_attempts')" id="logTypeLogin" style="background:#95a5a6;color:white;">
                     <i class="fas fa-sign-in-alt"></i> محاولات الدخول
+                </button>
+                <button class="btn" onclick="showLogType('correspondence')" id="logTypeCorrespondence" style="background:#16a085;color:white;">
+                    <i class="fas fa-envelope"></i> سجل المراسلات
                 </button>
             </div>
 
@@ -981,6 +985,8 @@
             <div class="checkbox-group"><input type="checkbox" id="userCanEdit"> <label>صلاحية التعديل</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userCanViewLogs"> <label>صلاحية مشاهدة السجل</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userCanViewUsers"> <label>صلاحية إدارة المستخدمين</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="userCanCorrespondence"> <label>صلاحية المراسلات</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="userIsReserveCenter"> <label>حساب المركز الاحتياطي</label></div>
             <div style="display:flex;gap:12px;margin-top:20px;"><button class="btn btn-success" onclick="saveUser()">حفظ</button><button class="btn btn-danger" onclick="closeUserModal()">إلغاء</button></div>
         </div>
     </div>
@@ -1003,7 +1009,7 @@
     <script>
 
         const API_URL = '/.netlify/functions';
-        let currentUserId = null, currentUserBranch = null, currentUserRole = null, currentUserCanEdit = false, currentUserCanViewUsers = false, currentUserCanViewLogs = false;
+        let currentUserId = null, currentUserBranch = null, currentUserRole = null, currentUserCanEdit = false, currentUserCanViewUsers = false, currentUserCanViewLogs = false, currentUserCanCorrespondence = false;
         let currentEditUserId = null, currentPage = 1, totalRecords = 0, isLoading = false, currentStatusFilter = null, isSearchMode = false;
         let currentRequests = [], globalSearchResults = [];
         let allNotifications = [];
@@ -1174,6 +1180,7 @@
             document.getElementById('usersTab').style.display = currentUserCanViewUsers ? 'inline-flex' : 'none';
             document.getElementById('uploadTab').style.display = currentUserCanEdit ? 'inline-flex' : 'none';
             document.getElementById('logsTab').style.display = currentUserCanViewLogs ? 'inline-flex' : 'none';
+            document.getElementById('correspondenceBtn').style.display = currentUserCanCorrespondence ? 'inline-flex' : 'none';
 
             const notifTab = document.getElementById('notificationsTab');
             if (currentUserCanEdit) {
@@ -1249,6 +1256,7 @@
                     currentUserCanEdit = true;
                     currentUserCanViewUsers = true;
                     currentUserCanViewLogs = true;
+                    currentUserCanCorrespondence = false;
 
                     document.getElementById('adminName').innerText = savedUsername;
                     document.getElementById('adminBranch').innerText = currentUserBranch;
@@ -1268,6 +1276,7 @@
                             currentUserCanEdit = data.can_edit === true;
                             currentUserCanViewUsers = data.can_view_users === true;
                             currentUserCanViewLogs = data.can_view_logs === true;
+                            currentUserCanCorrespondence = data.can_correspondence === true;
                             applyPermissions();
                         }
                     } catch (err) {
@@ -1298,6 +1307,7 @@
                 currentUserCanEdit = data.can_edit === true;
                 currentUserCanViewUsers = data.can_view_users === true;
                 currentUserCanViewLogs = data.can_view_logs === true;
+                currentUserCanCorrespondence = data.can_correspondence === true;
 
                 sessionStorage.setItem('admin_branch', currentUserBranch);
                 sessionStorage.setItem('admin_username', data.username);
@@ -1879,6 +1889,8 @@
             currentLogType = type;
             document.getElementById('logTypeAdmin').style.background = type === 'admin_logs' ? '#3498db' : '#95a5a6';
             document.getElementById('logTypeLogin').style.background = type === 'login_attempts' ? '#e67e22' : '#95a5a6';
+            const corrBtn = document.getElementById('logTypeCorrespondence');
+            if (corrBtn) corrBtn.style.background = type === 'correspondence' ? '#16a085' : '#95a5a6';
             loadLogs();
         }
 
@@ -1894,6 +1906,10 @@
             try {
                 if (currentLogType === 'login_attempts') {
                     await loadLoginAttempts(token);
+                    return;
+                }
+                if (currentLogType === 'correspondence') {
+                    await loadCorrespondenceLogs(token);
                     return;
                 }
 
@@ -1997,6 +2013,46 @@
             }
         }
 
+        async function loadCorrespondenceLogs(token) {
+            const tbody = document.getElementById('logsTableBody');
+            const thead = document.getElementById('logsTableHead');
+            thead.innerHTML = `
+                <tr>
+                    <th>المستخدم</th>
+                    <th>الإجراء</th>
+                    <th>التفاصيل</th>
+                    <th>التاريخ</th>
+                </tr>
+            `;
+            try {
+                const res = await fetch(`${API_URL}/correspondence-logs`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Failed to load correspondence logs');
+                }
+                const logs = await res.json();
+                const items = logs.logs || logs;
+                if (items && items.length > 0) {
+                    tbody.innerHTML = items.map(l => `
+                        <tr>
+                            <td><strong>${escapeHtml(l.username || 'غير معروف')}</strong></td>
+                            <td>${escapeHtml(l.action || '')}</td>
+                            <td style="font-size:12px;">${escapeHtml(l.details || '')}</td>
+                            <td dir="ltr" style="text-align:left;">${formatDateTime(l.created_at)}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#888;">📭 لا توجد حركة مراسلات بعد</td></tr>';
+                }
+            } catch(err) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">خطأ: ${err.message}</td></tr>`;
+            }
+        }
+
         function getActionColor(action) {
             const colors = {
                 'تسجيل الدخول': '#27ae60',
@@ -2040,21 +2096,22 @@
 
                 const tbody = document.getElementById('usersTableBody');
                 if (!users || users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888;">لا يوجد مستخدمين</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#888;">لا يوجد مستخدمين</td></tr>';
                     return;
                 }
 
                 tbody.innerHTML = users.map(u => `
                     <tr>
-                        <td><strong>${escapeHtml(u.username)}</strong></td>
+                        <td><strong>${escapeHtml(u.username)}</strong>${u.is_reserve_center === true ? ' <span class="status-badge status-active" style="font-size:11px;">مركز</span>' : ''}</td>
                         <td>${escapeHtml(u.branch_name || '-----')}</td>
                         <td><span class="role-badge">${getRoleName(u.role)}</span></td>
                         <td>${escapeHtml(u.admin_phone || '-----')}</td>
                         <td>${escapeHtml(u.tech_phone || '-----')}</td>
                         <td>${escapeHtml(u.whatsapp_number || '-----')}</td>
+                        <td>${u.can_correspondence === true ? '<span class="status-badge status-active">نعم</span>' : '<span class="status-badge status-inactive">لا</span>'}</td>
                         <td><span class="status-badge ${u.is_active !== false ? 'status-active' : 'status-inactive'}">${u.is_active !== false ? 'نشط' : 'غير نشط'}</span></td>
                         <td>
-                            <button class="btn btn-warning btn-sm" onclick="editUser(${u.id}, '${escapeHtml(u.username)}', '${escapeHtml(u.branch_name)}', '${escapeHtml(u.role)}', ${u.is_active !== false}, ${u.can_edit === true}, ${u.can_view_logs === true}, ${u.can_view_users === true}, '${escapeHtml(u.admin_phone || '')}', '${escapeHtml(u.tech_phone || '')}', '${escapeHtml(u.whatsapp_number || '')}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-warning btn-sm" onclick="editUser(${u.id}, '${escapeHtml(u.username)}', '${escapeHtml(u.branch_name)}', '${escapeHtml(u.role)}', ${u.is_active !== false}, ${u.can_edit === true}, ${u.can_view_logs === true}, ${u.can_view_users === true}, '${escapeHtml(u.admin_phone || '')}', '${escapeHtml(u.tech_phone || '')}', '${escapeHtml(u.whatsapp_number || '')}', ${u.can_correspondence === true}, ${u.is_reserve_center === true})"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
@@ -2082,9 +2139,11 @@
             document.getElementById('userCanEdit').checked = false;
             document.getElementById('userCanViewLogs').checked = false;
             document.getElementById('userCanViewUsers').checked = false;
+            document.getElementById('userCanCorrespondence').checked = false;
+            document.getElementById('userIsReserveCenter').checked = false;
         }
 
-        function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp) {
+        function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp, canCorrespondence, isReserveCenter) {
             currentEditUserId = id;
             document.getElementById('userModalTitle').innerText = 'تعديل مستخدم';
             document.getElementById('userUsername').value = username;
@@ -2097,6 +2156,8 @@
             document.getElementById('userCanEdit').checked = canEdit === true;
             document.getElementById('userCanViewLogs').checked = canViewLogs === true;
             document.getElementById('userCanViewUsers').checked = canViewUsers === true;
+            document.getElementById('userCanCorrespondence').checked = canCorrespondence === true;
+            document.getElementById('userIsReserveCenter').checked = isReserveCenter === true;
             document.getElementById('userModal').style.display = 'flex';
         }
 
@@ -2116,6 +2177,8 @@
             const canEdit = document.getElementById('userCanEdit').checked;
             const canViewLogs = document.getElementById('userCanViewLogs').checked;
             const canViewUsers = document.getElementById('userCanViewUsers').checked;
+            const canCorrespondence = document.getElementById('userCanCorrespondence').checked;
+            const isReserveCenter = document.getElementById('userIsReserveCenter').checked;
 
             if (!username) { alert('يرجى إدخال اسم المستخدم'); return; }
             if (!currentEditUserId && !password) { alert('يرجى إدخال كلمة المرور للمستخدم الجديد'); return; }
@@ -2140,7 +2203,9 @@
                         is_active: true,
                         can_edit: canEdit,
                         can_view_logs: canViewLogs,
-                        can_view_users: canViewUsers
+                        can_view_users: canViewUsers,
+                        can_correspondence: canCorrespondence,
+                        is_reserve_center: isReserveCenter
                     })
                 });
                 alert('تم الحفظ بنجاح');

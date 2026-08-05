@@ -60,6 +60,7 @@ exports.handler = async (event) => {
         let query = supabase
             .from('admin_logs')
             .select('*')
+            .neq('category', 'correspondence')
             .order('created_at', { ascending: false })
             .limit(500);
         
@@ -67,6 +68,7 @@ exports.handler = async (event) => {
             query = supabase
                 .from('admin_logs')
                 .select('*')
+                .neq('category', 'correspondence')
                 .or(`username.ilike.%${searchQuery}%,action.ilike.%${searchQuery}%,details.ilike.%${searchQuery}%`)
                 .order('created_at', { ascending: false })
                 .limit(500);

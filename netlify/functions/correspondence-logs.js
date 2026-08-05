@@ -36,49 +36,30 @@ exports.handler = async (event) => {
 
         const { data: user } = await supabase
             .from('users')
-            .select('id, can_correspondence')
+            .select('role, can_view_logs')
             .eq('id', session.user_id)
             .single();
-        if (!user || !user.can_correspondence) {
-            return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بالتعبيئة التلقائية' }) };
+        if (!user || (user.role !== 'admin' && !user.can_view_logs)) {
+            return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بمشاهدة سجل المراسلات' }) };
         }
 
-        const requestNumber = (event.queryStringParameters?.request_number || '').trim();
-        if (!requestNumber || !/^[0-9]+$/.test(requestNumber) || requestNumber.length > 30) {
-            return { statusCode: 400, headers, body: JSON.stringify({ error: 'رقم الطلب غير صحيح' }) };
+        let query = supabase
+            .from('admin_logs')
+            .select('*')
+            .eq('category', 'correspondence')
+            .order('created_at', { ascending: false })
+            .limit(500);
+
+        const { data, error } = await query;
+        if (error) {
+            console.error('correspondence-logs error:', error);
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في جلب سجل المراسلات' }) };
         }
 
-        const { data: reqs, error: reqError } = await supabase
-            .from('requests')
-            .select('"رقم الطلب", "الرقم الوطني", "الاسم بالكامل", "وحدة التسجيل", "نوع الطلب", "تاريخ التقديم"')
-            .eq('رقم الطلب', requestNumber)
-            .limit(1);
-        if (reqError) {
-            console.error('correspondence-lookup error:', reqError);
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في جلب بيانات الطلب' }) };
-        }
-
-        if (!reqs || reqs.length === 0) {
-            return { statusCode: 200, headers, body: JSON.stringify({ found: false }) };
-        }
-
-        const r = reqs[0];
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({
-                found: true,
-                request_number: r['رقم الطلب'],
-                national_number: r['الرقم الوطني'] || '',
-                full_name: r['الاسم بالكامل'] || '',
-                branch: r['وحدة التسجيل'] || '',
-                request_type: r['نوع الطلب'] || '',
-                request_date: r['تاريخ التقديم'] || ''
-            })
-        };
+        return { statusCode: 200, headers, body: JSON.stringify(data || []) };
 
     } catch (error) {
-        console.error('correspondence-lookup error:', error);
+        console.error('correspondence-logs error:', error);
         return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ داخلي في النظام' }) };
     }
 };

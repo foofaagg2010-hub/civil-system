@@ -36,10 +36,10 @@ exports.handler = async (event) => {
 
         const { data: user } = await supabase
             .from('users')
-            .select('id, username, is_reserve_center')
+            .select('id, username, is_reserve_center, can_correspondence')
             .eq('id', session.user_id)
             .single();
-        if (!user || !user.is_reserve_center) {
+        if (!user || !user.is_reserve_center || !user.can_correspondence) {
             return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بتأكيد الطلبات' }) };
         }
 
@@ -80,10 +80,13 @@ exports.handler = async (event) => {
             return { statusCode: 500, headers, body: JSON.stringify({ error: 'فشل تأكيد المراسلة' }) };
         }
 
-        await supabase.from('logs').insert({
+        await supabase.from('admin_logs').insert({
             user_id: user.id,
+            username: user.username,
+            category: 'correspondence',
             action: 'تأكيد وإغلاق طلب موقوف',
-            details: `تم تأكيد وإغلاق المراسلة رقم: ${correspondenceId}`
+            details: `تم تأكيد وإغلاق المراسلة رقم: ${correspondenceId}`,
+            created_at: new Date().toISOString()
         });
 
         return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
