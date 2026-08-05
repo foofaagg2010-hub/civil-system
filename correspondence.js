@@ -211,13 +211,8 @@ function closeDetail() { document.getElementById('detailModal').classList.remove
 
 async function viewFile(id) {
     const d = await api('correspondence-file?fileId=' + id);
-    if (d.ok && d.data) {
-        const bytes = atob(d.data);
-        const arr = new Uint8Array(bytes.length);
-        for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
-        const blob = new Blob([arr], { type: d.mime_type || 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
+    if (d.ok && d.url) {
+        window.open(d.url, '_blank');
     } else {
         toast('تعذر عرض الملف', false);
     }

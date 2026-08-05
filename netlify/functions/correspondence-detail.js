@@ -71,7 +71,7 @@ exports.handler = async (event) => {
         if (messageIds.length > 0) {
             const { data: fileData, error: fileError } = await supabase
                 .from('stopped_files')
-                .select('id, message_id, filename, mime_type, file_size')
+                .select('id, message_id, filename, mime_type, file_size, storage_path')
                 .in('message_id', messageIds)
                 .order('uploaded_at', { ascending: true });
             if (fileError) {

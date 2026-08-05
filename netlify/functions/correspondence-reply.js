@@ -99,18 +99,31 @@ exports.handler = async (event) => {
             return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في حفظ الرسالة' }) };
         }
 
-        for (const f of files) {
+        const BUCKET = process.env.CORRESPONDENCE_BUCKET || 'correspondence-files';
+        for (let i = 0; i < files.length; i++) {
+            const f = files[i];
             const name = String(f.name || '').trim().slice(0, 255);
             const base64 = String(f.data || '');
             if (!name || !base64) continue;
             const mime = String(f.mime || 'application/octet-stream').slice(0, 100);
             const buffer = Buffer.from(base64, 'base64');
+            const safeName = (name.replace(/[^a-zA-Z0-9._-]/g, '_') || 'file').slice(0, 100);
+            const path = `${correspondenceId}/${insertedMsg[0].id}/${Date.now()}_${i}_${safeName}`;
+
+            const { error: upErr } = await supabase.storage
+                .from(BUCKET)
+                .upload(path, buffer, { contentType: mime, upsert: false });
+            if (upErr) {
+                console.error('Storage upload error:', upErr);
+                return { statusCode: 500, headers, body: JSON.stringify({ error: 'فشل رفع الملف إلى مساحة التخزين' }) };
+            }
+
             const { error: fileErr } = await supabase.from('stopped_files').insert({
                 message_id: insertedMsg[0].id,
                 filename: name,
                 mime_type: mime,
                 file_size: buffer.length,
-                data: buffer,
+                storage_path: path,
                 uploaded_at: new Date().toISOString()
             });
             if (fileErr) console.error('File insert error:', fileErr);

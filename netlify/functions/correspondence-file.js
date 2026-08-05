@@ -49,7 +49,7 @@ exports.handler = async (event) => {
 
         const { data: file, error: fileError } = await supabase
             .from('stopped_files')
-            .select('id, filename, mime_type, file_size, data, message_id')
+            .select('id, filename, mime_type, file_size, storage_path, message_id')
             .eq('id', fileId)
             .single();
         if (fileError || !file) {
@@ -77,13 +77,16 @@ exports.handler = async (event) => {
             return { statusCode: 403, headers, body: JSON.stringify({ error: 'لا يمكنك الاطلاع على هذا الملف' }) };
         }
 
-        const raw = file.data;
-        if (!raw) {
-            return { statusCode: 404, headers, body: JSON.stringify({ error: 'الملف لا يحتوي على بيانات' }) };
+        const BUCKET = process.env.CORRESPONDENCE_BUCKET || 'correspondence-files';
+        if (!file.storage_path) {
+            return { statusCode: 404, headers, body: JSON.stringify({ error: 'الملف غير متاح في مساحة التخزين' }) };
         }
-        let base64 = raw;
-        if (typeof raw === 'string' && raw.startsWith('\\x')) {
-            base64 = Buffer.from(raw.slice(2), 'hex').toString('base64');
+        const { data: signed, error: signedErr } = await supabase.storage
+            .from(BUCKET)
+            .createSignedUrl(file.storage_path, 3600);
+        if (signedErr || !signed || !signed.signedUrl) {
+            console.error('Signed URL error:', signedErr);
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في تجهيز رابط الملف' }) };
         }
 
         return {
@@ -94,7 +97,7 @@ exports.handler = async (event) => {
                 filename: file.filename,
                 mime_type: file.mime_type,
                 file_size: file.file_size,
-                data: base64
+                url: signed.signedUrl
             })
         };
 
