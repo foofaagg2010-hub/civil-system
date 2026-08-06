@@ -1,6 +1,19 @@
 // صفحة المراسلات - الطلبات الموقوفة
 const API_URL = '/.netlify/functions';
 let isCenter = false, currentId = null, selectedFiles = [];
+let confirmResolveFn = null;
+
+function showConfirm(msg) {
+    return new Promise((resolve) => {
+        confirmResolveFn = resolve;
+        document.getElementById('confirmMsg').textContent = msg;
+        document.getElementById('confirmModal').classList.add('show');
+    });
+}
+function confirmResolve(val) {
+    document.getElementById('confirmModal').classList.remove('show');
+    if (confirmResolveFn) { confirmResolveFn(val); confirmResolveFn = null; }
+}
 
 const STATUS_MAP = { sent: 'بانتظار رد الفرع', answered: 'بانتظار تأكيد المركز', closed: 'مغلق' };
 const STATUS_CLASS = { sent: 'st-sent', answered: 'st-answered', closed: 'st-closed' };
@@ -163,7 +176,7 @@ async function submitCreate() {
     if (!rn) { toast('رقم الطلب مطلوب', false); return; }
     if (!branch) { toast('الفرع مطلوب', false); return; }
     if (!reason) { toast('سبب التوقيف مطلوب', false); return; }
-    if (!confirm('هل أنت متأكد من إرسال الطلب الموقوف رقم ' + rn + ' إلى الفرع ' + branch + '؟')) return;
+    if (!(await showConfirm('هل أنت متأكد من إرسال الطلب الموقوف رقم ' + rn + ' إلى الفرع ' + branch + '؟'))) return;
     const body = {
         request_number: rn,
         national_number: document.getElementById('fNational').value.trim(),
@@ -218,7 +231,7 @@ async function openDetail(id) {
         (m.message_text ? '<div>' + esc(m.message_text) + '</div>' : '<div style="color:#888;">بدون نص</div>') + '</div>'
     ).join('');
     const files = (d.files || []).length ?
-        d.files.map(f => '<a class="file-chip" onclick="viewFile(' + f.id + ')"><i class="fas fa-paperclip"></i> ' + esc(f.filename) + ' (' + Math.round((f.file_size || 0) / 1024) + 'KB)</a>').join('') :
+        d.files.map(f => '<a class="file-chip" onclick="showPreview(' + f.id + ', ' + JSON.stringify(String(f.filename)).replace(/"/g, '&quot;') + ', ' + JSON.stringify(String(f.mime_type || '')).replace(/"/g, '&quot;') + ', false)"><i class="fas fa-paperclip"></i> ' + esc(f.filename) + ' (' + Math.round((f.file_size || 0) / 1024) + 'KB)</a>').join('') :
         '<div class="no-data">لا مرفقات</div>';
     document.getElementById('detailBody').innerHTML =
         '<div class="info-grid">' +
@@ -238,14 +251,26 @@ async function openDetail(id) {
 }
 function closeDetail() { document.getElementById('detailModal').classList.remove('show'); }
 
-async function viewFile(id) {
+async function showPreview(id, filename, mime, printOnly) {
     const d = await api('correspondence-file?fileId=' + id);
     if (d.ok && d.url) {
-        window.open(d.url, '_blank');
+        const frame = document.getElementById('previewFrame');
+        const acts = document.getElementById('previewActions');
+        document.getElementById('preview-head').textContent = filename || 'معاينة المستند';
+        if (/image\//i.test(mime || '')) {
+            frame.innerHTML = '<img src="' + d.url + '" alt="معاينة">';
+        } else if (mime === 'application/pdf') {
+            frame.innerHTML = '<iframe src="' + d.url + '"></iframe>';
+        } else {
+            frame.innerHTML = '<div class="no-data">معاينة غير مدعومة لهذا النوع</div>';
+        }
+        acts.innerHTML = '<button class="btn btn-primary" onclick="window.open(\'' + d.url + '\',\'_blank\')"><i class="fas fa-eye"></i> عرض</button>' +
+            '<button class="btn btn-warning" onclick="window.open(\'' + d.url + '\',\'_blank\').print()"><i class="fas fa-print"></i> طباعة</button>';
     } else {
         toast('تعذر عرض الملف', false);
     }
 }
+function viewFile(id) { /* استبدلت بـ showPreview */ }
 
 document.getElementById('replyFiles').addEventListener('change', async () => {
     selectedFiles = [];
@@ -269,7 +294,7 @@ function closeReply() { document.getElementById('replyModal').classList.remove('
 async function submitReply() {
     const text = document.getElementById('replyText').value.trim();
     if (selectedFiles.length === 0 && !text) { toast('أرفق ملفاً أو اكتب نصاً', false); return; }
-    if (!confirm('هل أنت متأكد من إرسال الرد إلى المركز؟')) return;
+    if (!(await showConfirm('هل أنت متأكد من إرسال الرد إلى المركز؟'))) return;
     const d = await api('correspondence-reply', {
         method: 'POST',
         body: JSON.stringify({ correspondence_id: currentId, message: text, files: selectedFiles })
@@ -287,7 +312,7 @@ function closeFollow() { document.getElementById('followModal').classList.remove
 async function submitFollow() {
     const text = document.getElementById('followText').value.trim();
     if (!text) { toast('نص المتابعة مطلوب', false); return; }
-    if (!confirm('هل أنت متأكد من إرسال المتابعة إلى الفرع؟')) return;
+    if (!(await showConfirm('هل أنت متأكد من إرسال المتابعة إلى الفرع؟'))) return;
     const d = await api('correspondence-followup', { method: 'POST', body: JSON.stringify({ correspondence_id: currentId, message: text }) });
     if (d.error) { toast(d.error, false); return; }
     toast('تم إرسال المتابعة إلى الفرع', true);
@@ -297,7 +322,7 @@ async function submitFollow() {
 }
 
 async function confirmId(id) {
-    if (!confirm('هل أنت متأكد من تأكيد الموافقة وإغلاق هذا الطلب؟')) return;
+    if (!(await showConfirm('هل أنت متأكد من تأكيد الموافقة وإغلاق هذا الطلب؟'))) return;
     const d = await api('correspondence-confirm', { method: 'POST', body: JSON.stringify({ correspondence_id: id }) });
     if (d.error) { toast(d.error, false); return; }
     toast('تم تأكيد وإغلاق الطلب', true);
@@ -339,11 +364,40 @@ function printReport() {
     const from = document.getElementById('repFrom').value;
     const to = document.getElementById('repTo').value;
     const status = document.getElementById('repStatus').value;
-    const statusLabel = { all: 'كل الطلبات', sent: 'المرسلة للفروع (قيد المتابعة)', closed: 'الطلبات المغلقة' }[status] || '';
+    const statusLabel = { all: 'جميع الطلبات', sent: 'المرسلة للفروع (قيد المتابعة)', closed: 'الطلبات المغلقة' }[status] || 'جميع الطلبات';
     const rows = document.getElementById('reportBody').innerHTML;
     const head = '<tr><th>رقم الطلب</th><th>الرقم الوطني</th><th>الاسم</th><th>الفرع</th><th>سبب التوقيف</th><th>الحالة</th></tr>';
+    const today = new Date().toLocaleDateString('ar-EG');
     const w = window.open('', '_blank');
-    w.document.write('<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>تقرير الطلبات الموقوفة</title><style>body{font-family:tahoma,arial;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:8px;font-size:13px}th{background:#eee}h2{margin-bottom:4px}.meta{color:#555;margin-bottom:14px}</style></head><body><h2>تقرير الطلبات الموقوفة</h2><div class="meta">الفترة: ' + (from || 'بداية') + ' إلى ' + (to || 'اليوم') + ' | النوع: ' + status + ' | التاريخ: ' + new Date().toLocaleDateString('ar-EG') + '</div><table>' + head + rows + '</table></body></html>');
+    w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>تقرير الطلبات الموقوفة</title><style>' +
+        '*{margin:0;padding:0;box-sizing:border-box}' +
+        '@page{size:A4;margin:8mm 6mm}' +
+        'body{font-family:"Tahoma","Arial",sans-serif;font-size:11px;color:#111}' +
+        '.letterhead{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:10px}' +
+        '.lh-left,.lh-right{width:28%;font-size:11px;font-weight:bold;line-height:1.5}' +
+        '.lh-right{text-align:right}.lh-left{text-align:left}' +
+        '.lh-center{width:44%;text-align:center}' +
+        '.lh-center img{height:58px}' +
+        '.org-title{text-align:center;font-weight:bold;font-size:13px;margin-bottom:2px}' +
+        '.doc-title{text-align:center;font-size:14px;font-weight:bold;text-decoration:underline;margin:12px 0 6px}' +
+        '.meta{text-align:center;font-size:10px;color:#333;margin-bottom:10px}' +
+        'table{width:100%;border-collapse:collapse;font-size:10px;margin-top:8px}' +
+        'th,td{border:1px solid #333;padding:4px 3px;text-align:center}' +
+        'th{background:#eaeaea;font-weight:bold}' +
+        '.foot{margin-top:26px;display:flex;justify-content:flex-end}' +
+        '.foot span{font-size:11px;font-weight:bold}' +
+        '</style></head><body>' +
+        '<div class="letterhead">' +
+        '<div class="lh-right">الجمهورية اليمنية<br>مصلحة الأحوال المدنية والسجل المدني<br>المركز الاحتياطي</div>' +
+        '<div class="lh-center"><img src="image.png" onerror="this.style.display=\'none\'"></div>' +
+        '<div class="lh-left">التاريخ: ' + today + '</div>' +
+        '</div>' +
+        '<div class="org-title">مصلحة الأحوال المدنية والسجل المدني - المركز الاحتياطي</div>' +
+        '<div class="doc-title">تقرير الطلبات الموقوفة</div>' +
+        '<div class="meta">الفترة: ' + (from || 'بداية') + ' إلى ' + (to || 'اليوم') + ' | النوع: ' + statusLabel + '</div>' +
+        '<table>' + head + rows + '</table>' +
+        '<div class="foot"><span>المركز الاحتياطي /</span></div>' +
+        '</body></html>');
     w.document.close();
     setTimeout(() => { w.print(); }, 300);
 }

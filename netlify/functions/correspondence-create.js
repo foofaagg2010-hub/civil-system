@@ -73,10 +73,19 @@ exports.handler = async (event) => {
         const fullName = String(body.full_name || autoName || '').trim();
         const branch = String(body.branch || autoBranch || '').trim();
         const national = String(body.national_number || autoNational || '').trim();
-        const reason = String(body.stop_reason || '').trim();
+        const reason = String(body.stop_reason || body.reason || '').trim();
 
         if (!branch) {
             return { statusCode: 400, headers, body: JSON.stringify({ error: 'الفرع مطلوب' }) };
+        }
+
+        const { data: existing, error: existingError } = await supabase
+            .from('stopped_requests')
+            .select('id, status')
+            .eq('رقم الطلب', requestNumber)
+            .limit(1);
+        if (!existingError && existing && existing.length > 0) {
+            return { statusCode: 409, headers, body: JSON.stringify({ error: 'تم إرسال هذا الطلب مسبقاً' }) };
         }
 
         const { data: inserted, error: insertError } = await supabase
