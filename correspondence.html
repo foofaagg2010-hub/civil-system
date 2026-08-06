@@ -46,6 +46,8 @@
         .form-group label { display: block; margin-bottom: 5px; font-weight: 700; font-size: 13px; }
         .form-group input, .form-group textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; font-size: 13px; }
         body.dark-mode .form-group input, body.dark-mode .form-group textarea { background: #2a2a2a; border-color: #444; color: #ecf0f1; }
+        .form-group select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; font-size: 13px; background: #fff; }
+        body.dark-mode .form-group select { background: #2a2a2a; border-color: #444; color: #ecf0f1; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -137,7 +139,7 @@
                 <div class="form-group"><label>الاسم</label><input type="text" id="fName"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>الفرع *</label><input type="text" id="fBranch"></div>
+                <div class="form-group"><label>الفرع *</label><select id="fBranch"><option value="">-- اختر الفرع --</option></select></div>
                 <div class="form-group"><label>سبب التوقيف *</label><input type="text" id="fReason"></div>
             </div>
             <div class="actions">

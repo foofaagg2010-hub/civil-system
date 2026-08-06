@@ -110,19 +110,47 @@ async function loadArchived() {
 }
 
 function clearCreateForm() {
-    ['fRequestNumber', 'fNational', 'fName', 'fBranch', 'fReason'].forEach(id => {
+    ['fRequestNumber', 'fNational', 'fName', 'fReason'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    const fb = document.getElementById('fBranch');
+    if (fb) fb.value = '';
+}
+async function loadBranches() {
+    try {
+        const d = await api('correspondence-branches');
+        const sel = document.getElementById('fBranch');
+        if (!sel) return;
+        const cur = sel.value || '';
+        sel.innerHTML = '<option value="">-- اختر الفرع --</option>';
+        (d.branches || []).forEach(b => {
+            const o = document.createElement('option');
+            o.value = b; o.textContent = b;
+            sel.appendChild(o);
+        });
+        if (cur) sel.value = cur;
+    } catch (e) { /* تجاهل */ }
+}
+function setBranch(b) {
+    const sel = document.getElementById('fBranch');
+    if (!sel) return;
+    let exists = false;
+    for (const o of sel.options) { if (String(o.value) === String(b)) { exists = true; break; } }
+    if (!exists) {
+        const o = document.createElement('option');
+        o.value = b; o.textContent = b;
+        sel.appendChild(o);
+    }
+    sel.value = b;
 }
 async function lookupRequest() {
     const rn = document.getElementById('fRequestNumber').value.trim();
     if (!rn) { toast('أدخل رقم الطلب أولاً', false); return; }
     const d = await api('correspondence-lookup?request_number=' + encodeURIComponent(rn));
     if (d.found) {
-        document.getElementById('fNational').value = d.national_number || '';
         document.getElementById('fName').value = d.full_name || '';
-        document.getElementById('fBranch').value = d.branch || '';
+        if (d.branch) setBranch(d.branch);
         toast('تمت التعبئة التلقائية', true);
     } else {
         toast('لم يوجد الطلب - أكمل البيانات يدوياً', false);
@@ -135,6 +163,7 @@ async function submitCreate() {
     if (!rn) { toast('رقم الطلب مطلوب', false); return; }
     if (!branch) { toast('الفرع مطلوب', false); return; }
     if (!reason) { toast('سبب التوقيف مطلوب', false); return; }
+    if (!confirm('هل أنت متأكد من إرسال الطلب الموقوف رقم ' + rn + ' إلى الفرع ' + branch + '؟')) return;
     const body = {
         request_number: rn,
         national_number: document.getElementById('fNational').value.trim(),
@@ -239,6 +268,8 @@ function openReply(id) { currentId = id; document.getElementById('replyModal').c
 function closeReply() { document.getElementById('replyModal').classList.remove('show'); }
 async function submitReply() {
     const text = document.getElementById('replyText').value.trim();
+    if (selectedFiles.length === 0 && !text) { toast('أرفق ملفاً أو اكتب نصاً', false); return; }
+    if (!confirm('هل أنت متأكد من إرسال الرد إلى المركز؟')) return;
     const d = await api('correspondence-reply', {
         method: 'POST',
         body: JSON.stringify({ correspondence_id: currentId, message: text, files: selectedFiles })
@@ -256,6 +287,7 @@ function closeFollow() { document.getElementById('followModal').classList.remove
 async function submitFollow() {
     const text = document.getElementById('followText').value.trim();
     if (!text) { toast('نص المتابعة مطلوب', false); return; }
+    if (!confirm('هل أنت متأكد من إرسال المتابعة إلى الفرع؟')) return;
     const d = await api('correspondence-followup', { method: 'POST', body: JSON.stringify({ correspondence_id: currentId, message: text }) });
     if (d.error) { toast(d.error, false); return; }
     toast('تم إرسال المتابعة إلى الفرع', true);
@@ -265,6 +297,7 @@ async function submitFollow() {
 }
 
 async function confirmId(id) {
+    if (!confirm('هل أنت متأكد من تأكيد الموافقة وإغلاق هذا الطلب؟')) return;
     const d = await api('correspondence-confirm', { method: 'POST', body: JSON.stringify({ correspondence_id: id }) });
     if (d.error) { toast(d.error, false); return; }
     toast('تم تأكيد وإغلاق الطلب', true);
@@ -277,6 +310,7 @@ function checkAuth() {
     const logged = sessionStorage.getItem('admin_logged_in');
     if (!token || logged !== 'true') { window.location.href = 'admin-login.html'; return; }
     applyTheme();
+    loadBranches();
     loadList();
 }
 window.addEventListener('DOMContentLoaded', checkAuth);
@@ -286,7 +320,6 @@ async function loadReport() {
     const from = document.getElementById('repFrom').value;
     const to = document.getElementById('repTo').value;
     const status = document.getElementById('repStatus').value;
-    if (!from && !to) { document.getElementById('reportEmpty').style.display = 'block'; return; }
     const params = new URLSearchParams();
     if (from) params.set('from', from);
     if (to) params.set('to', to);
@@ -298,7 +331,9 @@ async function loadReport() {
         const sc = STATUS_CLASS[r.status] || '';
         return '<tr><td><b>' + esc(r['رقم الطلب']) + '</b></td><td>' + esc(r['الرقم الوطني']) + '</td><td>' + esc(r['الاسم']) + '</td><td>' + esc(r['الفرع']) + '</td><td>' + esc(r['سبب التوقيف']) + '</td><td><span class="badge ' + sc + '">' + esc(st) + '</span></td></tr>';
     }).join('');
-    document.getElementById('reportEmpty').style.display = 'none';
+    document.getElementById('reportEmpty').style.display = records.length ? 'none' : 'block';
+    const emptyMsg = document.getElementById('reportEmpty');
+    emptyMsg.textContent = records.length ? '' : (params.toString() ? 'لا توجد بيانات ضمن هذه الفترة' : 'اختر التاريخ أو فقط اضغط توليد لعرض كل البيانات');
 }
 function printReport() {
     const from = document.getElementById('repFrom').value;

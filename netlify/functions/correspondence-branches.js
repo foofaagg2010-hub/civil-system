@@ -40,41 +40,29 @@ exports.handler = async (event) => {
             .eq('id', session.user_id)
             .single();
         if (!user || !user.can_correspondence) {
-            return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بالتعبيئة التلقائية' }) };
+            return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بجلب الفروع' }) };
         }
 
-        const requestNumber = (event.queryStringParameters?.request_number || '').trim();
-        if (!requestNumber || !/^[0-9]+$/.test(requestNumber) || requestNumber.length > 30) {
-            return { statusCode: 400, headers, body: JSON.stringify({ error: 'رقم الطلب غير صحيح' }) };
+        const { data: branches, error } = await supabase
+            .from('branch_statistics')
+            .select('branch');
+        if (error) {
+            console.error('correspondence-branches error:', error);
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في جلب الفروع' }) };
         }
 
-        const { data: reqs, error: reqError } = await supabase
-            .from('requests')
-            .select('"رقم الطلب", "الاسم بالكامل", "وحدة التسجيل"')
-            .eq('رقم الطلب', requestNumber)
-            .limit(1);
-        if (reqError) {
-            console.error('correspondence-lookup error:', reqError);
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في جلب بيانات الطلب' }) };
+        const list = [];
+        const seen = {};
+        for (const b of branches || []) {
+            const name = String(b.branch || '').trim();
+            if (name && !seen[name]) { seen[name] = true; list.push(name); }
         }
+        list.sort((a, b) => a.localeCompare(b, 'ar'));
 
-        if (!reqs || reqs.length === 0) {
-            return { statusCode: 200, headers, body: JSON.stringify({ found: false }) };
-        }
-
-        const r = reqs[0];
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({
-                found: true,
-                full_name: r['الاسم بالكامل'] || '',
-                branch: r['وحدة التسجيل'] || ''
-            })
-        };
+        return { statusCode: 200, headers, body: JSON.stringify({ branches: list }) };
 
     } catch (error) {
-        console.error('correspondence-lookup error:', error);
+        console.error('correspondence-branches error:', error);
         return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ داخلي في النظام' }) };
     }
 };
