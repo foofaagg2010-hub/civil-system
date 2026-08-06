@@ -133,16 +133,29 @@ function clearCreateForm() {
 async function loadBranches() {
     try {
         const d = await api('correspondence-branches');
+        const branches = d.branches || [];
         const sel = document.getElementById('fBranch');
-        if (!sel) return;
-        const cur = sel.value || '';
-        sel.innerHTML = '<option value="">-- اختر الفرع --</option>';
-        (d.branches || []).forEach(b => {
-            const o = document.createElement('option');
-            o.value = b; o.textContent = b;
-            sel.appendChild(o);
-        });
-        if (cur) sel.value = cur;
+        const rep = document.getElementById('repBranch');
+        if (sel) {
+            const cur = sel.value || '';
+            sel.innerHTML = '<option value="">-- اختر الفرع --</option>';
+            branches.forEach(b => {
+                const o = document.createElement('option');
+                o.value = b; o.textContent = b;
+                sel.appendChild(o);
+            });
+            if (cur) sel.value = cur;
+        }
+        if (rep) {
+            const repCur = rep.value || '';
+            rep.innerHTML = '<option value="">كل الفروع</option>';
+            branches.forEach(b => {
+                const o = document.createElement('option');
+                o.value = b; o.textContent = b;
+                rep.appendChild(o);
+            });
+            if (repCur) rep.value = repCur;
+        }
     } catch (e) { /* تجاهل */ }
 }
 function setBranch(b) {
@@ -251,24 +264,47 @@ async function openDetail(id) {
 }
 function closeDetail() { document.getElementById('detailModal').classList.remove('show'); }
 
+let currentPreviewBlobUrl = null;
+function revokePreviewBlob() {
+    if (currentPreviewBlobUrl) { try { URL.revokeObjectURL(currentPreviewBlobUrl); } catch (e) {} currentPreviewBlobUrl = null; }
+}
 async function showPreview(id, filename, mime, printOnly) {
     const d = await api('correspondence-file?fileId=' + id);
     if (d.ok && d.url) {
         const frame = document.getElementById('previewFrame');
         const acts = document.getElementById('previewActions');
         document.getElementById('preview-head').textContent = filename || 'معاينة المستند';
-        if (/image\//i.test(mime || '')) {
-            frame.innerHTML = '<img src="' + d.url + '" alt="معاينة">';
-        } else if (mime === 'application/pdf') {
-            frame.innerHTML = '<iframe src="' + d.url + '"></iframe>';
-        } else {
-            frame.innerHTML = '<div class="no-data">معاينة غير مدعومة لهذا النوع</div>';
+        revokePreviewBlob();
+        frame.innerHTML = '<div class="no-data">جارٍ تحميل المستند...</div>';
+        try {
+            const res = await fetch(d.url);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const blob = await res.blob();
+            currentPreviewBlobUrl = URL.createObjectURL(blob);
+            if (/image\//i.test(mime || '')) {
+                frame.innerHTML = '<img src="' + currentPreviewBlobUrl + '" alt="معاينة">';
+            } else if (mime === 'application/pdf') {
+                frame.innerHTML = '<iframe src="' + currentPreviewBlobUrl + '"></iframe>';
+            } else {
+                frame.innerHTML = '<div class="no-data">معاينة غير مدعومة لهذا النوع، استخدم زر العرض</div>';
+            }
+            acts.innerHTML = '<button class="btn btn-primary" onclick="window.open(\'' + currentPreviewBlobUrl + '\',\'_blank\')"><i class="fas fa-eye"></i> عرض</button>' +
+                '<button class="btn btn-warning" onclick="printDownload(\'' + currentPreviewBlobUrl + '\')"><i class="fas fa-print"></i> طباعة</button>';
+        } catch (err) {
+            frame.innerHTML = '<div class="no-data">تعذر تحميل الملف. جرّب زر العرض مباشرة.</div>';
+            acts.innerHTML = '<button class="btn btn-primary" onclick="window.open(\'' + d.url + '\',\'_blank\')"><i class="fas fa-eye"></i> عرض</button>';
         }
-        acts.innerHTML = '<button class="btn btn-primary" onclick="window.open(\'' + d.url + '\',\'_blank\')"><i class="fas fa-eye"></i> عرض</button>' +
-            '<button class="btn btn-warning" onclick="window.open(\'' + d.url + '\',\'_blank\').print()"><i class="fas fa-print"></i> طباعة</button>';
     } else {
         toast('تعذر عرض الملف', false);
     }
+}
+function printDownload(url) {
+    const ifr = document.createElement('iframe');
+    ifr.style.position = 'absolute'; ifr.style.width = '0'; ifr.style.height = '0';
+    ifr.src = url;
+    document.body.appendChild(ifr);
+    ifr.onload = () => { try { ifr.contentWindow.focus(); ifr.contentWindow.print(); } catch (e) {} };
+    setTimeout(() => document.body.removeChild(ifr), 60000);
 }
 function viewFile(id) { /* استبدلت بـ showPreview */ }
 
@@ -341,60 +377,102 @@ function checkAuth() {
 window.addEventListener('DOMContentLoaded', checkAuth);
 
 // ===== التقارير (للمركز فقط) =====
+const REPORT_STATUS_META = {
+    all:     { title: 'تقرير بالطلبات الموقوفة', label: 'جميع الطلبات' },
+    sent:    { title: 'تقرير بالطلبات الموقوفة', label: 'المرسلة للفروع' },
+    answered:{ title: 'الطلبات بانتظار تأكيد المركز', label: 'بانتظار تأكيد المركز' },
+    closed:  { title: 'البطاقات المطلقة من منظومة المركز الاحتياطي', label: 'الطلبات المغلقة (المستكملة)' }
+};
+let lastReportRecords = [];
+
 async function loadReport() {
     const from = document.getElementById('repFrom').value;
     const to = document.getElementById('repTo').value;
     const status = document.getElementById('repStatus').value;
+    const branch = document.getElementById('repBranch').value;
     const params = new URLSearchParams();
     if (from) params.set('from', from);
     if (to) params.set('to', to);
     params.set('status', status);
+    if (branch) params.set('branch', branch);
     const d = await api('correspondence-report?' + params.toString());
     const records = d.records || [];
+    lastReportRecords = records;
     document.getElementById('reportBody').innerHTML = records.map(r => {
         const st = STATUS_MAP[r.status] || r.status;
         const sc = STATUS_CLASS[r.status] || '';
         return '<tr><td><b>' + esc(r['رقم الطلب']) + '</b></td><td>' + esc(r['الرقم الوطني']) + '</td><td>' + esc(r['الاسم']) + '</td><td>' + esc(r['الفرع']) + '</td><td>' + esc(r['سبب التوقيف']) + '</td><td><span class="badge ' + sc + '">' + esc(st) + '</span></td></tr>';
     }).join('');
+    document.getElementById('reportTitleTop').textContent = (REPORT_STATUS_META[status] || REPORT_STATUS_META.all).title;
     document.getElementById('reportEmpty').style.display = records.length ? 'none' : 'block';
     const emptyMsg = document.getElementById('reportEmpty');
-    emptyMsg.textContent = records.length ? '' : (params.toString() ? 'لا توجد بيانات ضمن هذه الفترة' : 'اختر التاريخ أو فقط اضغط توليد لعرض كل البيانات');
+    emptyMsg.textContent = records.length ? '' : 'لا توجد بيانات ضمن هذه الفلترة';
 }
+
+function reportMeta() {
+    return REPORT_STATUS_META[document.getElementById('repStatus').value] || REPORT_STATUS_META.all;
+}
+
+function exportReportExcel() {
+    if (!window.XLSX) { toast('مكتبة Excel غير محملة', false); return; }
+    if (!lastReportRecords || lastReportRecords.length === 0) { toast('ولّد التقرير أولاً', false); return; }
+    const meta = reportMeta();
+    const rows = [['رقم الطلب', 'الرقم الوطني', 'الاسم', 'الفرع', 'سبب التوقيف', 'الحالة']];
+    lastReportRecords.forEach(r => {
+        rows.push([
+            String(r['رقم الطلب'] || ''),
+            String(r['الرقم الوطني'] || ''),
+            String(r['الاسم'] || ''),
+            String(r['الفرع'] || ''),
+            String(r['سبب التوقيف'] || ''),
+            STATUS_MAP[r.status] || r.status || ''
+        ]);
+    });
+    const aoa = XLSX.utils.aoa_to_sheet(rows);
+    aoa['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length - 1, c: 5 } });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, aoa, 'تقرير');
+    XLSX.writeFile(wb, 'تقرير-الطلبات-الموقوفة.xlsx');
+    toast('تم تصدير ملف Excel', true);
+}
+
 function printReport() {
     const from = document.getElementById('repFrom').value;
     const to = document.getElementById('repTo').value;
-    const status = document.getElementById('repStatus').value;
-    const statusLabel = { all: 'جميع الطلبات', sent: 'المرسلة للفروع (قيد المتابعة)', closed: 'الطلبات المغلقة' }[status] || 'جميع الطلبات';
+    const branch = document.getElementById('repBranch').value;
+    const meta = reportMeta();
     const rows = document.getElementById('reportBody').innerHTML;
     const head = '<tr><th>رقم الطلب</th><th>الرقم الوطني</th><th>الاسم</th><th>الفرع</th><th>سبب التوقيف</th><th>الحالة</th></tr>';
     const today = new Date().toLocaleDateString('ar-EG');
     const w = window.open('', '_blank');
-    w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>تقرير الطلبات الموقوفة</title><style>' +
+    w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>' + meta.title + '</title><style>' +
         '*{margin:0;padding:0;box-sizing:border-box}' +
-        '@page{size:A4;margin:8mm 6mm}' +
-        'body{font-family:"Tahoma","Arial",sans-serif;font-size:11px;color:#111}' +
-        '.letterhead{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:10px}' +
-        '.lh-left,.lh-right{width:28%;font-size:11px;font-weight:bold;line-height:1.5}' +
-        '.lh-right{text-align:right}.lh-left{text-align:left}' +
-        '.lh-center{width:44%;text-align:center}' +
-        '.lh-center img{height:58px}' +
-        '.org-title{text-align:center;font-weight:bold;font-size:13px;margin-bottom:2px}' +
-        '.doc-title{text-align:center;font-size:14px;font-weight:bold;text-decoration:underline;margin:12px 0 6px}' +
-        '.meta{text-align:center;font-size:10px;color:#333;margin-bottom:10px}' +
-        'table{width:100%;border-collapse:collapse;font-size:10px;margin-top:8px}' +
-        'th,td{border:1px solid #333;padding:4px 3px;text-align:center}' +
+        '@page{size:A4;margin:6mm 4mm}' +
+        'body{font-family:"Tahoma","Arial",sans-serif;font-size:10px;color:#111}' +
+        '.bismillah{text-align:center;font-size:14px;font-weight:bold;margin:2px 0 6px;font-family:"Traditional Arabic",Tahoma}' +
+        '.letterhead{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:8px}' +
+        '.lh-right{width:30%;text-align:right;font-size:11px;font-weight:bold;line-height:1.6}' +
+        '.lh-left{width:30%;text-align:left;font-size:11px;font-weight:bold;line-height:1.6}' +
+        '.lh-center{width:34%;text-align:center}' +
+        '.lh-center img{height:72px}' +
+        '.org-title{text-align:center;font-weight:bold;font-size:12px;margin-bottom:2px}' +
+        '.doc-title{text-align:center;font-size:14px;font-weight:bold;text-decoration:underline;margin:10px 0 4px}' +
+        '.meta{text-align:center;font-size:9px;color:#333;margin-bottom:8px}' +
+        'table{width:100%;border-collapse:collapse;font-size:9px;margin-top:6px}' +
+        'th,td{border:1px solid #333;padding:3px 2px;text-align:center}' +
         'th{background:#eaeaea;font-weight:bold}' +
-        '.foot{margin-top:26px;display:flex;justify-content:flex-end}' +
-        '.foot span{font-size:11px;font-weight:bold}' +
+        '.foot{margin-top:22px;display:flex;justify-content:flex-end}' +
+        '.foot span{font-size:10px;font-weight:bold}' +
         '</style></head><body>' +
+        '<div class="bismillah">بسم الله الرحمن الرحيم</div>' +
         '<div class="letterhead">' +
         '<div class="lh-right">الجمهورية اليمنية<br>مصلحة الأحوال المدنية والسجل المدني<br>المركز الاحتياطي</div>' +
         '<div class="lh-center"><img src="image.png" onerror="this.style.display=\'none\'"></div>' +
         '<div class="lh-left">التاريخ: ' + today + '</div>' +
         '</div>' +
         '<div class="org-title">مصلحة الأحوال المدنية والسجل المدني - المركز الاحتياطي</div>' +
-        '<div class="doc-title">تقرير الطلبات الموقوفة</div>' +
-        '<div class="meta">الفترة: ' + (from || 'بداية') + ' إلى ' + (to || 'اليوم') + ' | النوع: ' + statusLabel + '</div>' +
+        '<div class="doc-title">' + meta.title + '</div>' +
+        '<div class="meta">الفترة: ' + (from || 'بداية') + ' إلى ' + (to || 'اليوم') + ' | الحالة: ' + meta.label + (branch ? ' | الفرع: ' + branch : '') + '</div>' +
         '<table>' + head + rows + '</table>' +
         '<div class="foot"><span>المركز الاحتياطي /</span></div>' +
         '</body></html>');

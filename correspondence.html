@@ -99,6 +99,28 @@
         body.light-mode .info-grid div { background: #f8f9fa; }
         body.dark-mode .info-grid div { background: #2a2a2a; }
         .info-grid b { color: #3498db; }
+        @media (max-width: 640px) {
+            .navbar { padding: 10px 12px; gap: 6px; }
+            .navbar .logo h3 { font-size: 14px; }
+            .navbar .logo p { display: none; }
+            .user-info { gap: 6px; }
+            .user-badge { padding: 4px 8px; font-size: 11px; }
+            .tabs { gap: 6px; }
+            .tab-btn { padding: 8px 10px; font-size: 12px; flex: 1 1 auto; justify-content: center; }
+            .container { padding: 0 8px; margin: 12px auto; }
+            .card { padding: 12px; }
+            .tools { flex-direction: column; align-items: stretch; }
+            .tools select, .tools input { flex: 1 1 100%; width: 100% !important; min-width: 0; }
+            .tools input[type=text] { min-width: 0; }
+            .form-row { grid-template-columns: 1fr; }
+            table { font-size: 11px; display: block; overflow-x: auto; white-space: nowrap; }
+            th, td { padding: 7px 5px; }
+            .detail-split { grid-template-columns: 1fr; }
+            .info-grid { grid-template-columns: 1fr; }
+            .modal-content { padding: 14px; max-width: 100%; }
+            .actions .btn { flex: 1 1 100%; justify-content: center; }
+            .form-group input[type=text] { font-size: 16px; }
+        }
         @media print { .navbar, .tabs, .actions, .tools, .modal-head .btn { display: none !important; } .container { margin: 0; max-width: 100%; } .card { box-shadow: none; border: 1px solid #ccc; } }
     </style>
 </head>
@@ -119,8 +141,8 @@
         <div class="tabs">
             <button class="tab-btn active" onclick="showTab('inbox')"><i class="fas fa-inbox"></i> <span id="inboxLabel">المراسلات</span></button>
             <button class="tab-btn" onclick="showTab('archive')"><i class="fas fa-archive"></i> الأرشيف</button>
-            <button class="tab-btn" id="createTabBtn" onclick="showTab('create')"><i class="fas fa-plus-circle"></i> إرسال طلب</button>
-            <button class="tab-btn" id="reportTabBtn" onclick="showTab('report')"><i class="fas fa-chart-bar"></i> التقارير</button>
+            <button class="tab-btn" id="createTabBtn" style="display:none;" onclick="showTab('create')"><i class="fas fa-plus-circle"></i> إرسال طلب</button>
+            <button class="tab-btn" id="reportTabBtn" style="display:none;" onclick="showTab('report')"><i class="fas fa-chart-bar"></i> التقارير</button>
         </div>
         <div id="inbox" class="tab-content">
         <div class="card">
@@ -167,18 +189,23 @@
     </div>
     <div id="report" class="tab-content">
         <div class="card">
-            <h3>تقرير الطلبات الموقوفة</h3>
+            <h3 id="reportTitleTop">تقرير الطلبات الموقوفة</h3>
             <div class="tools">
                 <input type="date" id="repFrom"> <span>إلى</span> <input type="date" id="repTo">
                 <select id="repStatus" style="flex:1;min-width:150px;padding:10px;border-radius:8px;border:1px solid #ccc;font-family:inherit;">
                     <option value="all">كل الطلبات</option>
-                    <option value="sent">المرسلة للفروع (قيد المتابعة)</option>
-                    <option value="closed">الطلبات المغلقة</option>
+                    <option value="sent">المرسلة للفروع (لم يتم الرد)</option>
+                    <option value="answered">بانتظار تأكيد المركز</option>
+                    <option value="closed">الطلبات المغلقة (المستكملة)</option>
+                </select>
+                <select id="repBranch" style="flex:1;min-width:150px;padding:10px;border-radius:8px;border:1px solid #ccc;font-family:inherit;">
+                    <option value="">كل الفروع</option>
                 </select>
                 <button class="btn btn-primary" onclick="loadReport()"><i class="fas fa-chart-bar"></i> توليد التقرير</button>
+                <button class="btn btn-success" onclick="exportReportExcel()"><i class="fas fa-file-excel"></i> Excel</button>
                 <button class="btn btn-warning" onclick="printReport()"><i class="fas fa-print"></i> طباعة</button>
             </div>
-            <div id="reportEmpty" class="no-data" style="display:none;">اختر التاريخ واضغط توليد التقرير</div>
+            <div id="reportEmpty" class="no-data" style="display:none;">اختر التاريخ أو الفلترة واضغط توليد التقرير</div>
             <table id="reportTableWrap">
                 <thead><tr><th>رقم الطلب</th><th>الرقم الوطني</th><th>الاسم</th><th>الفرع</th><th>سبب التوقيف</th><th>الحالة</th></tr></thead>
                 <tbody id="reportBody"></tbody>
@@ -224,5 +251,6 @@
     </div></div>
 
     <script src="correspondence.js"></script>
+    <script src="/xlsx.full.min.js"></script>
 </body>
 </html>
