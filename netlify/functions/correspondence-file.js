@@ -81,23 +81,28 @@ exports.handler = async (event) => {
         if (!file.storage_path) {
             return { statusCode: 404, headers, body: JSON.stringify({ error: 'الملف غير متاح في مساحة التخزين' }) };
         }
-        const { data: signed, error: signedErr } = await supabase.storage
+
+        const { data: blob, error: downErr } = await supabase.storage
             .from(BUCKET)
-            .createSignedUrl(file.storage_path, 3600);
-        if (signedErr || !signed || !signed.signedUrl) {
-            console.error('Signed URL error:', signedErr);
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في تجهيز رابط الملف' }) };
+            .download(file.storage_path);
+        if (downErr || !blob) {
+            console.error('Storage download error:', downErr);
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في تحميل الملف' }) };
         }
 
+        const buffer = Buffer.from(await blob.arrayBuffer());
+        const safeName = String(file.filename || 'file').replace(/[<>]/g, '_');
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 ok: true,
                 filename: file.filename,
-                mime_type: file.mime_type,
-                file_size: file.file_size,
-                url: signed.signedUrl
+                mime_type: file.mime_type || 'application/octet-stream',
+                file_size: file.file_size || buffer.length,
+                doattach_download: false,
+                dataUrl: 'data:' + (file.mime_type || 'application/octet-stream') + ';base64,' + buffer.toString('base64'),
+                downloadName: safeName
             })
         };
 

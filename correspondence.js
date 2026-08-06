@@ -264,36 +264,21 @@ async function openDetail(id) {
 }
 function closeDetail() { document.getElementById('detailModal').classList.remove('show'); }
 
-let currentPreviewBlobUrl = null;
-function revokePreviewBlob() {
-    if (currentPreviewBlobUrl) { try { URL.revokeObjectURL(currentPreviewBlobUrl); } catch (e) {} currentPreviewBlobUrl = null; }
-}
 async function showPreview(id, filename, mime, printOnly) {
     const d = await api('correspondence-file?fileId=' + id);
-    if (d.ok && d.url) {
+    if (d.ok && d.dataUrl) {
         const frame = document.getElementById('previewFrame');
         const acts = document.getElementById('previewActions');
         document.getElementById('preview-head').textContent = filename || 'معاينة المستند';
-        revokePreviewBlob();
-        frame.innerHTML = '<div class="no-data">جارٍ تحميل المستند...</div>';
-        try {
-            const res = await fetch(d.url);
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            const blob = await res.blob();
-            currentPreviewBlobUrl = URL.createObjectURL(blob);
-            if (/image\//i.test(mime || '')) {
-                frame.innerHTML = '<img src="' + currentPreviewBlobUrl + '" alt="معاينة">';
-            } else if (mime === 'application/pdf') {
-                frame.innerHTML = '<iframe src="' + currentPreviewBlobUrl + '"></iframe>';
-            } else {
-                frame.innerHTML = '<div class="no-data">معاينة غير مدعومة لهذا النوع، استخدم زر العرض</div>';
-            }
-            acts.innerHTML = '<button class="btn btn-primary" onclick="window.open(\'' + currentPreviewBlobUrl + '\',\'_blank\')"><i class="fas fa-eye"></i> عرض</button>' +
-                '<button class="btn btn-warning" onclick="printDownload(\'' + currentPreviewBlobUrl + '\')"><i class="fas fa-print"></i> طباعة</button>';
-        } catch (err) {
-            frame.innerHTML = '<div class="no-data">تعذر تحميل الملف. جرّب زر العرض مباشرة.</div>';
-            acts.innerHTML = '<button class="btn btn-primary" onclick="window.open(\'' + d.url + '\',\'_blank\')"><i class="fas fa-eye"></i> عرض</button>';
+        if (/image\//i.test(mime || '')) {
+            frame.innerHTML = '<img src="' + d.dataUrl + '" alt="معاينة">';
+        } else if (mime === 'application/pdf') {
+            frame.innerHTML = '<iframe src="' + d.dataUrl + '"></iframe>';
+        } else {
+            frame.innerHTML = '<div class="no-data">معاينة غير مدعومة لهذا النوع، استخدم زر العرض</div>';
         }
+        acts.innerHTML = '<button class="btn btn-primary" onclick="window.open(\'' + d.dataUrl + '\',\'_blank\')"><i class="fas fa-eye"></i> عرض</button>' +
+            '<button class="btn btn-warning" onclick="printDownload(\'' + d.dataUrl + '\')"><i class="fas fa-print"></i> طباعة</button>';
     } else {
         toast('تعذر عرض الملف', false);
     }
