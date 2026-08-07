@@ -746,12 +746,15 @@ function printReport() {
     const w = window.open('', '_blank');
     w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>' + meta.title + '</title><style>' +
         '*{margin:0;padding:0;box-sizing:border-box}' +
-        '@page{size:A4;margin:6mm 4mm}' +
+        '@page{size:A4;margin:4mm}' +
         'body{font-family:"Tahoma","Arial",sans-serif;font-size:10px;color:#111}' +
-        '.bismillah{text-align:center;font-size:14px;font-weight:bold;margin:4px 0 2px;font-family:"Traditional Arabic",Tahoma}' +
-        '.eagle{text-align:center;margin:2px 0}' +
-        '.eagle img{height:74px;width:auto}' +
-        '.org-title{text-align:center;font-weight:bold;font-size:12px;margin:2px 0}' +
+        '.header{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:6px}' +
+        '.h-right{width:30%;text-align:right;font-size:10px;font-weight:bold;line-height:1.7}' +
+        '.h-left{width:30%;text-align:left;font-size:10px;font-weight:bold;line-height:1.7}' +
+        '.h-center{width:34%;text-align:center}' +
+        '.h-center .bismillah{font-size:15px;font-weight:bold;font-family:"Traditional Arabic",Tahoma}' +
+        '.h-center .eagle{margin-top:4px}' +
+        '.h-center .eagle img{height:64px;width:auto}' +
         '.doc-title{text-align:center;font-size:14px;font-weight:bold;text-decoration:underline;margin:10px 0 4px}' +
         '.meta{text-align:center;font-size:9px;color:#333;margin-bottom:8px}' +
         'table{width:100%;border-collapse:collapse;font-size:9px;margin-top:6px}' +
@@ -760,9 +763,11 @@ function printReport() {
         '.foot{margin-top:22px;display:flex;justify-content:flex-end}' +
         '.foot span{font-size:10px;font-weight:bold}' +
         '</style></head><body>' +
-        '<div class="bismillah">بسم الله الرحمن الرحيم</div>' +
-        '<div class="eagle"><img src="' + base + '/image.png" onerror="this.style.display=\'none\'"></div>' +
-        '<div class="org-title">الجمهورية اليمنية - مصلحة الأحوال المدنية والسجل المدني - المركز الاحتياطي</div>' +
+        '<div class="header">' +
+        '<div class="h-right">الجمهورية اليمنية<br>وزارة الداخلية<br>مصلحة الأحوال المدنية والسجل المدني<br>المركز الاحتياطي</div>' +
+        '<div class="h-center"><div class="bismillah">بسم الله الرحمن الرحيم</div><div class="eagle"><img src="' + base + '/image.png" onerror="this.style.display=\'none\'"></div></div>' +
+        '<div class="h-left">التاريخ: ' + today + '<br>عدد الصفحات........................................................<br>الرقم: ..............</div>' +
+        '</div>' +
         '<div class="doc-title">' + meta.title + '</div>' +
         '<div class="meta">التاريخ: ' + today + ' | الفترة: ' + (from || 'بداية') + ' إلى ' + (to || 'اليوم') + ' | الحالة: ' + meta.label + (branch ? ' | الفرع: ' + branch : '') + '</div>' +
         '<table>' + head + rows + '</table>' +
