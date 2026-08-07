@@ -1,6 +1,6 @@
 // صفحة المراسلات - الطلبات الموقوفة
 const API_URL = '/.netlify/functions';
-let isCenter = false, currentId = null, selectedFiles = [];
+let isCenter = false, currentId = null;
 let confirmResolveFn = null;
 
 function showConfirm(msg) {
@@ -262,7 +262,16 @@ async function openDetail(id) {
     renderActions(r);
     document.getElementById('detailModal').classList.add('show');
 }
-function closeDetail() { document.getElementById('detailModal').classList.remove('show'); }
+function closeDetail() {
+    document.getElementById('detailModal').classList.remove('show');
+    const pf = document.getElementById('previewFrame');
+    if (pf) pf.innerHTML = '<div class="no-data">اختر ملفاً للمعاينة</div>';
+    const pa = document.getElementById('previewActions');
+    if (pa) pa.innerHTML = '';
+    const ph = document.getElementById('preview-head');
+    if (ph) ph.textContent = 'معاينة المستند';
+    document.getElementById('detailBody').innerHTML = '';
+}
 
 async function showPreview(id, filename, mime, printOnly) {
     const d = await api('correspondence-file?fileId=' + id);
@@ -293,15 +302,70 @@ function printDownload(url) {
 }
 function viewFile(id) { /* استبدلت بـ showPreview */ }
 
+let selectedFiles = [];
+
 document.getElementById('replyFiles').addEventListener('change', async () => {
-    selectedFiles = [];
     const fl = document.getElementById('replyFiles').files;
     for (const f of fl) {
         if (Math.round(f.size / (1024 * 1024)) > 5) { toast('الملف كبير: ' + f.name, false); continue; }
         const b64 = await fileToBase64(f);
         selectedFiles.push({ name: f.name, mime: f.type || 'application/octet-stream', data: b64 });
     }
+    renderPendingThumbs();
+    document.getElementById('replyFiles').value = '';
 });
+
+document.getElementById('captureInput').addEventListener('change', async () => {
+    const f = document.getElementById('captureInput').files[0];
+    document.getElementById('captureInput').value = '';
+    if (!f) return;
+    if (!/image\//i.test(f.type)) { toast('الرجاء تصوير صورة فقط', false); return; }
+    const dataUrl = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result);
+        r.onerror = rej;
+        r.readAsDataURL(f);
+    });
+    openCrop(dataUrl);
+});
+
+function renderPendingThumbs() {
+    const holder = document.getElementById('pendingThumb');
+    holder.innerHTML = '';
+    if (!selectedFiles.length) { holder.innerHTML = ''; return; }
+    const list = document.createElement('div');
+    list.className = 'thumb-list';
+    selectedFiles.forEach((f, i) => {
+        const it = document.createElement('div');
+        it.className = 'thumb-item';
+        const img = document.createElement('img');
+        img.src = /image\//i.test(f.mime) ? 'data:image/png;base64,' + f.data : 'data:' + f.mime + ';base64,' + f.data;
+        img.onclick = () => showPending(i);
+        const del = document.createElement('button');
+        del.className = 'thumb-del';
+        del.innerHTML = '✕';
+        del.onclick = (e) => { e.stopPropagation(); selectedFiles.splice(i, 1); renderPendingThumbs(); };
+        it.appendChild(img); it.appendChild(del);
+        list.appendChild(it);
+    });
+    const add = document.createElement('div');
+    add.className = 'thumb-item';
+    const addIn = document.createElement('div');
+    addIn.className = 'thumb-add';
+    addIn.innerHTML = '+';
+    addIn.onclick = () => document.getElementById('captureInput').click();
+    add.appendChild(addIn);
+    list.appendChild(add);
+    holder.appendChild(list);
+}
+function showPending(i) {
+    const f = selectedFiles[i];
+    if (!f) return;
+    if (/image\//i.test(f.mime)) {
+        openCrop('data:image/jpeg;base64,' + f.data);
+    }
+}
+
 function fileToBase64(file) {
     return new Promise((res, rej) => {
         const r = new FileReader();
@@ -310,7 +374,212 @@ function fileToBase64(file) {
         r.readAsDataURL(file);
     });
 }
-function openReply(id) { currentId = id; document.getElementById('replyModal').classList.add('show'); }
+
+// ==== القصّ، التدوير وتحسين/ضغط الصورة ====
+let cropSrcImg = null, cropCtx = null, cropW = 0, cropH = 0;
+let cropEnhanceOn = false, cropRotation = 0, cropSel = null, cropDrag = null;
+
+function openCrop(dataUrl) {
+    const img = new Image();
+    img.onload = () => {
+        cropSrcImg = img;
+        cropEnhanceOn = false; cropRotation = 0; cropSel = null;
+        document.getElementById('docEnhLabel').textContent = 'تحسين المستند';
+        document.getElementById('docEnhance').classList.remove('btn-success'); document.getElementById('docEnhance').classList.add('btn');
+        document.getElementById('cropModal').classList.add('show');
+        drawCrop();
+    };
+    img.src = dataUrl;
+}
+function drawCrop() {
+    const c = document.getElementById('cropCanvas');
+    const stage = document.querySelector('.crop-stage');
+    const avail = stage.clientWidth ? stage.clientWidth - 8 : 480;
+    const maxH = stage.clientHeight ? stage.clientHeight : 480;
+    let w = cropSrcImg.width, h = cropSrcImg.height;
+    if (cropRotation % 180 !== 0) { const t = w; w = h; h = t; }
+    const scale = Math.min(1, avail / w, maxH / h);
+    c.width = Math.round(w * scale);
+    c.height = Math.round(h * scale);
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+    const x = c.width / 2, y = c.height / 2;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(cropRotation * Math.PI / 180);
+    ctx.translate(-cropSrcImg.width / 2, -cropSrcImg.height / 2);
+    ctx.drawImage(cropSrcImg, 0, 0, cropSrcImg.width, cropSrcImg.height);
+    ctx.restore();
+    cropCtx = ctx; cropW = c.width; cropH = c.height;
+    c.onmousedown = canvasDown;
+    c.ontouchstart = canvasDown;
+    c.ontouchmove = (ev) => { if (ev.cancelable) ev.preventDefault(); };
+    if (!cropSel) initSelect(); else drawSelect();
+}
+function drawSelect() {
+    drawCropBase();
+    if (!cropCtx || !cropSel) return;
+    const s = cropSel;
+    cropCtx.fillStyle = 'rgba(0,0,0,0.35)';
+    cropCtx.fillRect(0, 0, cropW, s.y);
+    cropCtx.fillRect(0, s.y + s.h, cropW, cropH - s.y - s.h);
+    cropCtx.fillRect(0, s.y, s.x, s.h);
+    cropCtx.fillRect(s.x + s.w, s.y, cropW - s.x - s.w, s.h);
+    cropCtx.strokeStyle = '#3498db'; cropCtx.lineWidth = 2;
+    cropCtx.strokeRect(s.x, s.y, s.w, s.h);
+    cropCtx.lineWidth = 1;
+    cropCtx.strokeRect(s.x + s.w * 0.2, s.y + s.h * 0.2, s.w * 0.6, s.h * 0.6);
+}
+function drawCropBase() {
+    const c = document.getElementById('cropCanvas');
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+    const x = c.width / 2, y = c.height / 2;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(cropRotation * Math.PI / 180);
+    ctx.drawImage(cropSrcImg, -cropSrcImg.width / 2, -cropSrcImg.height / 2, cropSrcImg.width, cropSrcImg.height);
+    ctx.restore();
+}
+function initSelect() {
+    const m = Math.round(cropW * 0.05);
+    cropSel = { x: m, y: Math.round(cropH * 0.1), w: cropW - m * 2, h: cropH - Math.round(cropH * 0.18) - m };
+    drawSelect();
+}
+function pointerToCanvas(ev) {
+    const c = document.getElementById('cropCanvas');
+    const r = c.getBoundingClientRect();
+    return { x: ev.clientX - r.left, y: ev.clientY - r.top };
+}
+function startSel(ev) {
+    ev.preventDefault();
+    initSelect();
+    bindSelEvents();
+}
+function bindSelEvents() {
+    document.addEventListener('mousemove', moveSel);
+    document.addEventListener('mouseup', upSel);
+    document.addEventListener('touchmove', moveSel, { passive: false });
+    document.addEventListener('touchend', upSel);
+}
+function moveSel(ev) {
+    if (ev.cancelable) ev.preventDefault();
+    const p = pointerToCanvas(ev.touches ? ev.touches[0] : ev);
+    if (!cropSel || !cropDrag) return;
+    const s = cropDrag;
+    let nx = s.x, ny = s.y, nw = s.w, nh = s.h;
+    if (s.mode === 'move') {
+        nx = clamp(p.x - s.dx, 0, cropW - s.w);
+        ny = clamp(p.y - s.dy, 0, cropH - s.h);
+    } else if (s.mode === 'resize') {
+        nw = clamp(p.x - s.x0, 1, cropW - s.x0);
+        nh = clamp(p.y - s.y0, 1, cropH - s.y0);
+    }
+    cropSel = { x: nx, y: ny, w: nw, h: nh };
+    drawSelect();
+}
+function upSel(ev) {
+    document.removeEventListener('mousemove', moveSel);
+    document.removeEventListener('mouseup', upSel);
+    document.removeEventListener('touchmove', moveSel);
+    document.removeEventListener('touchend', upSel);
+    cropDrag = null;
+}
+function canvasDown(ev) {
+    ev.preventDefault();
+    const p = pointerToCanvas(ev.touches ? ev.touches[0] : ev);
+    if (cropSel) {
+        const inSel = p.x >= cropSel.x && p.x <= cropSel.x + cropSel.w && p.y >= cropSel.y && p.y <= cropSel.y + cropSel.h;
+        const inHandle = p.x >= cropSel.x + cropSel.w - 14 && p.y >= cropSel.y + cropSel.h - 14 && p.x <= cropSel.x + cropSel.w + 6 && p.y <= cropSel.y + cropSel.h + 6;
+        cropDrag = inHandle ? { mode: 'resize', x0: cropSel.x, y0: cropSel.y, dx: cropSel.x + cropSel.w - p.x, dy: cropSel.y + cropSel.h - p.y }
+            : inSel ? { mode: 'move', dx: p.x - cropSel.x, dy: p.y - cropSel.y } : null;
+        if (!cropDrag) { initSelect(); cropDrag = null; }
+    }
+    bindSelEvents();
+}
+function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+
+function rotateCrop() { cropRotation = (cropRotation + 90) % 360; drawCrop(); }
+function toggleEnhance() {
+    cropEnhanceOn = !cropEnhanceOn;
+    document.getElementById('docEnhLabel').textContent = cropEnhanceOn ? 'تحسين مفعّل' : 'تحسين المستند';
+    const b = document.getElementById('docEnhance');
+    b.classList.toggle('btn-success', cropEnhanceOn);
+}
+
+function applyCrop() {
+    const real = document.createElement('canvas');
+    let cx, cy, sw, sh;
+    if (!cropSel) { cx = 0; cy = 0; sw = cropW; sh = cropH; }
+    else { cx = cropSel.x; cy = cropSel.y; sw = cropSel.w; sh = cropSel.h; }
+    const scaleX = cropSrcImg.width / cropW, scaleY = cropSrcImg.height / cropH;
+    real.width = Math.max(1, Math.round(sw * scaleX));
+    real.height = Math.max(1, Math.round(sh * scaleY));
+    const rctx = real.getContext('2d');
+    rctx.fillStyle = '#fff'; rctx.fillRect(0, 0, real.width, real.height);
+
+    const srcCX = ((cx + sw / 2) / cropW) * cropSrcImg.width;
+    const srcCY = ((cy + sh / 2) / cropH) * cropSrcImg.height;
+
+    rctx.save();
+    rctx.translate(real.width / 2, real.height / 2);
+    rctx.rotate(cropRotation * Math.PI / 180);
+    rctx.drawImage(cropSrcImg, -srcCX, -srcCY);
+    rctx.restore();
+
+    let final = real;
+    if (cropEnhanceOn) final = enhanceDocument(real);
+
+    const out = document.createElement('canvas');
+    out.width = final.width; out.height = final.height;
+    const octx = out.getContext('2d');
+    octx.drawImage(final, 0, 0);
+
+    let quality = 0.75;
+    let outData = out.toDataURL('image/jpeg', quality);
+    const maxBytes = 256 * 1024;
+    let guard = 0;
+    while (outData.length * 0.75 > maxBytes && quality > 0.15 && guard < 9) {
+        quality -= 0.07; guard++;
+        outData = out.toDataURL('image/jpeg', quality);
+    }
+    const raw = outData.split(',')[1];
+    selectedFiles.push({ name: 'مستند_' + Date.now() + '.jpg', mime: 'image/jpeg', data: raw });
+    renderPendingThumbs();
+    closeCrop();
+    toast('أُضيفت الصورة بنجاح', true);
+}
+function closeCrop() { document.getElementById('cropModal').classList.remove('show'); cropSrcImg = null; }
+
+function enhanceDocument(canvas) {
+    const out = document.createElement('canvas');
+    out.width = canvas.width; out.height = canvas.height;
+    const octx = out.getContext('2d');
+    const id = octx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = id.data;
+    const n = d.length;
+    const lum = new Float32Array(canvas.width * canvas.height);
+    let minL = 255, maxL = 0;
+    for (let i = 0; i < n; i += 4) {
+        const v = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        lum[i / 4] = v;
+        if (v < minL) minL = v;
+        if (v > maxL) maxL = v;
+    }
+    const range = maxL - minL;
+    if (range < 20) { octx.putImageData(id, 0, 0); return out; }
+    const gain = 255 / range, bias = -minL * gain;
+    for (let i = 0; i < n; i += 4) {
+        let v = lum[i / 4] * gain + bias;
+        v = v < 0 ? 0 : v > 255 ? 255 : v;
+        d[i] = d[i + 1] = d[i + 2] = Math.round(v);
+        d[i + 3] = 255;
+    }
+    id.data.set(d);
+    octx.putImageData(id, 0, 0);
+    return out;
+}
+function openReply(id) { currentId = id; selectedFiles = []; renderPendingThumbs(); document.getElementById('replyModal').classList.add('show'); }
 function closeReply() { document.getElementById('replyModal').classList.remove('show'); }
 async function submitReply() {
     const text = document.getElementById('replyText').value.trim();
@@ -402,7 +671,8 @@ function exportReportExcel() {
     if (!window.XLSX) { toast('مكتبة Excel غير محملة', false); return; }
     if (!lastReportRecords || lastReportRecords.length === 0) { toast('ولّد التقرير أولاً', false); return; }
     const meta = reportMeta();
-    const rows = [['رقم الطلب', 'الرقم الوطني', 'الاسم', 'الفرع', 'سبب التوقيف', 'الحالة']];
+    const headers = ['رقم الطلب', 'الرقم الوطني', 'الاسم', 'الفرع', 'سبب التوقيف', 'الحالة'];
+    const rows = [headers];
     lastReportRecords.forEach(r => {
         rows.push([
             String(r['رقم الطلب'] || ''),
@@ -413,10 +683,30 @@ function exportReportExcel() {
             STATUS_MAP[r.status] || r.status || ''
         ]);
     });
-    const aoa = XLSX.utils.aoa_to_sheet(rows);
-    aoa['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length - 1, c: 5 } });
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!dir'] = 'rtl';
+
+    const sky = { patternType: 'solid', fgColor: { rgb: 'CFEBF7' } };
+    const headerFill = { font: { bold: true, sz: 11, color: { rgb: '111111' } }, fill: sky };
+    rows[0].forEach((_, c) => {
+        const cell = ws[XLSX.utils.encode_cell({ r: 0, c: c })];
+        if (cell) { cell.s = headerFill; }
+    });
+
+    const widthByCol = headers.map((h, c) => {
+        let max = h.length;
+        rows.forEach((row, ri) => {
+            if (ri === 0) return;
+            const v = String(row[c] || '');
+            const w = Math.max(v.length, v.split('\n').reduce((m, x) => Math.max(m, x.length), 0));
+            if (w > max) max = w;
+        });
+        return Math.min(Math.max(max + 4, 8), 40);
+    });
+    ws['!cols'] = widthByCol.map(w => ({ wch: w }));
+
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, aoa, 'تقرير');
+    XLSX.utils.book_append_sheet(wb, ws, 'تقرير');
     XLSX.writeFile(wb, 'تقرير-الطلبات-الموقوفة.xlsx');
     toast('تم تصدير ملف Excel', true);
 }

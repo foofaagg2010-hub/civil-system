@@ -72,6 +72,19 @@
         body.dark-mode .confirm-msg { color: #bbb; }
         .confirm-actions { display: flex; gap: 10px; justify-content: center; }
         .confirm-actions .btn { flex: 1; justify-content: center; }
+        .crop-wrap { max-width: 520px; }
+        .crop-stage { background: #222; border-radius: 8px; max-height: 60vh; overflow: auto; display: flex; align-items: center; justify-content: center; }
+        body.light-mode .crop-stage { background: #111; }
+        #cropCanvas { display: block; max-width: 100%; touch-action: none; cursor: crosshair; }
+        .crop-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .crop-controls .btn { flex: 1 1 auto; justify-content: center; }
+        .thumb-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .thumb-item { position: relative; border: 2px solid #ccc; border-radius: 8px; overflow: hidden; width: 90px; height: 90px; cursor: pointer; }
+        body.dark-mode .thumb-item { border-color: #444; }
+        .thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .thumb-item .thumb-del { position: absolute; top: 2px; left: 2px; background: #e74c3c; color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 12px; }
+        .thumb-item .thumb-add { width: 100%; height: 100%; background: #eef; display: flex; align-items: center; justify-content: center; color: #2563eb; font-size: 22px; cursor: pointer; }
+        body.dark-mode .thumb-item .thumb-add { background: #333; color: #7fb8ff; }
         .modal-content { border-radius: 14px; padding: 20px; width: 100%; max-width: 720px; max-height: 92vh; overflow: auto; }
         .modal-content.wide { max-width: 1060px; }
         .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
@@ -229,9 +242,28 @@
 
     <div class="modal" id="replyModal"><div class="modal-content">
         <div class="modal-head"><h3>رد من الفرع</h3><button class="btn btn-danger" onclick="closeReply()">✕</button></div>
-        <div class="form-group"><label>ملفات (PDF/صورة) - حتى 4MB</label><input type="file" id="replyFiles" multiple accept="application/pdf,image/*"></div>
+        <div class="form-group">
+            <label>المرفقات</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+                <button class="btn btn-outline" onclick="document.getElementById('replyFiles').click()"><i class="fas fa-paperclip"></i> إرفاق ملف (PDF)</button>
+                <button class="btn btn-primary" id="captureBtn" onclick="document.getElementById('captureInput').click()"><i class="fas fa-camera"></i> تصوير مستند</button>
+            </div>
+            <input type="file" id="replyFiles" multiple accept="application/pdf" style="display:none;">
+            <input type="file" id="captureInput" accept="image/*" capture="environment" style="display:none;">
+        </div>
+        <div class="form-group" id="pendingThumb"></div>
         <div class="form-group"><label>نص اختياري</label><textarea id="replyText" rows="3"></textarea></div>
         <div class="actions"><button class="btn btn-success" onclick="submitReply()">إرسال الرد</button><button class="btn btn-outline" onclick="closeReply()">إلغاء</button></div>
+    </div></div>
+
+    <div class="modal" id="cropModal"><div class="modal-content crop-wrap">
+        <div class="modal-head"><h3>قصّ الصورة وتحسينها</h3><button class="btn btn-danger" onclick="closeCrop()">✕</button></div>
+        <div class="crop-stage"><canvas id="cropCanvas"></canvas></div>
+        <div class="crop-controls">
+            <button class="btn" id="docEnhance" onclick="toggleEnhance()"><i class="fas fa-magic"></i> <span id="docEnhLabel">تحسين المستند</span></button>
+            <button class="btn btn-warning" onclick="rotateCrop()"><i class="fas fa-redo"></i> تدوير</button>
+            <button class="btn btn-success" onclick="applyCrop()"><i class="fas fa-check"></i> اعتماد</button>
+        </div>
     </div></div>
 
     <div class="modal" id="followModal"><div class="modal-content">

@@ -52,12 +52,17 @@ exports.handler = async (event) => {
             .from('stopped_requests')
             .select('id, "رقم الطلب", "الرقم الوطني", "الاسم", "الفرع", "سبب التوقيف", status, created_at, closed_at');
 
-        if (from) query = query.gte('created_at', from + 'T00:00:00');
-        if (to) query = query.lte('created_at', to + 'T23:59:59');
-
         if (statusFilter === 'closed') query = query.eq('status', 'closed');
         else if (statusFilter === 'sent') query = query.eq('status', 'sent');
         else if (statusFilter === 'answered') query = query.eq('status', 'answered');
+
+        if (statusFilter === 'closed') {
+            if (from) query = query.gte('closed_at', from + 'T00:00:00');
+            if (to) query = query.lte('closed_at', to + 'T23:59:59');
+        } else {
+            if (from) query = query.gte('created_at', from + 'T00:00:00');
+            if (to) query = query.lte('created_at', to + 'T23:59:59');
+        }
 
         if (branchFilter) query = query.eq('الفرع', branchFilter);
 
