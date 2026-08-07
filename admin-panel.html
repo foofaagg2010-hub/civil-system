@@ -1044,7 +1044,6 @@
             const elapsed = Date.now() - lastActivity;
             if (elapsed >= SESSION_TIMEOUT) {
                 alert('⏰ انتهت صلاحية الجلسة بسبب عدم النشاط لمدة 30 دقيقة. سيتم تسجيل الخروج.');
-                logActivity('تسجيل الخروج', 'خروج تلقائي بسبب انتهاء صلاحية الجلسة (عدم نشاط)');
                 const token = sessionStorage.getItem('admin_token');
                 if (token) {
                     fetch(`${API_URL}/logout`, {
@@ -2575,7 +2574,6 @@
 
         function logout() {
             const token = sessionStorage.getItem('admin_token');
-            logActivity('تسجيل الخروج', `تسجيل خروج المستخدم ${sessionStorage.getItem('admin_username')}`);
             if (token) {
                 fetch(`${API_URL}/logout`, {
                     method: 'POST',

@@ -66,9 +66,18 @@ exports.handler = async (event) => {
 
         await supabase.from('admin_sessions').delete().eq('token', token);
 
+        let logoutUsername = '';
+        const { data: logoutUser } = await supabase
+            .from('users')
+            .select('username')
+            .eq('id', session.user_id)
+            .single();
+        if (logoutUser) logoutUsername = logoutUser.username;
+
         try {
             await supabase.from('admin_logs').insert({
                 user_id: session.user_id,
+                username: logoutUsername,
                 action: 'تسجيل الخروج',
                 details: 'تسجيل خروج من النظام',
                 created_at: new Date().toISOString()
