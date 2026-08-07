@@ -73,6 +73,29 @@ function logout() {
     setTimeout(() => { sessionStorage.clear(); window.location.href = 'admin-login.html'; }, 300);
 }
 
+// ===== انتهاء صلاحية الجلسة تلقائياً (30 دقيقة) =====
+const SESSION_TIMEOUT = 30 * 60 * 1000;
+let sessionTimer = null, lastActivity = Date.now();
+function resetSessionTimer() {
+    lastActivity = Date.now();
+    if (sessionTimer) clearTimeout(sessionTimer);
+    sessionTimer = setTimeout(checkSessionTimeout, SESSION_TIMEOUT);
+}
+function checkSessionTimeout() {
+    const elapsed = Date.now() - lastActivity;
+    if (elapsed >= SESSION_TIMEOUT) {
+        alert('⏰ انتهت صلاحية الجلسة بسبب عدم النشاط لمدة 30 دقيقة. سيتم تسجيل الخروج.');
+        const t = sessionStorage.getItem('admin_token');
+        if (t) fetch(API_URL + '/logout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t } }).catch(() => {});
+        setTimeout(() => { sessionStorage.clear(); window.location.href = 'admin-login.html'; }, 500);
+        return;
+    }
+    sessionTimer = setTimeout(checkSessionTimeout, SESSION_TIMEOUT - elapsed);
+}
+['click', 'keypress', 'mousemove', 'scroll', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, resetSessionTimer);
+});
+
 async function api(path, opts) {
     const t = sessionStorage.getItem('admin_token');
     if (!t) { window.location.href = 'admin-login.html'; throw new Error('no session'); }
@@ -632,7 +655,7 @@ window.addEventListener('DOMContentLoaded', checkAuth);
 
 // ===== التقارير (للمركز فقط) =====
 const REPORT_STATUS_META = {
-    all:     { title: 'تقرير بالطلبات الموقوفة', label: 'جميع الطلبات' },
+    all:     { title: 'تقرير بحالة الطلبات', label: 'جميع الطلبات' },
     sent:    { title: 'تقرير بالطلبات الموقوفة', label: 'المرسلة للفروع' },
     answered:{ title: 'الطلبات بانتظار تأكيد المركز', label: 'بانتظار تأكيد المركز' },
     closed:  { title: 'البطاقات المطلقة من منظومة المركز الاحتياطي', label: 'الطلبات المغلقة (المستكملة)' }

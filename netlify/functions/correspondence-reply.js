@@ -59,7 +59,7 @@ exports.handler = async (event) => {
 
         const { data: corr, error: corrError } = await supabase
             .from('stopped_requests')
-            .select('id, "الفرع", status')
+            .select('id, "رقم الطلب", "الفرع", status')
             .eq('id', correspondenceId)
             .single();
         if (corrError || !corr) {
@@ -108,7 +108,8 @@ exports.handler = async (event) => {
             const mime = String(f.mime || 'application/octet-stream').slice(0, 100);
             const buffer = Buffer.from(base64, 'base64');
             const safeName = (name.replace(/[^a-zA-Z0-9._-]/g, '_') || 'file').slice(0, 100);
-            const path = `${correspondenceId}/${insertedMsg[0].id}/${Date.now()}_${i}_${safeName}`;
+            const requestNumber = String(corr['رقم الطلب'] || correspondenceId).replace(/[^0-9]/g, '').slice(0, 30);
+            const path = `${requestNumber}/${insertedMsg[0].id}/${Date.now()}_${i}_${safeName}`;
 
             const { error: upErr } = await supabase.storage
                 .from(BUCKET)
