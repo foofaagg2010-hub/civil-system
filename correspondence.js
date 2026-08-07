@@ -742,18 +742,16 @@ function printReport() {
     const rows = document.getElementById('reportBody').innerHTML;
     const head = '<tr><th>رقم الطلب</th><th>الرقم الوطني</th><th>الاسم</th><th>الفرع</th><th>سبب التوقيف</th><th>الحالة</th></tr>';
     const today = new Date().toLocaleDateString('ar-EG');
+    const base = window.location.origin;
     const w = window.open('', '_blank');
     w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>' + meta.title + '</title><style>' +
         '*{margin:0;padding:0;box-sizing:border-box}' +
         '@page{size:A4;margin:6mm 4mm}' +
         'body{font-family:"Tahoma","Arial",sans-serif;font-size:10px;color:#111}' +
-        '.bismillah{text-align:center;font-size:14px;font-weight:bold;margin:2px 0 6px;font-family:"Traditional Arabic",Tahoma}' +
-        '.letterhead{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:8px}' +
-        '.lh-right{width:30%;text-align:right;font-size:11px;font-weight:bold;line-height:1.6}' +
-        '.lh-left{width:30%;text-align:left;font-size:11px;font-weight:bold;line-height:1.6}' +
-        '.lh-center{width:34%;text-align:center}' +
-        '.lh-center img{height:72px}' +
-        '.org-title{text-align:center;font-weight:bold;font-size:12px;margin-bottom:2px}' +
+        '.bismillah{text-align:center;font-size:14px;font-weight:bold;margin:4px 0 2px;font-family:"Traditional Arabic",Tahoma}' +
+        '.eagle{text-align:center;margin:2px 0}' +
+        '.eagle img{height:74px;width:auto}' +
+        '.org-title{text-align:center;font-weight:bold;font-size:12px;margin:2px 0}' +
         '.doc-title{text-align:center;font-size:14px;font-weight:bold;text-decoration:underline;margin:10px 0 4px}' +
         '.meta{text-align:center;font-size:9px;color:#333;margin-bottom:8px}' +
         'table{width:100%;border-collapse:collapse;font-size:9px;margin-top:6px}' +
@@ -763,14 +761,10 @@ function printReport() {
         '.foot span{font-size:10px;font-weight:bold}' +
         '</style></head><body>' +
         '<div class="bismillah">بسم الله الرحمن الرحيم</div>' +
-        '<div class="letterhead">' +
-        '<div class="lh-right">الجمهورية اليمنية<br>مصلحة الأحوال المدنية والسجل المدني<br>المركز الاحتياطي</div>' +
-        '<div class="lh-center"><img src="image.png" onerror="this.style.display=\'none\'"></div>' +
-        '<div class="lh-left">التاريخ: ' + today + '</div>' +
-        '</div>' +
-        '<div class="org-title">مصلحة الأحوال المدنية والسجل المدني - المركز الاحتياطي</div>' +
+        '<div class="eagle"><img src="' + base + '/image.png" onerror="this.style.display=\'none\'"></div>' +
+        '<div class="org-title">الجمهورية اليمنية - مصلحة الأحوال المدنية والسجل المدني - المركز الاحتياطي</div>' +
         '<div class="doc-title">' + meta.title + '</div>' +
-        '<div class="meta">الفترة: ' + (from || 'بداية') + ' إلى ' + (to || 'اليوم') + ' | الحالة: ' + meta.label + (branch ? ' | الفرع: ' + branch : '') + '</div>' +
+        '<div class="meta">التاريخ: ' + today + ' | الفترة: ' + (from || 'بداية') + ' إلى ' + (to || 'اليوم') + ' | الحالة: ' + meta.label + (branch ? ' | الفرع: ' + branch : '') + '</div>' +
         '<table>' + head + rows + '</table>' +
         '<div class="foot"><span>المركز الاحتياطي /</span></div>' +
         '</body></html>');
