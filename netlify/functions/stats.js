@@ -56,6 +56,8 @@ exports.handler = async (event) => {
             branch = user.branch_name;
         }
         
+        const isMainCenter = branch === 'المركز - الرئيسي';
+        
         if (!branch) {
             return {
                 statusCode: 400,
@@ -63,7 +65,7 @@ exports.handler = async (event) => {
             };
         }
         
-        console.log('جلب الإحصائيات - المستخدم:', user.role, 'الفرع:', branch);
+        console.log('جلب الإحصائيات - المستخدم:', user.role, 'الفرع:', branch, 'المركز الرئـيسي:', isMainCenter);
         let stats = {
             total: 0,
             new: 0,
@@ -76,73 +78,25 @@ exports.handler = async (event) => {
             underProcess: 0,
             cancelled: 0
         };
-        const { count: total } = await supabase
-            .from('requests')
-            .select('*', { count: 'exact', head: true })
-            .eq('وحدة التسجيل', branch);
-        stats.total = total || 0;
-        const { count: newCount } = await supabase
-            .from('requests')
-            .select('*', { count: 'exact', head: true })
-            .eq('وحدة التسجيل', branch)
-            .eq('حالة الطلب', 'جديد');
-        stats.new = newCount || 0;
-        
-        const { count: sentToAuth } = await supabase
-            .from('requests')
-            .select('*', { count: 'exact', head: true })
-            .eq('وحدة التسجيل', branch)
-            .eq('حالة الطلب', 'مرسل للتصديق');
-        stats.sentToAuth = sentToAuth || 0;
-        
-        const { count: sentToPrint } = await supabase
-            .from('requests')
-            .select('*', { count: 'exact', head: true })
-            .eq('وحدة التسجيل', branch)
-            .eq('حالة الطلب', 'مرسل للطباعة');
-        stats.sentToPrint = sentToPrint || 0;
-        
-        const { count: printed } = await supabase
-            .from('requests')
-            .select('*', { count: 'exact', head: true })
-            .eq('وحدة التسجيل', branch)
-            .eq('حالة الطلب', 'تمت الطباعة');
-        stats.printed = printed || 0;
-        
-        const { count: delivered } = await supabase
-            .from('requests')
-            .select('*', { count: 'exact', head: true })
-            .eq('وحدة التسجيل', branch)
-            .eq('حالة الطلب', 'تم التسليم');
-        stats.delivered = delivered || 0;
-        
-        const { count: rejected } = await supabase
-            .from('requests')
-            .select('*', { count: 'exact', head: true })
-            .eq('وحدة التسجيل', branch)
-            .eq('حالة الطلب', 'مرفوض');
-        stats.rejected = rejected || 0;
-        
-        const { count: rejectedFromAuth } = await supabase
-            .from('requests')
-            .select('*', { count: 'exact', head: true })
-            .eq('وحدة التسجيل', branch)
-            .eq('حالة الطلب', 'مرفوض من التصديق');
-        stats.rejectedFromAuth = rejectedFromAuth || 0;
-        
-        const { count: underProcess } = await supabase
-            .from('requests')
-            .select('*', { count: 'exact', head: true })
-            .eq('وحدة التسجيل', branch)
-            .eq('حالة الطلب', 'تحت المعالجة');
-        stats.underProcess = underProcess || 0;
-        
-        const { count: cancelled } = await supabase
-            .from('requests')
-            .select('*', { count: 'exact', head: true })
-            .eq('وحدة التسجيل', branch)
-            .eq('حالة الطلب', 'طلبات تم إلغائها');
-        stats.cancelled = cancelled || 0;
+
+        const countRequests = async (status) => {
+            let q = supabase.from('requests').select('*', { count: 'exact', head: true });
+            if (!isMainCenter) q = q.eq('وحدة التسجيل', branch);
+            if (status) q = q.eq('حالة الطلب', status);
+            const { count } = await q;
+            return count || 0;
+        };
+
+        stats.total = await countRequests(null);
+        stats.new = await countRequests('جديد');
+        stats.sentToAuth = await countRequests('مرسل للتصديق');
+        stats.sentToPrint = await countRequests('مرسل للطباعة');
+        stats.printed = await countRequests('تمت الطباعة');
+        stats.delivered = await countRequests('تم التسليم');
+        stats.rejected = await countRequests('مرفوض');
+        stats.rejectedFromAuth = await countRequests('مرفوض من التصديق');
+        stats.underProcess = await countRequests('تحت المعالجة');
+        stats.cancelled = await countRequests('طلبات تم إلغائها');
         
         return {
             statusCode: 200,

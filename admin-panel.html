@@ -977,7 +977,9 @@
             <div class="modal-header"><h3 id="userModalTitle">إضافة مستخدم جديد</h3><span class="modal-close" onclick="closeUserModal()">&times;</span></div>
             <div class="form-group"><label>اسم المستخدم</label><input type="text" id="userUsername" autocomplete="off"></div>
             <div class="form-group"><label>كلمة المرور</label><input type="password" id="userPassword"></div>
-            <div class="form-group"><label>الفرع</label><input type="text" id="userBranch" value="لحج - ردفان"></div>
+            <div class="form-group"><label>الفرع</label>
+                <select id="userBranch"><option value="لحج - ردفان">لحج - ردفان</option><option value="المركز - الرئيسي">المركز - الرئيسي</option></select>
+            </div>
             <div class="form-group"><label>الدور</label><select id="userRole"><option value="admin">مدير</option><option value="supervisor">مشرف فرع</option><option value="employee">موظف</option></select></div>
             <div class="form-group"><label>رقم المدير</label><input type="text" id="userAdminPhone" placeholder="رقم المدير"></div>
             <div class="form-group"><label>رقم الفني</label><input type="text" id="userTechPhone" placeholder="رقم الفني"></div>
@@ -2140,8 +2142,34 @@
             finally { showLoading(false); }
         }
 
+        async function loadBranchOptions() {
+            const sel = document.getElementById('userBranch');
+            const token = sessionStorage.getItem('admin_token');
+            if (!token) return;
+            const current = sel.value;
+            try {
+                const res = await fetch(`${API_URL}/branches-stats`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) return;
+                const branches = await res.json();
+                const seen = { 'المركز - الرئيسي': true };
+                sel.innerHTML = '<option value="المركز - الرئيسي">المركز - الرئيسي</option>';
+                (branches || []).forEach(b => {
+                    const name = String(b.branch || '').trim();
+                    if (name && !seen[name]) {
+                        seen[name] = true;
+                        const o = document.createElement('option');
+                        o.value = name;
+                        o.textContent = name;
+                        sel.appendChild(o);
+                    }
+                });
+                if (current && seen[current]) sel.value = current;
+            } catch(e) { /* تجاهل */ }
+        }
+
         function openUserModal() {
             if (!currentUserCanViewUsers) return;
+            loadBranchOptions();
             document.getElementById('userModal').style.display = 'flex';
             document.getElementById('userModalTitle').innerText = 'إضافة مستخدم جديد';
             currentEditUserId = null;
@@ -2161,6 +2189,7 @@
 
         function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp, canCorrespondence, isReserveCenter) {
             currentEditUserId = id;
+            loadBranchOptions();
             document.getElementById('userModalTitle').innerText = 'تعديل مستخدم';
             document.getElementById('userUsername').value = username;
             document.getElementById('userPassword').value = '';

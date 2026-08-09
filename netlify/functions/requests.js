@@ -59,12 +59,13 @@ exports.handler = async (event) => {
         
         const offset = (page - 1) * limit;
         let query = supabase.from('requests').select('*', { count: 'exact' });
+        const isMainCenter = user.branch_name === 'المركز - الرئيسي';
         if (user.role === 'admin') {
-            if (branch) {
+            if (branch && branch !== 'المركز - الرئيسي') {
                 query = query.eq('وحدة التسجيل', branch);
             }
         } 
-        else {
+        else if (!isMainCenter) {
             query = query.eq('وحدة التسجيل', user.branch_name);
         }
         if (status && status !== 'all') {
