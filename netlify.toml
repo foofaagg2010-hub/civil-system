@@ -32,15 +32,17 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     Permissions-Policy = "geolocation=(), microphone=(), camera=()"
-    Cross-Origin-Embedder-Policy = "require-corp"
+    Cross-Origin-Embedder-Policy = "unsafe-none"
     Cross-Origin-Opener-Policy = "same-origin"
     Cross-Origin-Resource-Policy = "same-origin"
 
-# ✅ سياسة أمان المحتوى (CSP) - محسنة
+# ✅ سياسة أمان المحتوى (CSP)
+# frame-src: يسمح بتضمين فيديوهات يوتيوب وفيسبوك في صفحة الأخبار
+# img-src / media-src: يسمح بتحميل صور وفيديوهات الأخبار من Supabase Storage
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co; media-src 'self' blob: https://*.supabase.co; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://www.facebook.com https://web.facebook.com https://fb.watch; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 
 # للـ Functions
 [[headers]]
