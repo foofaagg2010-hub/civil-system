@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+﻿const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcryptjs');
 
 const { checkRateLimit } = require('./shared/rate-limit');
@@ -58,7 +58,7 @@ exports.handler = async (event) => {
         if (event.httpMethod === 'GET') {
             const { data: users, error } = await supabase
                 .from('users')
-                .select('id, username, branch_name, role, is_active, last_login, can_edit, can_view_logs, can_view_users, is_reserve_center, admin_phone, tech_phone, whatsapp_number');
+                .select('id, username, branch_name, role, is_active, last_login, can_edit, can_view_logs, can_view_users, can_news, is_reserve_center, admin_phone, tech_phone, whatsapp_number');
             
             if (error) throw error;
             
@@ -76,7 +76,7 @@ exports.handler = async (event) => {
                 };
             }
             
-            const { username, password, branch, role, is_active, can_edit, can_view_logs, can_view_users, is_reserve_center, admin_phone, tech_phone, whatsapp_number } = JSON.parse(event.body);
+            const { username, password, branch, role, is_active, can_edit, can_view_logs, can_view_users, can_news, is_reserve_center, admin_phone, tech_phone, whatsapp_number } = JSON.parse(event.body);
             const password_hash = password ? await bcrypt.hash(password, 10) : null;
             
             const { error } = await supabase
@@ -90,6 +90,7 @@ exports.handler = async (event) => {
                     can_edit: can_edit || false,
                     can_view_logs: can_view_logs || false,
                     can_view_users: can_view_users || false,
+                    can_news: can_news || false,
                     is_reserve_center: is_reserve_center || false,
                     admin_phone: admin_phone || '',
                     tech_phone: tech_phone || '',
@@ -120,7 +121,7 @@ exports.handler = async (event) => {
                 };
             }
             
-            const { id, username, password, branch, role, is_active, can_edit, can_view_logs, can_view_users, is_reserve_center, admin_phone, tech_phone, whatsapp_number } = JSON.parse(event.body);
+            const { id, username, password, branch, role, is_active, can_edit, can_view_logs, can_view_users, can_news, is_reserve_center, admin_phone, tech_phone, whatsapp_number } = JSON.parse(event.body);
             
             const updates = { 
                 branch_name: branch, 
@@ -129,6 +130,7 @@ exports.handler = async (event) => {
                 can_edit: can_edit || false,
                 can_view_logs: can_view_logs || false,
                 can_view_users: can_view_users || false,
+                    can_news: can_news || false,
                 is_reserve_center: is_reserve_center || false,
                 admin_phone: admin_phone || '',
                 tech_phone: tech_phone || '',

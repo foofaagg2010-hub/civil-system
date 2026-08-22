@@ -95,6 +95,7 @@ exports.handler = async (event) => {
                 can_edit: user.can_edit || false,
                 can_view_logs: user.can_view_logs || false,
                 can_view_users: user.can_view_users || false,
+                can_news: user.can_news || false,
                 is_reserve_center: user.is_reserve_center || false,
                 admin_phone: user.admin_phone || '',
                 branch_name: user.branch_name || ''

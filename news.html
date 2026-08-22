@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الأخبار والمنشورات | مصلحة الأحوال المدنية والسجل المدني</title>
+    <meta name="description" content="آخر أخبار ومنشورات مصلحة الأحوال المدنية والسجل المدني - فرع لحج ردفان">
+    <meta name="robots" content="index, follow">
+
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" strict-origin-when-cross-origin">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+
+    <script>
+        if (window.location.hostname === 'radfan.netlify.app') {
+            window.location.replace('https://id-yemen.org' + window.location.pathname + window.location.search);
+        }
+    </script>
+
+    <link rel="canonical" href="https://id-yemen.org/news.html">
+    <link rel="icon" type="image/png" href="images.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --bg: #F8FAFC;
+            --card: #FFFFFF;
+            --primary: #0F172A;
+            --secondary: #2563EB;
+            --secondary-dark: #1D4ED8;
+            --green: #16A34A;
+            --gold: #C5A03A;
+            --danger: #DC2626;
+            --muted: #64748B;
+            --border: #E2E8F0;
+            --radius: 18px;
+            --radius-sm: 12px;
+            --shadow-sm: 0 1px 3px rgba(15,23,42,0.08);
+            --shadow-md: 0 6px 20px rgba(15,23,42,0.10);
+            --tr: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .national-bar {
+            background: linear-gradient(90deg, #CE1126 0%, #CE1126 33%, #FFFFFF 33%, #FFFFFF 66%, #212122 66%, #212122 100%);
+            height: 5px;
+        }
+
+        .navbar {
+            background: var(--card);
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .logo-img { height: 34px; width: auto; object-fit: contain; }
+        .logo-img-fallback { display: none; }
+        .logo-divider { width: 1px; height: 28px; background: var(--border); }
+        .logo-text { line-height: 1.3; }
+        .logo-text h2 { font-size: 0.95rem; color: var(--primary); font-weight: 800; }
+        .logo-text p { font-size: 0.68rem; color: var(--secondary); font-weight: 600; }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #EEF2FF;
+            color: var(--secondary);
+            padding: 8px 14px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.82rem;
+            white-space: nowrap;
+            transition: var(--tr);
+        }
+        .back-btn:hover { background: var(--secondary); color: white; }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 16px 16px 80px; width: 100%; }
+
+        .page-hero { text-align: center; padding: 16px 0 8px; }
+        .page-hero h1 { font-size: 1.5rem; margin-bottom: 6px; font-weight: 800; display: inline-flex; align-items: center; gap: 10px; }
+        .page-hero h1 i { color: var(--gold); background: rgba(197,160,58,0.12); padding: 9px; border-radius: 12px; font-size: 1rem; }
+        .page-hero p { font-size: 0.88rem; color: var(--muted); }
+        .page-hero::after {
+            content: '';
+            display: block;
+            width: 56px; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            margin: 10px auto 0; border-radius: 2px;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 18px;
+            margin-top: 22px;
+        }
+
+        .news-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: var(--tr);
+            display: flex;
+            flex-direction: column;
+            animation: fadeUp 0.45s ease;
+        }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+        .news-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+
+        .news-media-box {
+            position: relative;
+            background: linear-gradient(135deg, #0F172A, #1E293B);
+            height: 170px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .news-media-box img.thumb { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+        .news-card:hover .news-media-box img.thumb { transform: scale(1.05); }
+        .news-media-box .media-icon {
+            color: rgba(255,255,255,0.85);
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; flex-direction: column;
+        }
+        .news-media-box .media-icon i { font-size: 42px; }
+        .news-media-box .play-overlay {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .news-media-box .play-overlay span {
+            width: 54px; height: 54px;
+            background: rgba(220,38,38,0.92);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 20px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+            transition: var(--tr);
+        }
+        .news-card:hover .play-overlay span { transform: scale(1.12); }
+
+        .type-badge {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(15,23,42,0.75);
+            backdrop-filter: blur(4px);
+            color: white;
+            font-size: 0.68rem;
+            padding: 4px 10px;
+            border-radius: 30px;
+            display: inline-flex; align-items: center; gap: 5px;
+            font-weight: 700;
+        }
+
+        .news-body { padding: 15px 16px 17px; display: flex; flex-direction: column; flex: 1; }
+        .news-body h3 { font-size: 1.02rem; font-weight: 800; margin-bottom: 7px; line-height: 1.5;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-body p.excerpt { color: var(--muted); font-size: 0.84rem; line-height: 1.7; flex: 1;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-meta {
+            margin-top: 13px; padding-top: 11px; border-top: 1px solid #F1F5F9;
+            display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            font-size: 0.72rem; color: var(--muted);
+        }
+        .news-meta .author { display: inline-flex; align-items: center; gap: 5px; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .load-more-wrap { text-align: center; margin-top: 26px; }
+        .load-more-btn {
+            background: var(--secondary); color: white;
+            border: none; padding: 13px 34px;
+            border-radius: 40px; font-weight: 700; font-family: inherit;
+            font-size: 0.95rem; cursor: pointer; transition: var(--tr);
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .load-more-btn:hover { background: var(--secondary-dark); transform: translateY(-2px); }
+        .load-more-btn:disabled { opacity: 0.6; cursor: wait; }
+
+        .empty-state, .error-state {
+            text-align: center; padding: 60px 20px; color: var(--muted);
+        }
+        .empty-state i { font-size: 52px; opacity: 0.25; margin-bottom: 14px; display: block; }
+        .error-state { color: var(--danger); font-weight: 600; }
+        .loading-state { text-align: center; padding: 50px 20px; color: var(--secondary); font-weight: 600; }
+
+        /* ===== نافذة العرض الكامل ===== */
+        .overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(15,23,42,0.72);
+            backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+            padding: 18px;
+        }
+        .overlay.show { display: flex; }
+        .viewer {
+            background: var(--card);
+            border-radius: var(--radius);
+            max-width: 860px; width: 100%;
+            max-height: 92vh;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            animation: fadeUp 0.3s ease;
+        }
+        .viewer-head {
+            padding: 14px 18px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex; justify-content: space-between; align-items: center; gap: 12px;
+        }
+        .viewer-head h3 { font-size: 1rem; font-weight: 800; line-height: 1.5; }
+        .viewer-close {
+            background: rgba(255,255,255,0.15); border: none; color: white;
+            width: 36px; height: 36px; border-radius: 50%;
+            cursor: pointer; font-size: 16px; flex-shrink: 0; transition: var(--tr);
+        }
+        .viewer-close:hover { background: rgba(255,255,255,0.3); transform: rotate(90deg); }
+        .viewer-body { padding: 18px; overflow-y: auto; }
+        .viewer-body img.full { width: 100%; border-radius: var(--radius-sm); display: block; }
+        .viewer-body video.full { width: 100%; border-radius: var(--radius-sm); display: block; background: black; }
+        .viewer-body .embed-frame { position: relative; width: 100%; padding-top: 56.25%; border-radius: var(--radius-sm); overflow: hidden; background: black; }
+        .viewer-body .embed-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+        .viewer-body .article-text { white-space: pre-wrap; line-height: 2; font-size: 0.95rem; color: #334155; }
+        .viewer-date { margin-top: 14px; font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+
+        .footer {
+            text-align: center;
+            padding: 24px 16px 40px;
+            color: var(--muted);
+            font-size: 0.82rem;
+            border-top: 1px solid var(--border);
+            background: var(--card);
+        }
+
+        @media (min-width: 768px) {
+            .container { padding: 24px 24px 90px; }
+            .navbar { padding: 12px 24px; }
+            .page-hero h1 { font-size: 1.9rem; }
+            .news-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 22px; }
+            .news-media-box { height: 190px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="national-bar"></div>
+
+    <div class="navbar">
+        <div class="logo">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <img src="image.png" alt="الجمهورية اليمنية" class="logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="logo-img-fallback" style="width:34px;height:34px;background:#EEF2FF;border-radius:10px;align-items:center;justify-content:center;"><i class="fas fa-flag" style="font-size:16px;color:#2563EB;"></i></div>
+                <div class="logo-divider"></div>
+                <img src="images.png" alt="شعار الأحوال المدنية" class="logo-img" style="height:30px;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="logo-img-fallback" style="display:none;width:30px;height:30px;background:#EEF2FF;border-radius:10px;align-items:center;justify-content:center;"><i class="fas fa-id-card" style="font-size:14px;color:#2563EB;"></i></div>
+            </div>
+            <div class="logo-text">
+                <h2>مصلحة الأحوال المدنية</h2>
+                <p>الأخبار والمنشورات</p>
+            </div>
+        </div>
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-right"></i> الرئيسية</a>
+    </div>
+
+    <div class="container">
+        <div class="page-hero">
+            <h1><i class="fas fa-bullhorn"></i> الأخبار والمنشورات</h1>
+            <p>آخر الأخبار والإعلانات والمنشورات الرسمية</p>
+        </div>
+
+        <div id="newsArea">
+            <div class="loading-state"><i class="fas fa-spinner fa-pulse"></i> جاري تحميل المنشورات...</div>
+        </div>
+
+        <div class="load-more-wrap" id="moreWrap" style="display:none;">
+            <button class="load-more-btn" id="moreBtn" onclick="loadMore()"><i class="fas fa-chevron-down"></i> عرض المزيد</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 الإدارة العامة للأحوال المدنية - جميع الحقوق محفوظة</p>
+    </div>
+
+    <div class="overlay" id="viewerOverlay" onclick="if(event.target===this)closeViewer()">
+        <div class="viewer" role="dialog" aria-modal="true">
+            <div class="viewer-head">
+                <h3 id="viewerTitle"></h3>
+                <button class="viewer-close" onclick="closeViewer()" aria-label="إغلاق">&times;</button>
+            </div>
+            <div class="viewer-body" id="viewerBody"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/.netlify/functions';
+        let currentPage = 1;
+        let totalPages = 1;
+
+        function escapeHtml(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function formatDate(d) {
+            try {
+                return new Date(d).toLocaleDateString('ar-YE', { year: 'numeric', month: 'long', day: 'numeric' });
+            } catch (e) { return ''; }
+        }
+
+        const TYPE_LABELS = {
+            article: '<i class="fas fa-newspaper"></i> مقالة',
+            image: '<i class="fas fa-image"></i> صورة',
+            video: '<i class="fas fa-film"></i> فيديو',
+            youtube: '<i class="fab fa-youtube"></i> يوتيوب',
+            facebook: '<i class="fab fa-facebook"></i> فيسبوك'
+        };
+
+        function ytEmbed(url) {
+            try {
+                const u = new URL(url);
+                const h = u.hostname.toLowerCase();
+                if (h === 'youtu.be' || h === 'www.youtu.be') {
+                    const id = u.pathname.split('/').filter(Boolean)[0];
+                    return id ? 'https://www.youtube.com/embed/' + encodeURIComponent(id) : null;
+                }
+                const m = u.pathname.match(/\/(?:shorts|embed|v)\/([A-Za-z0-9_-]{6,})/);
+                if (m) return 'https://www.youtube.com/embed/' + encodeURIComponent(m[1]);
+                const v = u.searchParams.get('v');
+                if (v) return 'https://www.youtube.com/embed/' + encodeURIComponent(v);
+                return null;
+            } catch (e) { return null; }
+        }
+
+        function fbEmbed(url) {
+            return 'https://www.facebook.com/plugins/video.php?height=400&show_text=false&href=' + encodeURIComponent(url);
+        }
+
+        function mediaBox(p) {
+            if (p.media_type === 'image' && p.media_public_url) {
+                return `<img class="thumb" src="${escapeHtml(p.media_public_url)}" alt="${escapeHtml(p.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;media-icon&quot;><i class=&quot;fas fa-image&quot;></i></div>'">`;
+            }
+            if (p.media_type === 'video' && p.media_public_url) {
+                return `
+                    <video class="thumb" src="${escapeHtml(p.media_public_url)}" preload="metadata" muted></video>
+                    <div class="play-overlay"><span><i class="fas fa-play"></i></span></div>`;
+            }
+            if (p.media_type === 'youtube') {
+                return `
+                    <div class="media-icon"><i class="fab fa-youtube" style="color:#FF0000;"></i></div>
+                    <div class="play-overlay"><span><i class="fas fa-play"></i></span></div>`;
+            }
+            if (p.media_type === 'facebook') {
+                return `
+                    <div class="media-icon"><i class="fab fa-facebook" style="color:#1877F2;"></i></div>
+                    <div class="play-overlay"><span><i class="fas fa-play"></i></span></div>`;
+            }
+            return '<div class="media-icon"><i class="fas fa-newspaper"></i></div>';
+        }
+
+        function excerptOf(p) {
+            if (p.body) return p.body.slice(0, 160);
+            if (p.media_type === 'image') return 'اضغط لعرض الصورة بالحجم الكامل';
+            if (p.media_type === 'video') return 'اضغط لمشاهدة الفيديو';
+            if (p.media_type === 'youtube') return 'اضغط لمشاهدة الفيديو على يوتيوب';
+            if (p.media_type === 'facebook') return 'اضغط لمشاهدة الفيديو على فيسبوك';
+            return '';
+        }
+
+        async function loadPosts(page) {
+            const area = document.getElementById('newsArea');
+            try {
+                const res = await fetch(`${API_URL}/news-public?page=${page}&per=12`);
+                if (!res.ok) throw new Error('فشل التحميل');
+                const data = await res.json();
+                const items = data.items || [];
+                totalPages = Math.max(1, Math.ceil((data.total || 0) / (data.per || 12)));
+
+                if (page === 1) {
+                    if (!items.length) {
+                        area.innerHTML = '<div class="empty-state"><i class="far fa-newspaper"></i>لا توجد منشورات بعد</div>';
+                        document.getElementById('moreWrap').style.display = 'none';
+                        return;
+                    }
+                    area.innerHTML = '<div class="news-grid" id="newsGrid"></div>';
+                }
+                const grid = document.getElementById('newsGrid');
+                grid.insertAdjacentHTML('beforeend', items.map(p => `
+                    <article class="news-card" onclick='openViewer(${JSON.stringify({
+                        id: p.id,
+                        title: p.title,
+                        body: p.body,
+                        media_type: p.media_type,
+                        media_url: p.media_url,
+                        media_public_url: p.media_public_url,
+                        author: p.author,
+                        created_at: p.created_at
+                    }).replace(/'/g, "&#39;")})'>
+                        <div class="news-media-box">
+                            ${mediaBox(p)}
+                            <span class="type-badge">${TYPE_LABELS[p.media_type] || TYPE_LABELS.article}</span>
+                        </div>
+                        <div class="news-body">
+                            <h3>${escapeHtml(p.title)}</h3>
+                            <p class="excerpt">${escapeHtml(excerptOf(p))}</p>
+                            <div class="news-meta">
+                                <span class="author"><i class="fas fa-user-circle"></i> ${escapeHtml(p.author || 'مصلحة الأحوال المدنية')}</span>
+                                <span dir="ltr"><i class="far fa-calendar-alt"></i> ${formatDate(p.created_at)}</span>
+                            </div>
+                        </div>
+                    </article>
+                `).join(''));
+
+                document.getElementById('moreWrap').style.display = page < totalPages ? 'block' : 'none';
+            } catch (err) {
+                if (page === 1) {
+                    area.innerHTML = '<div class="error-state"><i class="fas fa-triangle-exclamation"></i> تعذر تحميل المنشورات، حاول تحديث الصفحة</div>';
+                }
+            }
+        }
+
+        function loadMore() {
+            currentPage++;
+            loadPosts(currentPage);
+        }
+
+        function openViewer(p) {
+            document.getElementById('viewerTitle').textContent = p.title;
+            const body = document.getElementById('viewerBody');
+            let inner = '';
+
+            if (p.media_type === 'image' && p.media_public_url) {
+                inner += `<img class="full" src="${escapeHtml(p.media_public_url)}" alt="${escapeHtml(p.title)}">`;
+            } else if (p.media_type === 'video' && p.media_public_url) {
+                inner += `<video class="full" src="${escapeHtml(p.media_public_url)}" controls autoplay playsinline></video>`;
+            } else if (p.media_type === 'youtube' && p.media_url) {
+                const e = ytEmbed(p.media_url);
+                inner += e
+                    ? `<div class="embed-frame"><iframe src="${escapeHtml(e)}" title="فيديو يوتيوب" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
+                    : `<p style="color:var(--danger);">رابط الفيديو غير صالح</p>`;
+            } else if (p.media_type === 'facebook' && p.media_url) {
+                inner += `<div class="embed-frame"><iframe src="${escapeHtml(fbEmbed(p.media_url))}" title="فيديو فيسبوك" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+            }
+
+            if (p.body) inner += `<p class="article-text" style="${inner ? 'margin-top:16px;' : ''}">${escapeHtml(p.body)}</p>`;
+            inner += `<div class="viewer-date"><i class="far fa-calendar-alt"></i> ${formatDate(p.created_at)}${p.author ? ' &bull; <i class="fas fa-user-circle"></i> ' + escapeHtml(p.author) : ''}</div>`;
+
+            body.innerHTML = inner;
+            document.getElementById('viewerOverlay').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeViewer() {
+            document.getElementById('viewerBody').innerHTML = '';
+            document.getElementById('viewerOverlay').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeViewer(); });
+
+        loadPosts(1);
+    </script>
+</body>
+</html>

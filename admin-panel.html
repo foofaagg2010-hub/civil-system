@@ -727,6 +727,9 @@
             <button class="tab-btn" onclick="showTab('users')" id="usersTab"><i class="fas fa-users"></i> المستخدمين</button>
             <button class="tab-btn" onclick="showTab('logs')" id="logsTab"><i class="fas fa-history"></i> السجل</button>
             <button class="tab-btn" onclick="showTab('announce')" id="announceTab"><i class="fas fa-bullhorn"></i> الإشعارات <span id="announceTabBadge" class="notification-count" style="display:none;">0</span></button>
+            <button class="tab-btn" onclick="showTab('news')" id="newsTab" style="display:none;">
+                <i class="fas fa-newspaper"></i> الأخبار والمنشورات
+            </button>
             <button class="tab-btn" onclick="showTab('notifications')" id="notificationsTab" style="display:none;">
                 <i class="fas fa-bell"></i> طلبات الإشعارات <span id="notifBadge" class="notification-count" style="display:none;">0</span>
             </button>
@@ -993,6 +996,67 @@
                 <div id="announceList"></div>
             </div>
         </div>
+
+        <div id="news" class="tab-content">
+            <h3><i class="fas fa-newspaper"></i> إدارة الأخبار والمنشورات</h3>
+            <p style="color:#666;margin-bottom:15px;">المنشورات المحفوظة تظهر مباشرة في صفحة <a href="news.html" target="_blank" style="color:#2980b9;">الأخبار والمنشورات</a> للزوار.</p>
+
+            <div style="background:white;border:1px solid #ddd;border-radius:12px;padding:20px;margin-bottom:25px;">
+                <h4 id="newsFormTitle" style="margin-bottom:15px;color:#2c3e50;"><i class="fas fa-plus-circle"></i> إضافة منشور جديد</h4>
+                <div class="form-group">
+                    <label>عنوان المنشور *</label>
+                    <input type="text" id="newsTitle" maxlength="300" placeholder="اكتب عنوان المنشور..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-family:inherit;font-size:14px;">
+                </div>
+                <div class="form-group">
+                    <label>نوع المنشور</label>
+                    <select id="newsType" onchange="onNewsTypeChange()" style="width:auto;min-width:220px;padding:10px;border:1px solid #ddd;border-radius:8px;font-family:inherit;font-size:14px;">
+                        <option value="article">مقالة (نص فقط)</option>
+                        <option value="image">صورة مرفوعة</option>
+                        <option value="video">فيديو مرفوع</option>
+                        <option value="youtube">رابط فيديو يوتيوب</option>
+                        <option value="facebook">رابط فيديو فيسبوك</option>
+                    </select>
+                </div>
+                <div class="form-group" id="newsUrlGroup" style="display:none;">
+                    <label>رابط الفيديو</label>
+                    <input type="url" id="newsMediaUrl" dir="ltr" placeholder="https://www.youtube.com/watch?v=..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-family:inherit;font-size:14px;text-align:left;">
+                    <small style="color:#888;">مثال يوتيوب: https://www.youtube.com/watch?v=xxxx أو https://youtu.be/xxxx</small>
+                </div>
+                <div class="form-group" id="newsFileGroup" style="display:none;">
+                    <label>الملف <small id="newsFileHint" style="color:#888;"></small></label>
+                    <input type="file" id="newsFile" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,video/3gpp" onchange="onNewsFileChange()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-family:inherit;font-size:13px;background:#fafafa;">
+                    <small id="newsFileInfo" style="color:#2980b9;"></small>
+                </div>
+                <div class="form-group" id="newsBodyGroup">
+                    <label>محتوى المنشور</label>
+                    <textarea id="newsBody" rows="5" maxlength="10000" placeholder="اكتب نص المنشور هنا..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;"></textarea>
+                </div>
+                <div class="checkbox-group"><input type="checkbox" id="newsPublished" checked> <label>منشور للعموم (إلغاء التحديد = مسودة مخفية)</label></div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+                    <button class="btn btn-success" onclick="saveNewsPost()" id="newsSaveBtn"><i class="fas fa-save"></i> حفظ المنشور</button>
+                    <button class="btn" onclick="resetNewsForm()" id="newsCancelBtn" style="background:#95a5a6;color:white;display:none;"><i class="fas fa-times"></i> إلغاء التعديل</button>
+                </div>
+            </div>
+
+            <h4 style="margin-bottom:10px;color:#2c3e50;"><i class="fas fa-list"></i> المنشورات الحالية</h4>
+            <div class="table-container">
+                <table class="branches-table">
+                    <thead>
+                        <tr>
+                            <th>العنوان</th>
+                            <th>النوع</th>
+                            <th>بواسطة</th>
+                            <th>التاريخ</th>
+                            <th>الحالة</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="newsTableBody">
+                        <tr><td colspan="6" style="text-align:center;color:#888;">لا توجد منشورات بعد</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <div id="loadingModal" class="modal">
@@ -1027,6 +1091,7 @@
             <div class="checkbox-group"><input type="checkbox" id="userCanEdit"> <label>صلاحية التعديل</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userCanViewLogs"> <label>صلاحية مشاهدة السجل</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userCanViewUsers"> <label>صلاحية إدارة المستخدمين</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="userCanNews"> <label>صلاحية الأخبار والمنشورات</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userIsReserveCenter"> <label>صلاحية المركز الرئيسي (إرسال الإشعارات)</label></div>
             <div style="display:flex;gap:12px;margin-top:20px;"><button class="btn btn-success" onclick="saveUser()">حفظ</button><button class="btn btn-danger" onclick="closeUserModal()">إلغاء</button></div>
         </div>
@@ -1050,7 +1115,7 @@
     <script>
 
         const API_URL = '/.netlify/functions';
-        let currentUserId = null, currentUserBranch = null, currentUserRole = null, currentUserCanEdit = false, currentUserCanViewUsers = false, currentUserCanViewLogs = false, currentUserIsCenter = false;
+        let currentUserId = null, currentUserBranch = null, currentUserRole = null, currentUserCanEdit = false, currentUserCanViewUsers = false, currentUserCanViewLogs = false, currentUserIsCenter = false, currentUserCanNews = false;
         let currentEditUserId = null, currentPage = 1, totalRecords = 0, isLoading = false, currentStatusFilter = null, isSearchMode = false;
         let currentRequests = [], globalSearchResults = [];
         let allNotifications = [];
@@ -1222,6 +1287,7 @@
             document.getElementById('logsTab').style.display = currentUserCanViewLogs ? 'inline-flex' : 'none';
             document.getElementById('announceTab').style.display = 'inline-flex';
             document.getElementById('notifCenterBtn').style.display = 'inline-flex';
+            document.getElementById('newsTab').style.display = (currentUserCanNews || currentUserRole === 'admin') ? 'inline-flex' : 'none';
 
             const notifTab = document.getElementById('notificationsTab');
             if (currentUserCanEdit) {
@@ -1339,6 +1405,7 @@
                             currentUserCanViewUsers = data.can_view_users === true;
                             currentUserCanViewLogs = data.can_view_logs === true;
                             currentUserIsCenter = data.is_reserve_center === true;
+                            currentUserCanNews = data.can_news === true || data.role === 'admin';
                             applyPermissions();
                         }
                     } catch (err) {
@@ -1370,6 +1437,7 @@
                 currentUserCanViewUsers = data.can_view_users === true;
                 currentUserCanViewLogs = data.can_view_logs === true;
                 currentUserIsCenter = data.is_reserve_center === true;
+                currentUserCanNews = data.can_news === true || data.role === 'admin';
 
                 sessionStorage.setItem('admin_branch', currentUserBranch);
                 sessionStorage.setItem('admin_username', data.username);
@@ -2085,7 +2153,10 @@
                 'تعديل مستخدم': '#f39c12',
                 'حذف مستخدم': '#e74c3c',
                 'إرسال إشعار متصفح': '#9b59b6',
-                'إرسال إشعار': '#2980b9'
+                'إرسال إشعار': '#2980b9',
+                'إضافة منشور': '#16a085',
+                'تعديل منشور': '#f39c12',
+                'حذف منشور': '#e74c3c'
             };
             return colors[action] || '#7f8c8d';
         }
@@ -2127,7 +2198,7 @@
                         <td>${escapeHtml(u.whatsapp_number || '-----')}</td>
                         <td><span class="status-badge ${u.is_active !== false ? 'status-active' : 'status-inactive'}">${u.is_active !== false ? 'نشط' : 'غير نشط'}</span></td>
                         <td>
-                            <button class="btn btn-warning btn-sm" onclick="editUser(${u.id}, '${escapeHtml(u.username)}', '${escapeHtml(u.branch_name)}', '${escapeHtml(u.role)}', ${u.is_active !== false}, ${u.can_edit === true}, ${u.can_view_logs === true}, ${u.can_view_users === true}, '${escapeHtml(u.admin_phone || '')}', '${escapeHtml(u.tech_phone || '')}', '${escapeHtml(u.whatsapp_number || '')}', ${u.is_reserve_center === true})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-warning btn-sm" onclick="editUser(${u.id}, '${escapeHtml(u.username)}', '${escapeHtml(u.branch_name)}', '${escapeHtml(u.role)}', ${u.is_active !== false}, ${u.can_edit === true}, ${u.can_view_logs === true}, ${u.can_view_users === true}, '${escapeHtml(u.admin_phone || '')}', '${escapeHtml(u.tech_phone || '')}', '${escapeHtml(u.whatsapp_number || '')}', ${u.can_news === true}, ${u.is_reserve_center === true})"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
@@ -2181,10 +2252,11 @@
             document.getElementById('userCanEdit').checked = false;
             document.getElementById('userCanViewLogs').checked = false;
             document.getElementById('userCanViewUsers').checked = false;
+            document.getElementById('userCanNews').checked = false;
             document.getElementById('userIsReserveCenter').checked = false;
         }
 
-        function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp, isReserveCenter) {
+        function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp, canNews, isReserveCenter) {
             currentEditUserId = id;
             loadBranchOptions();
             document.getElementById('userModalTitle').innerText = 'تعديل مستخدم';
@@ -2198,6 +2270,7 @@
             document.getElementById('userCanEdit').checked = canEdit === true;
             document.getElementById('userCanViewLogs').checked = canViewLogs === true;
             document.getElementById('userCanViewUsers').checked = canViewUsers === true;
+            document.getElementById('userCanNews').checked = canNews === true;
             document.getElementById('userIsReserveCenter').checked = isReserveCenter === true;
             document.getElementById('userModal').style.display = 'flex';
         }
@@ -2218,6 +2291,7 @@
             const canEdit = document.getElementById('userCanEdit').checked;
             const canViewLogs = document.getElementById('userCanViewLogs').checked;
             const canViewUsers = document.getElementById('userCanViewUsers').checked;
+            const canNews = document.getElementById('userCanNews').checked;
             const isReserveCenter = document.getElementById('userIsReserveCenter').checked;
 
             if (!username) { alert('يرجى إدخال اسم المستخدم'); return; }
@@ -2244,6 +2318,7 @@
                         can_edit: canEdit,
                         can_view_logs: canViewLogs,
                         can_view_users: canViewUsers,
+                        can_news: canNews,
                         is_reserve_center: isReserveCenter
                     })
                 });
@@ -2807,6 +2882,234 @@
             });
         }
 
+        const NEWS_TYPE_LABELS = {
+            article: '<i class="fas fa-newspaper"></i> مقالة',
+            image: '<i class="fas fa-image"></i> صورة',
+            video: '<i class="fas fa-film"></i> فيديو',
+            youtube: '<i class="fab fa-youtube"></i> يوتيوب',
+            facebook: '<i class="fab fa-facebook"></i> فيسبوك'
+        };
+        let newsItemsCache = [];
+        let newsSelectedFile = null;
+        let currentEditNewsId = null;
+
+        async function loadNewsAdmin() {
+            const tbody = document.getElementById('newsTableBody');
+            if (!tbody) return;
+            if (!(currentUserCanNews || currentUserRole === 'admin')) return;
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>';
+            try {
+                const data = await notifyApi('news-manage');
+                newsItemsCache = data.items || [];
+                renderNewsAdminTable();
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;">خطأ: ${escapeHtml(err.message)}</td></tr>`;
+            }
+        }
+
+        function renderNewsAdminTable() {
+            const tbody = document.getElementById('newsTableBody');
+            if (!newsItemsCache.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888;">لا توجد منشورات بعد</td></tr>';
+                return;
+            }
+            tbody.innerHTML = newsItemsCache.map(p => `
+                <tr>
+                    <td style="max-width:320px;"><strong>${escapeHtml(p.title)}</strong>${p.storage_path ? ' <small style="color:#888;"><i class="fas fa-paperclip"></i> ملف</small>' : ''}</td>
+                    <td><span class="status-badge status-active" style="background:#eef2ff;color:#2563eb;">${NEWS_TYPE_LABELS[p.media_type] || NEWS_TYPE_LABELS.article}</span></td>
+                    <td>${escapeHtml(p.created_by_name || '-----')}</td>
+                    <td dir="ltr" style="text-align:left;white-space:nowrap;">${formatDateTime(p.created_at)}</td>
+                    <td><span class="status-badge ${p.is_published ? 'status-active' : 'status-inactive'}">${p.is_published ? 'منشور' : 'مسودة'}</span></td>
+                    <td style="white-space:nowrap;">
+                        <button class="btn btn-warning btn-sm" onclick="editNewsPost(${p.id})" title="تعديل"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm" style="background:${p.is_published ? '#e67e22' : '#27ae60'};color:white;" onclick="toggleNewsPublish(${p.id}, ${p.is_published === true})" title="${p.is_published ? 'إخفاء عن الزوار' : 'نشر للزوار'}"><i class="fas ${p.is_published ? 'fa-eye-slash' : 'fa-eye'}"></i></button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteNewsPost(${p.id})" title="حذف"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function onNewsTypeChange() {
+            const t = document.getElementById('newsType').value;
+            document.getElementById('newsUrlGroup').style.display = (t === 'youtube' || t === 'facebook') ? 'block' : 'none';
+            document.getElementById('newsFileGroup').style.display = (t === 'image' || t === 'video') ? 'block' : 'none';
+            document.getElementById('newsFileHint').textContent = t === 'video'
+                ? '(فيديو MP4/WEBM/MOV - الحد الأقصى 100MB)'
+                : '(صورة JPG/PNG/WEBP/GIF)';
+            newsSelectedFile = null;
+            document.getElementById('newsFile').value = '';
+            document.getElementById('newsFileInfo').textContent = '';
+        }
+
+        function onNewsFileChange() {
+            const inp = document.getElementById('newsFile');
+            const info = document.getElementById('newsFileInfo');
+            newsSelectedFile = null;
+            info.textContent = '';
+            info.style.color = '#2980b9';
+            if (!inp.files || !inp.files[0]) return;
+            const f = inp.files[0];
+            if (f.size > 104857600) {
+                info.textContent = '❌ حجم الملف يتجاوز 100 ميجابايت';
+                info.style.color = '#e74c3c';
+                inp.value = '';
+                return;
+            }
+            newsSelectedFile = f;
+            info.textContent = `✔ ${f.name} (${(f.size / 1048576).toFixed(1)} MB)`;
+        }
+
+        async function uploadNewsMedia(postId, file) {
+            const sign = await notifyApi('news-upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}` },
+                body: JSON.stringify({ id: postId, filename: file.name, content_type: file.type, size: file.size })
+            });
+            const upRes = await fetch(sign.upload_url, {
+                method: 'PUT',
+                headers: { 'Content-Type': sign.content_type },
+                body: file
+            });
+            if (!upRes.ok) throw new Error('فشل رفع الملف إلى التخزين (' + upRes.status + ')');
+            await notifyApi('news-manage', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}` },
+                body: JSON.stringify({ id: postId, attach_storage_path: sign.storage_path })
+            });
+        }
+
+        async function saveNewsPost() {
+            if (!(currentUserCanNews || currentUserRole === 'admin')) return;
+            const title = document.getElementById('newsTitle').value.trim();
+            const content = document.getElementById('newsBody').value.trim();
+            const type = document.getElementById('newsType').value;
+            const linkUrl = document.getElementById('newsMediaUrl').value.trim();
+            const published = document.getElementById('newsPublished').checked;
+
+            if (!title) { alert('يرجى إدخال عنوان المنشور'); return; }
+            if ((type === 'youtube' || type === 'facebook')) {
+                if (!linkUrl || !/^https:\/\/(www\.)?(youtube\.com|youtu\.be|facebook\.com|fb\.watch)/i.test(linkUrl)) {
+                    alert('يرجى إدخال رابط فيديو صحيح يبدأ بـ https');
+                    return;
+                }
+            }
+            if (!currentEditNewsId && (type === 'image' || type === 'video') && !newsSelectedFile) {
+                alert('يرجى اختيار الملف المطلوب رفعه');
+                return;
+            }
+
+            const btn = document.getElementById('newsSaveBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> جاري الحفظ...';
+
+            try {
+                if (currentEditNewsId) {
+                    await notifyApi('news-manage', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}` },
+                        body: JSON.stringify({ id: currentEditNewsId, title, body: content, media_type: type, media_url: linkUrl, is_published: published })
+                    });
+                    if (newsSelectedFile) {
+                        btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> جاري رفع الملف...';
+                        await uploadNewsMedia(currentEditNewsId, newsSelectedFile);
+                    }
+                    alert('تم تحديث المنشور بنجاح');
+                    logActivity('تعديل منشور', `تعديل المنشور رقم ${currentEditNewsId}: ${title}`);
+                } else {
+                    const created = await notifyApi('news-manage', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}` },
+                        body: JSON.stringify({ title, body: content, media_type: type, media_url: linkUrl, is_published: published })
+                    });
+                    if (newsSelectedFile) {
+                        btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> جاري رفع الملف...';
+                        await uploadNewsMedia(created.id, newsSelectedFile);
+                    }
+                    alert('تم حفظ المنشور بنجاح وظهر للزوار مباشرة');
+                    logActivity('إضافة منشور', `إضافة منشور جديد (${type}): ${title}`);
+                }
+                resetNewsForm();
+                await loadNewsAdmin();
+            } catch (err) {
+                alert('❌ ' + err.message);
+                await loadNewsAdmin().catch(() => {});
+            }
+            finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> حفظ المنشور';
+            }
+        }
+
+        function resetNewsForm() {
+            currentEditNewsId = null;
+            newsSelectedFile = null;
+            document.getElementById('newsFormTitle').innerHTML = '<i class="fas fa-plus-circle"></i> إضافة منشور جديد';
+            document.getElementById('newsTitle').value = '';
+            document.getElementById('newsBody').value = '';
+            document.getElementById('newsType').value = 'article';
+            document.getElementById('newsMediaUrl').value = '';
+            document.getElementById('newsFile').value = '';
+            document.getElementById('newsFileInfo').textContent = '';
+            document.getElementById('newsPublished').checked = true;
+            document.getElementById('newsCancelBtn').style.display = 'none';
+            onNewsTypeChange();
+        }
+
+        function editNewsPost(id) {
+            const p = newsItemsCache.find(x => x.id === id);
+            if (!p) return;
+            currentEditNewsId = id;
+            document.getElementById('newsFormTitle').innerHTML = `<i class="fas fa-edit"></i> تعديل المنشور #${id}`;
+            document.getElementById('newsTitle').value = p.title;
+            document.getElementById('newsBody').value = p.body || '';
+            document.getElementById('newsType').value = p.media_type;
+            document.getElementById('newsMediaUrl').value = p.media_url || '';
+            document.getElementById('newsPublished').checked = p.is_published !== false;
+            newsSelectedFile = null;
+            document.getElementById('newsFile').value = '';
+            document.getElementById('newsFileInfo').textContent = p.media_public_url
+                ? `(يوجد ملف مرفق حالياً - اختر ملفاً جديداً فقط إذا أردت استبداله)`
+                : '';
+            document.getElementById('newsCancelBtn').style.display = 'inline-flex';
+            onNewsTypeChange();
+            document.getElementById('newsFormTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function toggleNewsPublish(id, currentlyPublished) {
+            const p = newsItemsCache.find(x => x.id === id);
+            if (!p) return;
+            try {
+                await notifyApi('news-manage', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}` },
+                    body: JSON.stringify({
+                        id: id,
+                        title: p.title,
+                        body: p.body || '',
+                        media_type: p.media_type,
+                        media_url: p.media_url || '',
+                        is_published: !currentlyPublished
+                    })
+                });
+                await loadNewsAdmin();
+            } catch (err) {
+                alert('❌ ' + err.message);
+            }
+        }
+
+        async function deleteNewsPost(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا المنشور نهائياً؟ سيُحذف مع ملفاته المرفقة.')) return;
+            try {
+                await notifyApi(`news-manage?id=${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}` } });
+                alert('تم حذف المنشور');
+                if (currentEditNewsId === id) resetNewsForm();
+                logActivity('حذف منشور', `حذف المنشور رقم ${id}`);
+                await loadNewsAdmin();
+            } catch (err) {
+                alert('❌ ' + err.message);
+            }
+        }
+
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -2830,6 +3133,7 @@
             else if (tabId === 'logs') { loadLogs(); }
             else if (tabId === 'notifications') { loadNotifications(); }
             else if (tabId === 'announce') { loadAnnounce(); }
+            else if (tabId === 'news') { loadNewsAdmin(); }
         }
 
         window.onclick = function(event) {
