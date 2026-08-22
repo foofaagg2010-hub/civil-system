@@ -7,16 +7,13 @@ exports.handler = async (event) => {
     const allowedOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : (process.env.SITE_URL || allowedOrigins[0]);
     const headers = { 'Access-Control-Allow-Origin': allowedOrigin, 'Content-Type': 'application/json' };
     if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers };
-    if (event.httpMethod !== 'GET') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+    if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
 
     const __rl = checkRateLimit(event, { limit: 120, windowMs: 60000 });
     if (__rl.limited) {
         return {
             statusCode: 429,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': (['https://id-yemen.org', 'https://radfan.netlify.app'].includes(event.headers.origin || '') ? event.headers.origin : (process.env.SITE_URL || 'https://id-yemen.org'))
-            },
+            headers,
             body: JSON.stringify({ error: 'Too many requests', retryAfter: __rl.retryAfter })
         };
     }
@@ -36,33 +33,44 @@ exports.handler = async (event) => {
 
         const { data: user } = await supabase
             .from('users')
-            .select('id, can_correspondence')
+            .select('id, username, branch_name, is_reserve_center')
             .eq('id', session.user_id)
             .single();
-        if (!user || !user.can_correspondence) {
-            return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بجلب الفروع' }) };
+        if (!user) return { statusCode: 403, headers, body: JSON.stringify({ error: 'المستخدم غير موجود' }) };
+
+        let body;
+        try {
+            body = JSON.parse(event.body);
+        } catch (e) {
+            return { statusCode: 400, headers, body: JSON.stringify({ error: 'بيانات غير صالحة' }) };
         }
 
-        const { data: branches, error } = await supabase
-            .from('branch_statistics')
-            .select('branch');
-        if (error) {
-            console.error('correspondence-branches error:', error);
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في جلب الفروع' }) };
+        const notificationId = parseInt(body.notification_id, 10);
+        if (!notificationId) return { statusCode: 400, headers, body: JSON.stringify({ error: 'معرف الإشعار مطلوب' }) };
+
+        const branchName = String(user.branch_name || '').trim();
+        if (!branchName) return { statusCode: 400, headers, body: JSON.stringify({ error: 'لا يوجد فرع مرتبط بحسابك' }) };
+
+        const { data: updated, error: upErr } = await supabase
+            .from('center_notification_recipients')
+            .update({
+                read_at: new Date().toISOString(),
+                read_by: user.id,
+                read_by_name: user.username
+            })
+            .eq('notification_id', notificationId)
+            .eq('branch', branchName)
+            .is('read_at', null)
+            .select();
+        if (upErr) {
+            console.error('notify-mark-read error:', upErr);
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'فشل تحديث حالة القراءة' }) };
         }
 
-        const list = [];
-        const seen = {};
-        for (const b of branches || []) {
-            const name = String(b.branch || '').trim();
-            if (name && !seen[name]) { seen[name] = true; list.push(name); }
-        }
-        list.sort((a, b) => a.localeCompare(b, 'ar'));
-
-        return { statusCode: 200, headers, body: JSON.stringify({ branches: list }) };
+        return { statusCode: 200, headers, body: JSON.stringify({ success: true, marked: (updated || []).length }) };
 
     } catch (error) {
-        console.error('correspondence-branches error:', error);
+        console.error('notify-mark-read error:', error);
         return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ داخلي في النظام' }) };
     }
 };

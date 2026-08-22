@@ -714,7 +714,7 @@
             <div class="user-badge user-role-badge"><i class="fas fa-tag"></i> <span id="adminRole">-</span></div>
             <div class="user-badge"><i class="fas fa-building"></i> <span id="adminBranch">-</span></div>
             <button class="btn btn-warning btn-sm" onclick="openPasswordModal()" style="background:#f39c12;color:#1a1a2e;border:none;padding:8px 16px;border-radius:40px;cursor:pointer;font-weight:bold;font-size:13px;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-key"></i> تغيير كلمة المرور</button>
-            <button class="logout-btn" id="correspondenceBtn" onclick="window.location.href='correspondence.html'" style="background:#2980b9;display:none;"><i class="fas fa-envelope"></i> المراسلات <span id="corrBadge" class="notification-count" style="display:none;">0</span></button>
+            <button class="logout-btn" id="notifCenterBtn" onclick="showTab('announce')" style="background:#2980b9;display:none;"><i class="fas fa-bullhorn"></i> الإشعارات <span id="announceBadge" class="notification-count" style="display:none;">0</span></button>
             <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
         </div>
     </div>
@@ -726,6 +726,7 @@
             <button class="tab-btn" onclick="showTab('branches')" id="branchesTab"><i class="fas fa-building"></i> الفروع</button>
             <button class="tab-btn" onclick="showTab('users')" id="usersTab"><i class="fas fa-users"></i> المستخدمين</button>
             <button class="tab-btn" onclick="showTab('logs')" id="logsTab"><i class="fas fa-history"></i> السجل</button>
+            <button class="tab-btn" onclick="showTab('announce')" id="announceTab"><i class="fas fa-bullhorn"></i> الإشعارات <span id="announceTabBadge" class="notification-count" style="display:none;">0</span></button>
             <button class="tab-btn" onclick="showTab('notifications')" id="notificationsTab" style="display:none;">
                 <i class="fas fa-bell"></i> طلبات الإشعارات <span id="notifBadge" class="notification-count" style="display:none;">0</span>
             </button>
@@ -866,13 +867,12 @@
                             <th>رقم المدير</th>
                             <th>رقم الفني</th>
                             <th>واتساب</th>
-                            <th>المراسلات</th>
                             <th>الحالة</th>
                             <th>إجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
-                        <tr><td colspan="9" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>
+                        <tr><td colspan="8" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -887,9 +887,6 @@
                 </button>
                 <button class="btn" onclick="showLogType('login_attempts')" id="logTypeLogin" style="background:#95a5a6;color:white;">
                     <i class="fas fa-sign-in-alt"></i> محاولات الدخول
-                </button>
-                <button class="btn" onclick="showLogType('correspondence')" id="logTypeCorrespondence" style="background:#16a085;color:white;">
-                    <i class="fas fa-envelope"></i> سجل المراسلات
                 </button>
             </div>
 
@@ -953,6 +950,49 @@
                 </table>
             </div>
         </div>
+
+        <div id="announce" class="tab-content">
+            <!-- وضع المركز الرئيسي: إرسال إشعار -->
+            <div id="announceComposer" style="display:none;">
+                <h3><i class="fas fa-bullhorn"></i> إضافة إشعار</h3>
+                <p style="color:#666;margin-bottom:15px;">اكتب محتوى الإشعار ثم حدد الفروع المستهدفة (فرع واحد أو عدة فروع أو كافة الفروع).</p>
+                <div class="form-group">
+                    <label>محتوى الإشعار</label>
+                    <textarea id="announceContent" rows="4" maxlength="2000" placeholder="اكتب نص الإشعار هنا..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>الفروع المستهدفة <small style="color:#888;">(اضغط للاختيار - يمكنك اختيار أكثر من فرع)</small></label>
+                    <div id="announceBranchesBox" style="display:flex;flex-wrap:wrap;gap:8px;border:1px solid #ddd;border-radius:8px;padding:12px;background:#fafafa;">
+                        <span style="color:#888;font-size:13px;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</span>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="sendAnnouncement()" id="announceSendBtn"><i class="fas fa-paper-plane"></i> إرسال الإشعار</button>
+
+                <h3 style="margin-top:30px;"><i class="fas fa-history"></i> الإشعارات المرسلة</h3>
+                <div class="table-container">
+                    <table class="branches-table">
+                        <thead>
+                            <tr>
+                                <th>التاريخ</th>
+                                <th>المحتوى</th>
+                                <th>الفروع المستهدفة</th>
+                                <th>قرأ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sentAnnounceBody">
+                            <tr><td colspan="4" style="text-align:center;color:#888;">لا توجد إشعارات مرسلة بعد</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- وضع الفرع: الإشعارات الواردة -->
+            <div id="announceInbox">
+                <h3><i class="fas fa-inbox"></i> الإشعارات الواردة <span id="inboxUnreadLabel" style="font-size:14px;color:#e67e22;"></span></h3>
+                <p style="color:#666;margin-bottom:15px;">هنا تظهر الإشعارات الواردة من المركز الرئيسي. بمجرد فتح الإشعار يُسجل كـ "مقروء".</p>
+                <div id="announceList"></div>
+            </div>
+        </div>
     </div>
 
     <div id="loadingModal" class="modal">
@@ -987,8 +1027,7 @@
             <div class="checkbox-group"><input type="checkbox" id="userCanEdit"> <label>صلاحية التعديل</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userCanViewLogs"> <label>صلاحية مشاهدة السجل</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userCanViewUsers"> <label>صلاحية إدارة المستخدمين</label></div>
-            <div class="checkbox-group"><input type="checkbox" id="userCanCorrespondence"> <label>صلاحية المراسلات</label></div>
-            <div class="checkbox-group"><input type="checkbox" id="userIsReserveCenter"> <label>حساب المركز الاحتياطي</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="userIsReserveCenter"> <label>صلاحية المركز الرئيسي (إرسال الإشعارات)</label></div>
             <div style="display:flex;gap:12px;margin-top:20px;"><button class="btn btn-success" onclick="saveUser()">حفظ</button><button class="btn btn-danger" onclick="closeUserModal()">إلغاء</button></div>
         </div>
     </div>
@@ -1011,7 +1050,7 @@
     <script>
 
         const API_URL = '/.netlify/functions';
-        let currentUserId = null, currentUserBranch = null, currentUserRole = null, currentUserCanEdit = false, currentUserCanViewUsers = false, currentUserCanViewLogs = false, currentUserCanCorrespondence = false;
+        let currentUserId = null, currentUserBranch = null, currentUserRole = null, currentUserCanEdit = false, currentUserCanViewUsers = false, currentUserCanViewLogs = false, currentUserIsCenter = false;
         let currentEditUserId = null, currentPage = 1, totalRecords = 0, isLoading = false, currentStatusFilter = null, isSearchMode = false;
         let currentRequests = [], globalSearchResults = [];
         let allNotifications = [];
@@ -1181,8 +1220,8 @@
             document.getElementById('usersTab').style.display = currentUserCanViewUsers ? 'inline-flex' : 'none';
             document.getElementById('uploadTab').style.display = currentUserCanEdit ? 'inline-flex' : 'none';
             document.getElementById('logsTab').style.display = currentUserCanViewLogs ? 'inline-flex' : 'none';
-            document.getElementById('correspondenceBtn').style.display = currentUserCanCorrespondence ? 'inline-flex' : 'none';
-            if (currentUserCanCorrespondence) loadCorrespondenceBadge();
+            document.getElementById('announceTab').style.display = 'inline-flex';
+            document.getElementById('notifCenterBtn').style.display = 'inline-flex';
 
             const notifTab = document.getElementById('notificationsTab');
             if (currentUserCanEdit) {
@@ -1197,21 +1236,27 @@
             if (globalSearchBox) {
                 globalSearchBox.style.display = (currentUserRole === 'admin' || currentUserRole === 'supervisor') ? 'flex' : 'none';
             }
+
+            if (!currentUserIsCenter) loadAnnounceBadge();
         }
 
-        async function loadCorrespondenceBadge() {
+        async function loadAnnounceBadge() {
             try {
+                if (currentUserIsCenter) return;
                 const token = sessionStorage.getItem('admin_token');
                 if (!token) return;
-                const res = await fetch(`${API_URL}/correspondence-list?open=1`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${API_URL}/notify-unread-count`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (!res.ok) return;
                 const data = await res.json();
-                const n = (data.records || []).length;
-                const badge = document.getElementById('corrBadge');
-                if (badge) {
-                    badge.textContent = n;
-                    badge.style.display = n > 0 ? 'inline-block' : 'none';
-                }
+                const n = data.count || 0;
+                const badge = document.getElementById('announceBadge');
+                const tabBadge = document.getElementById('announceTabBadge');
+                [badge, tabBadge].forEach(b => {
+                    if (b) {
+                        b.textContent = n;
+                        b.style.display = n > 0 ? 'inline-block' : 'none';
+                    }
+                });
             } catch (e) { /* تجاهل */ }
         }
 
@@ -1274,7 +1319,6 @@
                     currentUserCanEdit = true;
                     currentUserCanViewUsers = true;
                     currentUserCanViewLogs = true;
-                    currentUserCanCorrespondence = false;
 
                     document.getElementById('adminName').innerText = savedUsername;
                     document.getElementById('adminBranch').innerText = currentUserBranch;
@@ -1294,7 +1338,7 @@
                             currentUserCanEdit = data.can_edit === true;
                             currentUserCanViewUsers = data.can_view_users === true;
                             currentUserCanViewLogs = data.can_view_logs === true;
-                            currentUserCanCorrespondence = data.can_correspondence === true;
+                            currentUserIsCenter = data.is_reserve_center === true;
                             applyPermissions();
                         }
                     } catch (err) {
@@ -1325,7 +1369,7 @@
                 currentUserCanEdit = data.can_edit === true;
                 currentUserCanViewUsers = data.can_view_users === true;
                 currentUserCanViewLogs = data.can_view_logs === true;
-                currentUserCanCorrespondence = data.can_correspondence === true;
+                currentUserIsCenter = data.is_reserve_center === true;
 
                 sessionStorage.setItem('admin_branch', currentUserBranch);
                 sessionStorage.setItem('admin_username', data.username);
@@ -1907,8 +1951,6 @@
             currentLogType = type;
             document.getElementById('logTypeAdmin').style.background = type === 'admin_logs' ? '#3498db' : '#95a5a6';
             document.getElementById('logTypeLogin').style.background = type === 'login_attempts' ? '#e67e22' : '#95a5a6';
-            const corrBtn = document.getElementById('logTypeCorrespondence');
-            if (corrBtn) corrBtn.style.background = type === 'correspondence' ? '#16a085' : '#95a5a6';
             loadLogs();
         }
 
@@ -1924,10 +1966,6 @@
             try {
                 if (currentLogType === 'login_attempts') {
                     await loadLoginAttempts(token);
-                    return;
-                }
-                if (currentLogType === 'correspondence') {
-                    await loadCorrespondenceLogs(token);
                     return;
                 }
 
@@ -2031,46 +2069,6 @@
             }
         }
 
-        async function loadCorrespondenceLogs(token) {
-            const tbody = document.getElementById('logsTableBody');
-            const thead = document.getElementById('logsTableHead');
-            thead.innerHTML = `
-                <tr>
-                    <th>المستخدم</th>
-                    <th>الإجراء</th>
-                    <th>التفاصيل</th>
-                    <th>التاريخ</th>
-                </tr>
-            `;
-            try {
-                const res = await fetch(`${API_URL}/correspondence-logs`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    throw new Error(err.error || 'Failed to load correspondence logs');
-                }
-                const logs = await res.json();
-                const items = logs.logs || logs;
-                if (items && items.length > 0) {
-                    tbody.innerHTML = items.map(l => `
-                        <tr>
-                            <td><strong>${escapeHtml(l.username || 'غير معروف')}</strong></td>
-                            <td>${escapeHtml(l.action || '')}</td>
-                            <td style="font-size:12px;">${escapeHtml(l.details || '')}</td>
-                            <td dir="ltr" style="text-align:left;">${formatDateTime(l.created_at)}</td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#888;">📭 لا توجد حركة مراسلات بعد</td></tr>';
-                }
-            } catch(err) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">خطأ: ${err.message}</td></tr>`;
-            }
-        }
-
         function getActionColor(action) {
             const colors = {
                 'تسجيل الدخول': '#27ae60',
@@ -2086,7 +2084,8 @@
                 'إضافة مستخدم': '#1abc9c',
                 'تعديل مستخدم': '#f39c12',
                 'حذف مستخدم': '#e74c3c',
-                'إرسال إشعار متصفح': '#9b59b6'
+                'إرسال إشعار متصفح': '#9b59b6',
+                'إرسال إشعار': '#2980b9'
             };
             return colors[action] || '#7f8c8d';
         }
@@ -2114,7 +2113,7 @@
 
                 const tbody = document.getElementById('usersTableBody');
                 if (!users || users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#888;">لا يوجد مستخدمين</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888;">لا يوجد مستخدمين</td></tr>';
                     return;
                 }
 
@@ -2126,10 +2125,9 @@
                         <td>${escapeHtml(u.admin_phone || '-----')}</td>
                         <td>${escapeHtml(u.tech_phone || '-----')}</td>
                         <td>${escapeHtml(u.whatsapp_number || '-----')}</td>
-                        <td>${u.can_correspondence === true ? '<span class="status-badge status-active">نعم</span>' : '<span class="status-badge status-inactive">لا</span>'}</td>
                         <td><span class="status-badge ${u.is_active !== false ? 'status-active' : 'status-inactive'}">${u.is_active !== false ? 'نشط' : 'غير نشط'}</span></td>
                         <td>
-                            <button class="btn btn-warning btn-sm" onclick="editUser(${u.id}, '${escapeHtml(u.username)}', '${escapeHtml(u.branch_name)}', '${escapeHtml(u.role)}', ${u.is_active !== false}, ${u.can_edit === true}, ${u.can_view_logs === true}, ${u.can_view_users === true}, '${escapeHtml(u.admin_phone || '')}', '${escapeHtml(u.tech_phone || '')}', '${escapeHtml(u.whatsapp_number || '')}', ${u.can_correspondence === true}, ${u.is_reserve_center === true})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-warning btn-sm" onclick="editUser(${u.id}, '${escapeHtml(u.username)}', '${escapeHtml(u.branch_name)}', '${escapeHtml(u.role)}', ${u.is_active !== false}, ${u.can_edit === true}, ${u.can_view_logs === true}, ${u.can_view_users === true}, '${escapeHtml(u.admin_phone || '')}', '${escapeHtml(u.tech_phone || '')}', '${escapeHtml(u.whatsapp_number || '')}', ${u.is_reserve_center === true})"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
@@ -2183,11 +2181,10 @@
             document.getElementById('userCanEdit').checked = false;
             document.getElementById('userCanViewLogs').checked = false;
             document.getElementById('userCanViewUsers').checked = false;
-            document.getElementById('userCanCorrespondence').checked = false;
             document.getElementById('userIsReserveCenter').checked = false;
         }
 
-        function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp, canCorrespondence, isReserveCenter) {
+        function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp, isReserveCenter) {
             currentEditUserId = id;
             loadBranchOptions();
             document.getElementById('userModalTitle').innerText = 'تعديل مستخدم';
@@ -2201,7 +2198,6 @@
             document.getElementById('userCanEdit').checked = canEdit === true;
             document.getElementById('userCanViewLogs').checked = canViewLogs === true;
             document.getElementById('userCanViewUsers').checked = canViewUsers === true;
-            document.getElementById('userCanCorrespondence').checked = canCorrespondence === true;
             document.getElementById('userIsReserveCenter').checked = isReserveCenter === true;
             document.getElementById('userModal').style.display = 'flex';
         }
@@ -2222,7 +2218,6 @@
             const canEdit = document.getElementById('userCanEdit').checked;
             const canViewLogs = document.getElementById('userCanViewLogs').checked;
             const canViewUsers = document.getElementById('userCanViewUsers').checked;
-            const canCorrespondence = document.getElementById('userCanCorrespondence').checked;
             const isReserveCenter = document.getElementById('userIsReserveCenter').checked;
 
             if (!username) { alert('يرجى إدخال اسم المستخدم'); return; }
@@ -2249,7 +2244,6 @@
                         can_edit: canEdit,
                         can_view_logs: canViewLogs,
                         can_view_users: canViewUsers,
-                        can_correspondence: canCorrespondence,
                         is_reserve_center: isReserveCenter
                     })
                 });
@@ -2618,6 +2612,201 @@
             }, 300);
         }
 
+        let announceBranchSelection = {};
+
+        async function loadAnnounce() {
+            const token = sessionStorage.getItem('admin_token');
+            if (!token) return;
+            if (currentUserIsCenter) {
+                document.getElementById('announceComposer').style.display = 'block';
+                document.getElementById('announceInbox').style.display = 'none';
+                await Promise.all([loadAnnounceBranches(), renderSentAnnouncements()]);
+            } else {
+                document.getElementById('announceComposer').style.display = 'none';
+                document.getElementById('announceInbox').style.display = 'block';
+                await renderInboxAnnouncements();
+            }
+        }
+
+        async function notifyApi(path, options) {
+            const token = sessionStorage.getItem('admin_token');
+            const res = await fetch(`${API_URL}/${path}`, Object.assign({
+                headers: { 'Authorization': `Bearer ${token}` }
+            }, options || {}));
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || 'حدث خطأ غير متوقع');
+            return data;
+        }
+
+        async function loadAnnounceBranches() {
+            const box = document.getElementById('announceBranchesBox');
+            try {
+                const data = await notifyApi('notify-list');
+                announceBranchSelection = {};
+                const branches = data.branches || [];
+                if (!branches.length) {
+                    box.innerHTML = '<span style="color:#888;font-size:13px;">لا توجد فروع مسجلة بعد</span>';
+                    return;
+                }
+                box.innerHTML = `
+                    <label style="display:inline-flex;align-items:center;gap:5px;background:#2980b9;color:white;border-radius:20px;padding:6px 14px;cursor:pointer;font-size:13px;">
+                        <input type="checkbox" id="branchAllChk" onchange="toggleAllBranches(this.checked)" style="cursor:pointer;"> كافة الفروع
+                    </label>
+                ` + branches.map(b => `
+                    <label style="display:inline-flex;align-items:center;gap:5px;background:#ecf0f1;border-radius:20px;padding:6px 14px;cursor:pointer;font-size:13px;">
+                        <input type="checkbox" class="branchChk" value="${escapeHtml(b)}" onchange="onBranchChk(this)" style="cursor:pointer;"> ${escapeHtml(b)}
+                    </label>
+                `).join('');
+            } catch (err) {
+                box.innerHTML = `<span style="color:#e74c3c;font-size:13px;">${escapeHtml(err.message)}</span>`;
+            }
+        }
+
+        function toggleAllBranches(all) {
+            document.querySelectorAll('.branchChk').forEach(c => { c.checked = all; });
+            updateBranchSelection();
+        }
+
+        function onBranchChk() {
+            const anyUn = [...document.querySelectorAll('.branchChk')].some(c => !c.checked);
+            const allChk = document.getElementById('branchAllChk');
+            if (allChk) allChk.checked = !anyUn;
+            updateBranchSelection();
+        }
+
+        function updateBranchSelection() {
+            announceBranchSelection = {};
+            document.querySelectorAll('.branchChk:checked').forEach(c => { announceBranchSelection[c.value] = true; });
+        }
+
+        async function sendAnnouncement() {
+            const content = document.getElementById('announceContent').value.trim();
+            if (!content) { alert('يرجى كتابة محتوى الإشعار'); return; }
+            updateBranchSelection();
+            const selected = Object.keys(announceBranchSelection);
+            const allSel = document.getElementById('branchAllChk')?.checked;
+            if (!allSel && !selected.length) { alert('حدد فرعاً واحداً على الأقل أو اختر "كافة الفروع"'); return; }
+            if (!confirm(`سيتم إرسال الإشعار إلى ${allSel ? 'كافة الفروع' : selected.length + ' فرع'}. هل أنت متأكد؟`)) return;
+
+            const btn = document.getElementById('announceSendBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> جاري الإرسال...';
+            try {
+                const result = await notifyApi('notify-send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}` },
+                    body: JSON.stringify({ content: content, branches: allSel ? ['ALL'] : selected, all: !!allSel })
+                });
+                alert(`تم إرسال الإشعار بنجاح إلى ${result.recipients} فرع`);
+                document.getElementById('announceContent').value = '';
+                toggleAllBranches(false);
+                await renderSentAnnouncements();
+                logActivity('إرسال إشعار', `إرسال إشعار إلى ${result.recipients} فرع`);
+            } catch (err) {
+                alert('❌ ' + err.message);
+            }
+            finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الإشعار';
+            }
+        }
+
+        async function renderSentAnnouncements() {
+            const tbody = document.getElementById('sentAnnounceBody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>';
+            try {
+                const data = await notifyApi('notify-list');
+                const sent = data.sent || [];
+                if (!sent.length) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#888;">لا توجد إشعارات مرسلة بعد</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = sent.map(n => {
+                    const pct = n.total ? Math.round((n.read / n.total) * 100) : 0;
+                    return `
+                        <tr>
+                            <td dir="ltr" style="text-align:left;white-space:nowrap;">${formatDateTime(n.created_at)}</td>
+                            <td style="max-width:420px;">${n.title ? `<strong>${escapeHtml(n.title)}</strong><br>` : ''}${escapeHtml(n.content)}</td>
+                            <td>
+                                <div style="font-size:12px;margin-bottom:4px;"><strong>${pct}%</strong> قرأ (${n.read} من ${n.total})</div>
+                                <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                                    ${(n.branches || []).map(b => `<span class="status-badge ${b.read ? 'status-active' : 'status-inactive'}" style="font-size:11px;" title="${b.read ? 'تمت القراءة' : 'لم تقرأ بعد'}">${escapeHtml(b.name)}</span>`).join('')}
+                                </div>
+                            </td>
+                            <td>${pct === 100 ? '<span class="status-badge status-active">الجميع</span>' : pct > 0 ? `<span class="status-badge status-inactive">${n.total - n.read} لم يقرأ</span>` : '<span class="status-badge status-inactive">لم يقرأ أحد</span>'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">خطأ: ${escapeHtml(err.message)}</td></tr>`;
+            }
+        }
+
+        async function renderInboxAnnouncements() {
+            const list = document.getElementById('announceList');
+            list.innerHTML = '<p style="text-align:center;color:#888;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</p>';
+            try {
+                const data = await notifyApi('notify-list');
+                const items = data.items || [];
+                const unreadEl = document.getElementById('inboxUnreadLabel');
+                if (unreadEl) unreadEl.textContent = data.unread > 0 ? `(${data.unread} غير مقروء)` : '';
+                if (!items.length) {
+                    list.innerHTML = '<p style="text-align:center;color:#888;">📭 لا توجد إشعارات واردة بعد</p>';
+                    updateAnnounceBadges(0);
+                    return;
+                }
+                list.innerHTML = items.map(i => `
+                    <div onclick="openAnnouncement('${i.recipId}', ${i.id}, ${i.read === true}, this)" style="border:${i.read ? '1px solid #ddd' : '2px solid #2980b9'};border-radius:10px;padding:12px 15px;margin-bottom:10px;cursor:pointer;background:${i.read ? '#fafafa' : '#eaf4fd'};">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                            <strong>${i.title ? escapeHtml(i.title) : (i.read ? 'إشعار' : 'إشعار جديد')} ${i.read ? '' : '<span class="status-badge status-active" style="font-size:11px;">جديد</span>'}</strong>
+                            <small dir="ltr" style="color:#888;">${formatDateTime(i.created_at)}</small>
+                        </div>
+                        <div class="annBody" style="display:none;margin-top:10px;line-height:1.8;white-space:pre-wrap;">${escapeHtml(i.content)}</div>
+                        <small style="color:#888;">من: ${escapeHtml(i.from || 'المركز الرئيسي')}</small>
+                    </div>
+                `).join('');
+                updateAnnounceBadges(data.unread || 0);
+            } catch (err) {
+                list.innerHTML = `<p style="text-align:center;color:red;">خطأ: ${escapeHtml(err.message)}</p>`;
+            }
+        }
+
+        async function openAnnouncement(recipId, notifId, alreadyRead, el) {
+            el.querySelector('.annBody').style.display = 'block';
+            if (alreadyRead) return;
+            try {
+                await notifyApi('notify-mark-read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}` },
+                    body: JSON.stringify({ notification_id: notifId })
+                });
+                el.style.border = '1px solid #ddd';
+                el.style.background = '#fafafa';
+                const badge = el.querySelector('.status-badge');
+                if (badge) badge.remove();
+                const strong = el.querySelector('strong');
+                if (strong && strong.textContent.trim() === 'إشعار جديد') strong.textContent = 'إشعار';
+                updateAnnounceBadges(Math.max(0, getCurrentUnreadCount() - 1));
+            } catch (err) {
+                console.warn('فشل تعليم كمقروء:', err.message);
+            }
+        }
+
+        function getCurrentUnreadCount() {
+            const b = document.getElementById('announceBadge');
+            return parseInt(b?.textContent, 10) || 0;
+        }
+
+        function updateAnnounceBadges(count) {
+            ['announceBadge', 'announceTabBadge'].forEach(id => {
+                const b = document.getElementById(id);
+                if (b) {
+                    b.textContent = count;
+                    b.style.display = count > 0 ? 'inline-block' : 'none';
+                }
+            });
+        }
+
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -2640,6 +2829,7 @@
             else if (tabId === 'upload') { loadTempTable(); }
             else if (tabId === 'logs') { loadLogs(); }
             else if (tabId === 'notifications') { loadNotifications(); }
+            else if (tabId === 'announce') { loadAnnounce(); }
         }
 
         window.onclick = function(event) {

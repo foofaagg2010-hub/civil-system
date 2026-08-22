@@ -9,14 +9,11 @@ exports.handler = async (event) => {
     if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers };
     if (event.httpMethod !== 'GET') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
 
-    const __rl = checkRateLimit(event, { limit: 120, windowMs: 60000 });
+    const __rl = checkRateLimit(event, { limit: 240, windowMs: 60000 });
     if (__rl.limited) {
         return {
             statusCode: 429,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': (['https://id-yemen.org', 'https://radfan.netlify.app'].includes(event.headers.origin || '') ? event.headers.origin : (process.env.SITE_URL || 'https://id-yemen.org'))
-            },
+            headers,
             body: JSON.stringify({ error: 'Too many requests', retryAfter: __rl.retryAfter })
         };
     }
@@ -36,30 +33,33 @@ exports.handler = async (event) => {
 
         const { data: user } = await supabase
             .from('users')
-            .select('role, can_view_logs')
+            .select('id, branch_name, is_reserve_center')
             .eq('id', session.user_id)
             .single();
-        if (!user || (user.role !== 'admin' && !user.can_view_logs)) {
-            return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بمشاهدة سجل المراسلات' }) };
+        if (!user) return { statusCode: 403, headers, body: JSON.stringify({ error: 'المستخدم غير موجود' }) };
+
+        // المركز لا يحتاج عداد استلام
+        if (user.is_reserve_center) {
+            return { statusCode: 200, headers, body: JSON.stringify({ count: 0 }) };
         }
 
-        let query = supabase
-            .from('admin_logs')
-            .select('*')
-            .eq('category', 'correspondence')
-            .order('created_at', { ascending: false })
-            .limit(500);
+        const branchName = String(user.branch_name || '').trim();
+        if (!branchName) return { statusCode: 200, headers, body: JSON.stringify({ count: 0 }) };
 
-        const { data, error } = await query;
+        const { count, error } = await supabase
+            .from('center_notification_recipients')
+            .select('*', { count: 'exact', head: true })
+            .eq('branch', branchName)
+            .is('read_at', null);
         if (error) {
-            console.error('correspondence-logs error:', error);
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في جلب سجل المراسلات' }) };
+            console.error('notify-unread-count error:', error);
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ في جلب عدد الإشعارات' }) };
         }
 
-        return { statusCode: 200, headers, body: JSON.stringify(data || []) };
+        return { statusCode: 200, headers, body: JSON.stringify({ count: count || 0 }) };
 
     } catch (error) {
-        console.error('correspondence-logs error:', error);
+        console.error('notify-unread-count error:', error);
         return { statusCode: 500, headers, body: JSON.stringify({ error: 'خطأ داخلي في النظام' }) };
     }
 };
