@@ -63,7 +63,7 @@ exports.handler = async (event) => {
             .eq('id', session.user_id)
             .single();
         if (!user || user.is_active === false) return { statusCode: 403, headers, body: JSON.stringify({ error: 'الحساب غير نشط' }) };
-        const allowed = user.can_news === true || user.role === 'admin';
+        const allowed = user.can_news === true;
         if (!allowed) return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بإدارة الأخبار والمنشورات' }) };
 
         const supaUrl = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');

@@ -1287,7 +1287,7 @@
             document.getElementById('logsTab').style.display = currentUserCanViewLogs ? 'inline-flex' : 'none';
             document.getElementById('announceTab').style.display = 'inline-flex';
             document.getElementById('notifCenterBtn').style.display = 'inline-flex';
-            document.getElementById('newsTab').style.display = (currentUserCanNews || currentUserRole === 'admin') ? 'inline-flex' : 'none';
+            document.getElementById('newsTab').style.display = currentUserCanNews ? 'inline-flex' : 'none';
 
             const notifTab = document.getElementById('notificationsTab');
             if (currentUserCanEdit) {
@@ -1405,7 +1405,7 @@
                             currentUserCanViewUsers = data.can_view_users === true;
                             currentUserCanViewLogs = data.can_view_logs === true;
                             currentUserIsCenter = data.is_reserve_center === true;
-                            currentUserCanNews = data.can_news === true || data.role === 'admin';
+                            currentUserCanNews = data.can_news === true;
                             applyPermissions();
                         }
                     } catch (err) {
@@ -1437,7 +1437,7 @@
                 currentUserCanViewUsers = data.can_view_users === true;
                 currentUserCanViewLogs = data.can_view_logs === true;
                 currentUserIsCenter = data.is_reserve_center === true;
-                currentUserCanNews = data.can_news === true || data.role === 'admin';
+                currentUserCanNews = data.can_news === true;
 
                 sessionStorage.setItem('admin_branch', currentUserBranch);
                 sessionStorage.setItem('admin_username', data.username);
@@ -2896,7 +2896,7 @@
         async function loadNewsAdmin() {
             const tbody = document.getElementById('newsTableBody');
             if (!tbody) return;
-            if (!(currentUserCanNews || currentUserRole === 'admin')) return;
+            if (!currentUserCanNews) return;
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>';
             try {
                 const data = await notifyApi('news-manage');
@@ -2979,7 +2979,7 @@
         }
 
         async function saveNewsPost() {
-            if (!(currentUserCanNews || currentUserRole === 'admin')) return;
+            if (!currentUserCanNews) return;
             const title = document.getElementById('newsTitle').value.trim();
             const content = document.getElementById('newsBody').value.trim();
             const type = document.getElementById('newsType').value;

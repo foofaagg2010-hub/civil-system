@@ -58,7 +58,7 @@ exports.handler = async (event) => {
             .eq('id', session.user_id)
             .single();
         if (!user || user.is_active === false) return { statusCode: 403, headers, body: JSON.stringify({ error: 'الحساب غير نشط' }) };
-        if (!(user.can_news === true || user.role === 'admin')) {
+        if (user.can_news !== true) {
             return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك برفع ملفات الأخبار' }) };
         }
 
