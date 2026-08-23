@@ -417,7 +417,6 @@
                         media_type: p.media_type,
                         media_url: p.media_url,
                         media_public_url: p.media_public_url,
-                        author: p.author,
                         created_at: p.created_at
                     }).replace(/'/g, "&#39;")})'>
                         <div class="news-media-box">
@@ -428,7 +427,7 @@
                             <h3>${escapeHtml(p.title)}</h3>
                             <p class="excerpt">${escapeHtml(excerptOf(p))}</p>
                             <div class="news-meta">
-                                <span class="author"><i class="fas fa-user-circle"></i> ${escapeHtml(p.author || 'مصلحة الأحوال المدنية')}</span>
+                                <span class="author"><i class="fas fa-landmark"></i> مصلحة الأحوال المدنية والسجل المدني</span>
                                 <span dir="ltr"><i class="far fa-calendar-alt"></i> ${formatDate(p.created_at)}</span>
                             </div>
                         </div>
@@ -469,7 +468,7 @@
             }
 
             if (p.body) inner += `<p class="article-text" style="${inner ? 'margin-top:16px;' : ''}">${escapeHtml(p.body)}</p>`;
-            inner += `<div class="viewer-date"><i class="far fa-calendar-alt"></i> ${formatDate(p.created_at)}${p.author ? ' &bull; <i class="fas fa-user-circle"></i> ' + escapeHtml(p.author) : ''}</div>`;
+            inner += `<div class="viewer-date"><i class="far fa-calendar-alt"></i> ${formatDate(p.created_at)}</div>`;
 
             body.innerHTML = inner;
             document.getElementById('viewerOverlay').classList.add('show');

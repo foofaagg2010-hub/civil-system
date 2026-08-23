@@ -38,7 +38,7 @@ exports.handler = async (event) => {
 
         const { data: posts, error, count } = await supabase
             .from('news_posts')
-            .select('id, title, body, media_type, media_url, storage_path, created_by_name, created_at, updated_at', { count: 'exact' })
+            .select('id, title, body, media_type, media_url, storage_path, created_at, updated_at', { count: 'exact' })
             .eq('is_published', true)
             .order('created_at', { ascending: false })
             .range(from, to);
@@ -58,7 +58,6 @@ exports.handler = async (event) => {
             media_public_url: p.storage_path && supaUrl
                 ? `${supaUrl}/storage/v1/object/public/news-media/${p.storage_path}`
                 : null,
-            author: safeText(p.created_by_name, 100),
             created_at: p.created_at,
             updated_at: p.updated_at
         }));
