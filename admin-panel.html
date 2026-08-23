@@ -1082,7 +1082,10 @@
             <div class="form-group"><label>اسم المستخدم</label><input type="text" id="userUsername" autocomplete="off"></div>
             <div class="form-group"><label>كلمة المرور</label><input type="password" id="userPassword"></div>
             <div class="form-group"><label>الفرع</label>
-                <select id="userBranch"><option value="لحج - ردفان">لحج - ردفان</option><option value="المركز - الرئيسي">المركز - الرئيسي</option></select>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <select id="userBranch" onchange="onUserBranchChange()" style="flex:1;min-width:170px;"><option value="لحج - ردفان">لحج - ردفان</option><option value="المركز - الرئيسي">المركز - الرئيسي</option><option value="__manual__">أخرى - إدخال يدوي</option></select>
+                    <input type="text" id="userBranchManual" maxlength="150" placeholder="اكتب اسم الفرع يدوياً..." style="flex:1;min-width:170px;display:none;">
+                </div>
             </div>
             <div class="form-group"><label>الدور</label><select id="userRole"><option value="admin">مدير</option><option value="supervisor">مشرف فرع</option><option value="employee">موظف</option></select></div>
             <div class="form-group"><label>رقم المدير</label><input type="text" id="userAdminPhone" placeholder="رقم المدير"></div>
@@ -2211,16 +2214,15 @@
             finally { showLoading(false); }
         }
 
-        async function loadBranchOptions() {
+        async function loadBranchOptions(desired) {
             const sel = document.getElementById('userBranch');
             const token = sessionStorage.getItem('admin_token');
             if (!token) return;
-            const current = sel.value;
             try {
                 const res = await fetch(`${API_URL}/branches-stats`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (!res.ok) return;
                 const branches = await res.json();
-                const seen = { 'المركز - الرئيسي': true };
+                const seen = { 'المركز - الرئيسي': true, '__manual__': true };
                 sel.innerHTML = '<option value="المركز - الرئيسي">المركز - الرئيسي</option>';
                 (branches || []).forEach(b => {
                     const name = String(b.branch || '').trim();
@@ -2232,19 +2234,51 @@
                         sel.appendChild(o);
                     }
                 });
-                if (current && seen[current]) sel.value = current;
+                sel.insertAdjacentHTML('beforeend', '<option value="__manual__">أخرى - إدخال يدوي</option>');
+                applyUserBranchSelection(typeof desired === 'string' ? desired : sel.value);
             } catch(e) { /* تجاهل */ }
+        }
+
+        function onUserBranchChange() {
+            const sel = document.getElementById('userBranch');
+            const manual = document.getElementById('userBranchManual');
+            if (sel.value === '__manual__') {
+                manual.style.display = 'inline-block';
+                manual.focus();
+            } else {
+                manual.style.display = 'none';
+            }
+        }
+
+        function applyUserBranchSelection(desired) {
+            const sel = document.getElementById('userBranch');
+            const manual = document.getElementById('userBranchManual');
+            desired = String(desired || '').trim();
+            const exists = [...sel.options].some(o => o.value === desired);
+            if (desired && !exists) {
+                sel.value = '__manual__';
+                manual.value = desired;
+                manual.style.display = 'inline-block';
+            } else if (desired && exists) {
+                sel.value = desired;
+                manual.value = '';
+                manual.style.display = 'none';
+            } else {
+                sel.selectedIndex = 0;
+                manual.value = '';
+                manual.style.display = 'none';
+            }
         }
 
         function openUserModal() {
             if (!currentUserCanViewUsers) return;
-            loadBranchOptions();
+            loadBranchOptions(currentUserBranch || 'لحج - ردفان');
             document.getElementById('userModal').style.display = 'flex';
             document.getElementById('userModalTitle').innerText = 'إضافة مستخدم جديد';
             currentEditUserId = null;
             document.getElementById('userUsername').value = '';
             document.getElementById('userPassword').value = '';
-            document.getElementById('userBranch').value = currentUserBranch || 'لحج - ردفان';
+            applyUserBranchSelection(currentUserBranch || 'لحج - ردفان');
             document.getElementById('userRole').value = 'employee';
             document.getElementById('userAdminPhone').value = '';
             document.getElementById('userTechPhone').value = '';
@@ -2258,11 +2292,11 @@
 
         function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp, canNews, isReserveCenter) {
             currentEditUserId = id;
-            loadBranchOptions();
+            loadBranchOptions(branch || '');
             document.getElementById('userModalTitle').innerText = 'تعديل مستخدم';
             document.getElementById('userUsername').value = username;
             document.getElementById('userPassword').value = '';
-            document.getElementById('userBranch').value = branch || 'لحج - ردفان';
+            applyUserBranchSelection(branch || '');
             document.getElementById('userRole').value = role || 'employee';
             document.getElementById('userAdminPhone').value = adminPhone || '';
             document.getElementById('userTechPhone').value = techPhone || '';
@@ -2283,7 +2317,10 @@
 
             const username = document.getElementById('userUsername').value.trim();
             const password = document.getElementById('userPassword').value;
-            const branch = document.getElementById('userBranch').value.trim();
+            const branchSelValue = document.getElementById('userBranch').value;
+            const branch = branchSelValue === '__manual__'
+                ? document.getElementById('userBranchManual').value.trim()
+                : branchSelValue;
             const role = document.getElementById('userRole').value;
             const adminPhone = document.getElementById('userAdminPhone').value.trim();
             const techPhone = document.getElementById('userTechPhone').value.trim();
@@ -2295,6 +2332,7 @@
             const isReserveCenter = document.getElementById('userIsReserveCenter').checked;
 
             if (!username) { alert('يرجى إدخال اسم المستخدم'); return; }
+            if (!branch) { alert('يرجى اختيار الفرع أو كتابته يدوياً'); return; }
             if (!currentEditUserId && !password) { alert('يرجى إدخال كلمة المرور للمستخدم الجديد'); return; }
 
             showLoading(true);
