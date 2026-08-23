@@ -2960,16 +2960,26 @@
         }
 
         async function uploadNewsMedia(postId, file) {
-            const sign = await notifyApi('news-upload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}` },
-                body: JSON.stringify({ id: postId, filename: file.name, content_type: file.type, size: file.size })
-            });
-            const upRes = await fetch(sign.upload_url, {
-                method: 'PUT',
-                headers: { 'Content-Type': sign.content_type },
-                body: file
-            });
+            let sign;
+            try {
+                sign = await notifyApi('news-upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}` },
+                    body: JSON.stringify({ id: postId, filename: file.name, content_type: file.type, size: file.size })
+                });
+            } catch (e) {
+                throw new Error(e.message);
+            }
+            let upRes;
+            try {
+                upRes = await fetch(sign.upload_url, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': sign.content_type },
+                    body: file
+                });
+            } catch (netErr) {
+                throw new Error('تعذر الاتصال بالتخزين - تحقق من اتصال الإنترنت وأعد المحاولة');
+            }
             if (!upRes.ok) throw new Error('فشل رفع الملف إلى التخزين (' + upRes.status + ')');
             await notifyApi('news-manage', {
                 method: 'PUT',
@@ -3023,7 +3033,13 @@
                     });
                     if (newsSelectedFile) {
                         btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> جاري رفع الملف...';
-                        await uploadNewsMedia(created.id, newsSelectedFile);
+                        try {
+                            await uploadNewsMedia(created.id, newsSelectedFile);
+                        } catch (upErr) {
+                            // فشل الرفع الأول: احذف المنشور حتى لا يظهر معطوباً للزوار
+                            await notifyApi(`news-manage?id=${created.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}` } }).catch(() => {});
+                            throw upErr;
+                        }
                     }
                     alert('تم حفظ المنشور بنجاح وظهر للزوار مباشرة');
                     logActivity('إضافة منشور', `إضافة منشور جديد (${type}): ${title}`);
