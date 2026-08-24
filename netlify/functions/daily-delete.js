@@ -50,8 +50,8 @@ exports.handler = async (event) => {
             .single();
         if (!rec) return { statusCode: 404, headers, body: JSON.stringify({ error: 'السجل غير موجود' }) };
 
-        const isAdmin = user.role === 'admin';
-        if (!isAdmin && String(rec.branch).trim() !== String(user.branch_name || '').trim()) {
+        const isCenter = user.is_reserve_center === true || String(user.branch_name || '').includes('المركز');
+        if (!isCenter && String(rec.branch).trim() !== String(user.branch_name || '').trim()) {
             return { statusCode: 403, headers, body: JSON.stringify({ error: 'يمكنك حذف إنجاز فرعك فقط' }) };
         }
 

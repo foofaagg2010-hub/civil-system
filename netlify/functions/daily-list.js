@@ -40,8 +40,8 @@ exports.handler = async (event) => {
         if (!user || user.is_active === false) return { statusCode: 403, headers, body: JSON.stringify({ error: 'الحساب غير نشط' }) };
         if (user.can_daily !== true) return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بعرض الإنجاز اليومي' }) };
 
-        // من يملك صلاحية عرض كل الفروع: مدير أو المركز الرئيسي
-        const canSeeAll = user.role === 'admin' || user.is_reserve_center === true;
+        // عرض كل الفروع: مستخدمو المركز الرئيسي فقط
+        const canSeeAll = user.is_reserve_center === true || String(user.branch_name || '').includes('المركز');
         const ownBranch = String(user.branch_name || '').trim();
 
         const params = event.queryStringParameters || {};
@@ -52,14 +52,8 @@ exports.handler = async (event) => {
 
         if (!canSeeAll) {
             query = query.eq('branch', ownBranch);
-        } else {
-            let branchFilter = '';
-            if (params.branch && params.branch !== 'ALL') {
-                branchFilter = String(params.branch).replace(/[%,]/g, '').trim();
-            } else if (params.branch !== 'ALL' && !ownBranch.includes('المركز')) {
-                branchFilter = ownBranch;
-            }
-            if (branchFilter) query = query.eq('branch', branchFilter);
+        } else if (params.branch && params.branch !== 'ALL') {
+            query = query.eq('branch', String(params.branch).replace(/[%,]/g, '').trim());
         }
 
         if (/^\d{4}-\d{2}-\d{2}$/.test(from)) query = query.gte('entry_date', from);

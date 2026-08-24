@@ -947,8 +947,18 @@
 
                 <div id="dailySections"></div>
 
-                <div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;">
+                <div id="dailyTotalsBar" style="display:flex;gap:18px;flex-wrap:wrap;background:#1a5276;color:#fff;border-radius:10px;padding:12px 18px;margin-top:18px;font-size:14px;font-weight:bold;">
+                    <span>بطاقات: <span id="dtCards">0</span></span>
+                    <span>ميلاد: <span id="dtBirth">0</span></span>
+                    <span>وفيات: <span id="dtDeath">0</span></span>
+                    <span>قيد وطني: <span id="dtNat">0</span></span>
+                    <span>إضافية: <span id="dtExtra">0</span></span>
+                    <span style="background:#f9e79f;color:#1a5276;padding:2px 12px;border-radius:20px;">الإجمالي: <span id="dtGrand">0</span></span>
+                </div>
+
+                <div style="margin-top:14px;display:flex;gap:12px;flex-wrap:wrap;">
                     <button class="btn btn-success" onclick="saveDaily()"><i class="fas fa-save"></i> حفظ / تحديث الإنجاز</button>
+                    <button class="btn btn-primary" onclick="copyPreviousDaily()"><i class="fas fa-copy"></i> نسخ من اليوم السابق</button>
                     <button class="btn btn-secondary" onclick="resetDailyForm()"><i class="fas fa-broom"></i> تفريغ الحقول</button>
                 </div>
 
@@ -986,7 +996,8 @@
                         <label>الفرع</label>
                         <select id="dailyBranchSelect"></select>
                     </div>
-                    <button class="btn btn-primary" onclick="generateDailyReport()"><i class="fas fa-file-pdf"></i> توليد التقرير وطباعته PDF</button>
+                    <button class="btn btn-primary" onclick="generateDailyReport()"><i class="fas fa-print"></i> توليد التقرير وطباعته</button>
+                    <button class="btn btn-success" onclick="saveDailyPdf()"><i class="fas fa-file-pdf"></i> حفظ إلى PDF</button>
                 </div>
                 <p style="color:#666;font-size:14px;"><i class="fas fa-info-circle"></i> سيتم فتح نافذة التقرير بمقاس A4 أفقي جاهزة للطباعة أو الحفظ PDF، وتتضمن ترويسة الجمهورية اليمنية وشعاري الطير والاحوال المدنية.</p>
             </div>
@@ -3282,32 +3293,104 @@
 
         function buildDailyForm() {
             if (dailyFormBuilt) return;
+            if (!document.getElementById('dailyFormStyles')) {
+                const st = document.createElement('style');
+                st.id = 'dailyFormStyles';
+                st.textContent = `
+                    .dsec { background:#fff; border:1px solid #e3e8ee; border-radius:12px; margin-bottom:14px; overflow:hidden; box-shadow:0 1px 3px rgba(26,82,118,.08); }
+                    .dsec-head { padding:10px 16px; color:#fff; font-weight:bold; font-size:15px; display:flex; align-items:center; gap:8px; }
+                    .dsec-body { padding:14px 16px; display:flex; gap:14px; flex-wrap:wrap; }
+                    .ditem { border:1px solid #dfe6ec; border-radius:10px; padding:10px 12px; text-align:center; background:#fafcfe; min-width:150px; flex:1; transition:box-shadow .15s, border-color .15s; }
+                    .ditem:hover { border-color:#5dade2; box-shadow:0 2px 8px rgba(93,173,226,.25); }
+                    .ditem-title { font-weight:bold; font-size:13.5px; color:#1a5276; margin-bottom:8px; }
+                    .dpair { display:flex; gap:8px; justify-content:center; }
+                    .dcell { display:flex; flex-direction:column; align-items:center; }
+                    .dcell-label { font-size:11px; color:#7f8c8d; margin-bottom:3px; font-weight:bold; }
+                    .dcell input[type=number] { width:78px; text-align:center; font-size:17px; font-weight:bold; padding:7px 4px; border:1.5px solid #ccd6dd; border-radius:8px; color:#154360; transition:border-color .15s, box-shadow .15s; -moz-appearance:textfield; }
+                    .dcell input::-webkit-outer-spin-button, .dcell input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+                    .dcell input:focus { outline:none; border-color:#2e86c1; box-shadow:0 0 0 3px rgba(46,134,193,.18); background:#fff; }
+                `;
+                document.head.appendChild(st);
+            }
+            const secColors = [['#1a5276','#2e86c1'],['#196f3d','#27ae60'],['#943126','#cb4335'],['#6c3483','#8e44ad']];
             const wrap = document.getElementById('dailySections');
             let html = '';
-            DAILY_SECTIONS.forEach(sec => {
-                html += `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:14px;margin-bottom:12px;">
-                    <h4 style="margin:0 0 10px;color:#1a5276;border-bottom:2px solid #aed6f1;padding-bottom:6px;">${sec.title}</h4>
-                    <div style="display:flex;gap:12px;flex-wrap:wrap;">`;
+            DAILY_SECTIONS.forEach((sec, si) => {
+                const [dark, light] = secColors[si % secColors.length];
+                html += `<div class="dsec">
+                    <div class="dsec-head" style="background:linear-gradient(135deg, ${dark}, ${light});">${sec.title}</div>
+                    <div class="dsec-body">`;
                 sec.items.forEach(([key, label]) => {
-                    html += `<div style="border:1px dashed #bbb;border-radius:8px;padding:8px;text-align:center;">
-                        <div style="font-weight:bold;font-size:13px;margin-bottom:6px;">${label}</div>
-                        <div style="display:flex;gap:6px;">
-                            <div><div style="font-size:11px;color:#666;">ذكور</div><input type="number" min="0" id="daily_${key}_m" value="0" style="width:70px;"></div>
-                            <div><div style="font-size:11px;color:#666;">إناث</div><input type="number" min="0" id="daily_${key}_f" value="0" style="width:70px;"></div>
+                    html += `<div class="ditem">
+                        <div class="ditem-title">${label}</div>
+                        <div class="dpair">
+                            <div class="dcell"><span class="dcell-label">ذكور</span><input type="number" min="0" id="daily_${key}_m" value="0"></div>
+                            <div class="dcell"><span class="dcell-label">إناث</span><input type="number" min="0" id="daily_${key}_f" value="0"></div>
                         </div>
                     </div>`;
                 });
                 html += '</div></div>';
             });
-            html += `<div style="background:#fdf2e9;border:1px solid #e59866;border-radius:10px;padding:14px;">
-                <h4 style="margin:0 0 10px;color:#a04000;">خامساً: حالات إضافية</h4>
-                <div style="display:flex;gap:20px;flex-wrap:wrap;">`;
+            html += `<div class="dsec" style="border-color:#f0b27a;">
+                <div class="dsec-head" style="background:linear-gradient(135deg, #b9770e, #f5b041);">خامساً: حالات إضافية</div>
+                <div class="dsec-body">`;
             DAILY_EXTRAS.forEach(([key, label]) => {
-                html += `<div><div style="font-weight:bold;font-size:13px;margin-bottom:4px;">${label}</div><input type="number" min="0" id="daily_${key}" value="0" style="width:90px;"></div>`;
+                html += `<div class="ditem" style="min-width:120px;">
+                    <div class="ditem-title">${label}</div>
+                    <input type="number" min="0" id="daily_${key}" value="0" style="width:90px;text-align:center;font-size:17px;font-weight:bold;padding:7px 4px;border:1.5px solid #ccd6dd;border-radius:8px;color:#154360;">
+                </div>`;
             });
             html += '</div></div>';
             wrap.innerHTML = html;
+            const inputs = wrap.querySelectorAll('input[type=number]');
+            inputs.forEach(inp => {
+                inp.addEventListener('input', updateDailyTotals);
+                inp.addEventListener('focus', () => inp.select());
+                inp.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const idx = Array.prototype.indexOf.call(inputs, e.target);
+                        if (idx > -1 && idx < inputs.length - 1) inputs[idx + 1].focus();
+                    }
+                });
+            });
             dailyFormBuilt = true;
+            updateDailyTotals();
+        }
+
+        function updateDailyTotals() {
+            const val = id => parseInt((document.getElementById(id) || {}).value, 10) || 0;
+            let cards = 0, birth = 0, death = 0, nat = 0, extra = 0;
+            ['id_new','id_rep','id_lost','id_natreg'].forEach(k => { cards += val(`daily_${k}_m`) + val(`daily_${k}_f`); });
+            ['birth','late_birth','birth_copy','foreign_birth'].forEach(k => { birth += val(`daily_${k}_m`) + val(`daily_${k}_f`); });
+            ['death','death_copy'].forEach(k => { death += val(`daily_${k}_m`) + val(`daily_${k}_f`); });
+            ['nat_lt12','nat_12_16','nat_edit'].forEach(k => { nat += val(`daily_${k}_m`) + val(`daily_${k}_f`); });
+            extra = val('daily_marriage') + val('daily_divorce') + val('daily_deported');
+            document.getElementById('dtCards').textContent = cards;
+            document.getElementById('dtBirth').textContent = birth;
+            document.getElementById('dtDeath').textContent = death;
+            document.getElementById('dtNat').textContent = nat;
+            document.getElementById('dtExtra').textContent = extra;
+            document.getElementById('dtGrand').textContent = cards + birth + death + nat + extra;
+        }
+
+        async function copyPreviousDaily() {
+            const cur = document.getElementById('dailyDate').value;
+            if (!cur) { alert('يرجى اختيار التاريخ أولاً'); return; }
+            const prevD = new Date(cur + 'T00:00:00');
+            prevD.setDate(prevD.getDate() - 1);
+            const prev = prevD.toISOString().slice(0, 10);
+            try {
+                const res = await fetch(`${API_URL}/daily-list?from=${prev}&to=${prev}`, { headers: dailyAuthHeaders() });
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                const rec = (data.items || []).find(i => i.entry_date === prev);
+                if (!rec) { alert('لا يوجد سجل إنجاز لليوم السابق (' + fmtDMY(prev) + ')'); return; }
+                fillDailyForm(rec);
+                alert('✅ تم نسخ بيانات يوم ' + fmtDMY(prev) + ' - عدّل الأرقام ثم اضغط حفظ');
+            } catch(e) {
+                alert('تعذر جلب بيانات اليوم السابق');
+            }
         }
 
         function onDailyDateChange() {
@@ -3339,6 +3422,7 @@
             }));
             DAILY_EXTRAS.forEach(([key]) => { document.getElementById(`daily_${key}`).value = g(key); });
             document.getElementById('dailyNotes').value = rec.notes || '';
+            updateDailyTotals();
         }
 
         function resetDailyFields() {
@@ -3348,6 +3432,7 @@
             }));
             DAILY_EXTRAS.forEach(([key]) => { document.getElementById(`daily_${key}`).value = 0; });
             document.getElementById('dailyNotes').value = '';
+            updateDailyTotals();
         }
 
         function resetDailyForm() {
@@ -3458,7 +3543,7 @@
                 document.getElementById('dailyDate').value = now.toISOString().slice(0, 10);
                 onDailyDateChange();
             }
-            const canAll = currentUserIsCenter || currentUserRole === 'admin';
+            const canAll = dailyCanSeeAll();
             const grp = document.getElementById('dailyBranchGroup');
             if (canAll && !grp.dataset.loaded) {
                 grp.style.display = 'block';
@@ -3496,10 +3581,14 @@
             return { from, to, year: null, monthIdx: null };
         }
 
+        function dailyCanSeeAll() {
+            return currentUserIsCenter || String(currentUserBranch || '').includes('المركز');
+        }
+
         async function generateDailyReport() {
             const range = dailyComputeRange();
             if (!range) return;
-            const branchParam = (currentUserIsCenter || currentUserRole === 'admin')
+            const branchParam = dailyCanSeeAll()
                 ? encodeURIComponent(document.getElementById('dailyBranchSelect').value)
                 : '';
             showLoading(true);
@@ -3522,104 +3611,148 @@
             finally { showLoading(false); }
         }
 
-        function openDailyPrintWindow(items, range, branchLabel) {
-            const genDate = (() => {
-                const t = new Date();
-                return `${t.getDate()}-${t.getMonth()+1}-${t.getFullYear()}`;
-            })();
+        async function fetchDailyReportData() {
+            const range = dailyComputeRange();
+            if (!range) return null;
+            const branchParam = dailyCanSeeAll()
+                ? encodeURIComponent(document.getElementById('dailyBranchSelect').value)
+                : '';
+            showLoading(true);
+            try {
+                let url = `${API_URL}/daily-list?from=${range.from}&to=${range.to}`;
+                if (branchParam) url += `&branch=${branchParam}`;
+                const res = await fetch(url, { headers: dailyAuthHeaders() });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || 'فشل جلب البيانات');
+                if (!(data.items || []).length) throw new Error('لا توجد سجلات إنجاز في هذه الفترة');
+
+                let branchLabel = 'جميع الفروع';
+                if (data.scope === 'branch') branchLabel = data.viewer_branch || currentUserBranch;
+                else if (branchParam && branchParam !== 'ALL') branchLabel = decodeURIComponent(branchParam);
+
+                return { items: data.items, range, branchLabel };
+            } catch(err) {
+                alert('❌ ' + err.message);
+                return null;
+            }
+            finally { showLoading(false); }
+        }
+
+        async function generateDailyReport() {
+            const d = await fetchDailyReportData();
+            if (!d) return;
+            openDailyPrintWindow(d.items, d.range, d.branchLabel);
+        }
+
+        async function saveDailyPdf() {
+            const d = await fetchDailyReportData();
+            if (!d) return;
+            await downloadDailyPdf(d.items, d.range, d.branchLabel);
+        }
+
+        function dailyBuildTitle(range, branchLabel) {
             let periodText;
             if (range.monthIdx !== null) {
                 periodText = `خلال شهر ${MONTH_NAMES_AR[range.monthIdx]} لعام ${range.year}`;
             } else {
                 periodText = `خلال الفترة من ${fmtDMY(range.from)} إلى ${fmtDMY(range.to)}`;
             }
-            const title = `الكشف الاحصائي لتذاكر البطاقة الالكترونية المصروفة ${periodText} لفرع ${branchLabel}`;
-            const base = window.location.origin;
+            return `الكشف الاحصائي لتذاكر البطاقة الالكترونية المصروفة ${periodText} لفرع ${branchLabel}`;
+        }
 
-            let head1 = `<th rowspan="2" style="border:1px solid #333;padding:2px 4px;font-size:9px;">م</th>
-                <th rowspan="2" style="border:1px solid #333;padding:2px 4px;font-size:9px;">اليوم</th>
-                <th rowspan="2" style="border:1px solid #333;padding:2px 4px;font-size:9px;">التاريخ</th>`;
+        function dailyLetterheadHtml(base, genDate, branchLabel) {
+            return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:3px double #1a5276;padding-bottom:8px;margin-bottom:10px;">
+                <div style="text-align:center;font-weight:bold;font-size:13px;line-height:1.9;width:26%;direction:rtl;">
+                    الجمهورية اليمنية<br>وزارة الداخلية<br>مصلحة الأحوال المدنية والسجل المدني
+                </div>
+                <div style="text-align:center;width:34%;">
+                    <img src="${base}/image.png" alt="شعار الجمهورية" style="height:85px;max-width:100%;object-fit:contain;" crossorigin="anonymous">
+                </div>
+                <div style="text-align:center;width:26%;font-size:11px;line-height:1.7;direction:rtl;">
+                    <img src="${base}/images.png" alt="شعار الأحوال المدنية" style="height:60px;max-width:100%;object-fit:contain;margin-bottom:4px;" crossorigin="anonymous"><br>
+                    <b>تاريخ التوليد:</b> ${genDate}<br>
+                    <b>الفرع:</b> ${escapeHtml(branchLabel)}
+                </div>
+            </div>`;
+        }
+
+        function dailyTableParts(items) {
+            const TH = (extra) => `border:1px solid #333;padding:3px 4px;font-size:9px;text-align:center;`;
+            let head1 = `<th rowspan="2" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">م</th>
+                <th rowspan="2" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">اليوم</th>
+                <th rowspan="2" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">التاريخ</th>`;
             let head2 = '';
             const colKeys = [];
             DAILY_SECTIONS.forEach(sec => {
-                head1 += `<th colspan="${sec.items.length * 2}" style="border:1px solid #333;padding:2px 4px;font-size:9px;background:#d6eaf8;">${sec.title}</th>`;
+                head1 += `<th colspan="${sec.items.length * 2}" style="${TH()}background:#1a5276;color:#ffffff;font-weight:bold;">${sec.title}</th>`;
                 sec.items.forEach(([key, label]) => {
-                    head2 += `<th style="border:1px solid #333;padding:2px 4px;font-size:8px;background:#eaf2f8;">${label} ذ</th><th style="border:1px solid #333;padding:2px 4px;font-size:8px;background:#eaf2f8;">${label} ئ</th>`;
+                    head2 += `<th style="${TH()}background:#2471a3;color:#ffffff;font-weight:bold;">${label} ذ</th><th style="${TH()}background:#2471a3;color:#ffffff;font-weight:bold;">${label} ئ</th>`;
                     colKeys.push(key + '_m', key + '_f');
                 });
             });
-            head1 += `<th colspan="3" style="border:1px solid #333;padding:2px 4px;font-size:9px;background:#fdebd0;">خامساً: حالات إضافية</th>`;
+            head1 += `<th colspan="3" style="${TH()}background:#b9770e;color:#ffffff;font-weight:bold;">خامساً: حالات إضافية</th>`;
             DAILY_EXTRAS.forEach(([key, label]) => {
-                head2 += `<th style="border:1px solid #333;padding:2px 4px;font-size:8px;background:#fef5e7;">${label}</th>`;
+                head2 += `<th style="${TH()}background:#ca6f1e;color:#ffffff;font-weight:bold;">${label}</th>`;
                 colKeys.push(key);
             });
-            head1 += `<th rowspan="2" style="border:1px solid #333;padding:2px 4px;font-size:9px;background:#d5f5e3;">المجموع</th>`;
+            head1 += `<th rowspan="2" style="${TH()}background:#196f3d;color:#ffffff;font-weight:bold;">المجموع</th>`;
 
             const rowsHtml = items.map((r, i) => {
                 const vals = colKeys.map(k => +(r[k] || 0));
                 const total = vals.reduce((a, b) => a + b, 0);
                 return `<tr>
-                    <td style="border:1px solid #333;padding:2px 4px;font-size:9px;text-align:center;">${i + 1}</td>
-                    <td style="border:1px solid #333;padding:2px 4px;font-size:9px;text-align:center;">${escapeHtml(r.day_name || '')}</td>
-                    <td style="border:1px solid #333;padding:2px 4px;font-size:9px;text-align:center;white-space:nowrap;">${fmtDMY(r.entry_date)}</td>
-                    ${vals.map(v => `<td style="border:1px solid #333;padding:2px 4px;font-size:9px;text-align:center;">${v}</td>`).join('')}
-                    <td style="border:1px solid #333;padding:2px 4px;font-size:9px;text-align:center;font-weight:bold;">${total}</td>
+                    <td style="${TH()}">${i + 1}</td>
+                    <td style="${TH()}">${escapeHtml(r.day_name || '')}</td>
+                    <td style="${TH()}white-space:nowrap;">${fmtDMY(r.entry_date)}</td>
+                    ${vals.map(v => `<td style="${TH()}">${v}</td>`).join('')}
+                    <td style="${TH()}font-weight:bold;">${total}</td>
                 </tr>`;
             }).join('');
 
             const totals = colKeys.map(k => items.reduce((a, r) => a + (+(r[k] || 0)), 0));
             const grandTotal = totals.reduce((a, b) => a + b, 0);
+            const footHtml = `
+                <tr>
+                    <td colspan="3" style="${TH()}background:#d5dbdb;color:#000000;font-weight:bold;">الإجمالي</td>
+                    ${totals.map(v => `<td style="${TH()}background:#d5dbdb;color:#000000;font-weight:bold;">${v}</td>`).join('')}
+                    <td style="${TH()}background:#a9dfbf;color:#000000;font-weight:bold;">${grandTotal}</td>
+                </tr>`;
+
+            const tableOpen = `<table style="width:100%;border-collapse:collapse;direction:rtl;">`;
+            return { head1, head2, rowsHtml, footHtml, tableOpen };
+        }
+
+        function openDailyPrintWindow(items, range, branchLabel) {
+            const t = new Date();
+            const genDate = `${t.getDate()}-${t.getMonth()+1}-${t.getFullYear()}`;
+            const title = dailyBuildTitle(range, branchLabel);
+            const base = window.location.origin;
+            const parts = dailyTableParts(items);
 
             const html = `<!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <title>${escapeHtml(title)}</title>
 <style>
     @page { size: A4 landscape; margin: 8mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif; color: #111; padding: 10px; }
-    .letterhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; border-bottom: 3px double #1a5276; padding-bottom: 8px; margin-bottom: 10px; }
-    .lh-right { text-align: center; font-weight: bold; font-size: 13px; line-height: 1.9; width: 26%; }
-    .lh-center { text-align: center; width: 34%; }
-    .lh-center img { height: 85px; max-width: 100%; object-fit: contain; }
-    .lh-left { text-align: center; width: 26%; font-size: 11px; line-height: 1.7; }
-    .lh-left img { height: 60px; max-width: 100%; object-fit: contain; margin-bottom: 4px; }
-    .report-title { text-align: center; font-size: 15px; font-weight: bold; color: #1a5276; margin-bottom: 12px; line-height: 1.6; }
-    table { width: 100%; border-collapse: collapse; direction: rtl; }
-    thead th { background: #1a5276; color: white; }
-    tbody tr:nth-child(even) { background: #f4f6f7; }
-    tfoot td { background: #eaeded; font-weight: bold; }
-    .print-bar { position: fixed; top: 8px; left: 8px; z-index: 99; }
+    html, body { direction: rtl !important; }
+    body { font-family: 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif; color: #111; padding: 10px; direction: rtl; }
+    table { direction: rtl !important; unicode-bidi: isolate; }
+    .print-bar { position: fixed; top: 8px; left: 8px; z-index: 99; direction: ltr; }
     .print-bar button { font-family: inherit; font-size: 14px; padding: 10px 22px; cursor: pointer; background: #1a5276; color: #fff; border: none; border-radius: 6px; }
     @media print { .print-bar { display: none; } body { padding: 0; } }
 </style>
 </head>
 <body>
 <div class="print-bar"><button onclick="window.print()">🖨 طباعة / حفظ PDF</button></div>
-<div class="letterhead">
-    <div class="lh-right">الجمهورية اليمنية<br>وزارة الداخلية<br>مصلحة الأحوال المدنية والسجل المدني</div>
-    <div class="lh-center"><img src="${base}/image.png" alt="شعار الجمهورية"></div>
-    <div class="lh-left">
-        <img src="${base}/images.png" alt="شعار الأحوال المدنية"><br>
-        <b>تاريخ التوليد:</b> ${genDate}<br>
-        <b>الفرع:</b> ${escapeHtml(branchLabel)}
-    </div>
-</div>
-<div class="report-title">${escapeHtml(title)}</div>
-<table>
-    <thead>
-        <tr>${head1}</tr>
-        <tr>${head2}</tr>
-    </thead>
-    <tbody>${rowsHtml}</tbody>
-    <tfoot>
-        <tr>
-            <td colspan="3" style="border:1px solid #333;padding:3px 4px;font-size:9px;text-align:center;">الإجمالي</td>
-            ${totals.map(v => `<td style="border:1px solid #333;padding:3px 4px;font-size:9px;text-align:center;">${v}</td>`).join('')}
-            <td style="border:1px solid #333;padding:3px 4px;font-size:9px;text-align:center;">${grandTotal}</td>
-        </tr>
-    </tfoot>
+${dailyLetterheadHtml(base, genDate, branchLabel)}
+<div style="text-align:center;font-size:15px;font-weight:bold;color:#1a5276;margin-bottom:12px;line-height:1.6;direction:rtl;">${escapeHtml(title)}</div>
+${parts.tableOpen}
+    <thead><tr>${parts.head1}</tr><tr>${parts.head2}</tr></thead>
+    <tbody>${parts.rowsHtml}</tbody>
+    <tfoot>${parts.footHtml}</tfoot>
 </table>
 </body>
 </html>`;
@@ -3630,6 +3763,70 @@
             w.document.write(html);
             w.document.close();
             setTimeout(() => { try { w.focus(); w.print(); } catch(e) {} }, 600);
+        }
+
+        function loadScriptGlobal(src) {
+            return new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = src;
+                s.onload = resolve;
+                s.onerror = () => reject(new Error('تعذر تحميل: ' + src));
+                document.head.appendChild(s);
+            });
+        }
+
+        async function downloadDailyPdf(items, range, branchLabel) {
+            const t = new Date();
+            const genDate = `${t.getDate()}-${t.getMonth()+1}-${t.getFullYear()}`;
+            const title = dailyBuildTitle(range, branchLabel);
+            const base = window.location.origin;
+            const parts = dailyTableParts(items);
+
+            let stage = document.getElementById('dailyPdfStage');
+            if (!stage) {
+                stage = document.createElement('div');
+                stage.id = 'dailyPdfStage';
+                stage.style.cssText = 'position:fixed;left:-11000px;top:0;width:1122px;background:#ffffff;z-index:-1;';
+                document.body.appendChild(stage);
+            }
+            stage.innerHTML = `<div dir="rtl" style="direction:rtl;font-family:'Tajawal','Segoe UI',Tahoma,Arial,sans-serif;color:#111;background:#fff;padding:20px;">
+                ${dailyLetterheadHtml(base, genDate, branchLabel)}
+                <div style="text-align:center;font-size:16px;font-weight:bold;color:#1a5276;margin-bottom:12px;line-height:1.6;">${escapeHtml(title)}</div>
+                ${parts.tableOpen}
+                    <thead><tr>${parts.head1}</tr><tr>${parts.head2}</tr></thead>
+                    <tbody>${parts.rowsHtml}</tbody>
+                    <tfoot>${parts.footHtml}</tfoot>
+                </table>
+            </div>`;
+
+            showLoading(true);
+            try {
+                if (!window.html2canvas) await loadScriptGlobal('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+                if (!window.jspdf) await loadScriptGlobal('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+                const target = stage.firstElementChild;
+                const canvas = await window.html2canvas(target, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+                const imgWidth = 297;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                let heightLeft = imgHeight, position = 0, page = 0;
+                while (heightLeft > 0) {
+                    doc.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= 210;
+                    position -= 210;
+                    if (heightLeft > 0) { doc.addPage(); page++; if (page > 30) break; }
+                }
+
+                const safeName = `daily-report-${branchLabel}-${range.from}_${range.to}.pdf`.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '-');
+                doc.save(safeName);
+            } catch(err) {
+                console.error(err);
+                alert('❌ تعذر إنشاء ملف PDF: ' + err.message);
+            }
+            finally { showLoading(false); }
         }
         // ================= نهاية نظام الإنجاز اليومي =================
 
