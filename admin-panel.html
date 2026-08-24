@@ -3765,9 +3765,10 @@
 
             const totals = colKeys.map(k => items.reduce((a, r) => a + (+(r[k] || 0)), 0));
             const grandTotal = totals.reduce((a, b) => a + b, 0);
+            const leadCols = isSummary ? 2 : 3;
             const footHtml = `
                 <tr>
-                    <td colspan="3" style="${TH()}background:#d5dbdb;color:#000000;font-weight:bold;">الإجمالي</td>
+                    <td colspan="${leadCols}" style="${TH()}background:#d5dbdb;color:#000000;font-weight:bold;">الإجمالي</td>
                     ${totals.map(v => `<td style="${TH()}background:#d5dbdb;color:#000000;font-weight:bold;">${v}</td>`).join('')}
                     <td style="${TH()}background:#a9dfbf;color:#000000;font-weight:bold;">${grandTotal}</td>
                 </tr>`;
