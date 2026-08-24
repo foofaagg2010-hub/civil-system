@@ -730,6 +730,9 @@
             <button class="tab-btn" onclick="showTab('news')" id="newsTab" style="display:none;">
                 <i class="fas fa-newspaper"></i> الأخبار والمنشورات
             </button>
+            <button class="tab-btn" onclick="showTab('daily')" id="dailyTab" style="display:none;">
+                <i class="fas fa-clipboard-check"></i> الإنجاز اليومي
+            </button>
             <button class="tab-btn" onclick="showTab('notifications')" id="notificationsTab" style="display:none;">
                 <i class="fas fa-bell"></i> طلبات الإشعارات <span id="notifBadge" class="notification-count" style="display:none;">0</span>
             </button>
@@ -915,6 +918,80 @@
             </div>
         </div>
 
+        <div id="daily" class="tab-content">
+            <h3><i class="fas fa-clipboard-check"></i> الإنجاز اليومي</h3>
+            <div class="notif-filter-buttons">
+                <button class="notif-filter-btn active" id="dailySubBtnUpload" onclick="switchDailySub('upload')">
+                    <i class="fas fa-upload"></i> رفع التقرير اليومي
+                </button>
+                <button class="notif-filter-btn" id="dailySubBtnReport" onclick="switchDailySub('report')">
+                    <i class="fas fa-file-pdf"></i> توليد تقرير
+                </button>
+            </div>
+
+            <div id="dailySubUpload">
+                <div style="display:flex;gap:15px;flex-wrap:wrap;align-items:flex-end;background:#f8f9fa;padding:15px;border-radius:10px;margin-bottom:18px;">
+                    <div class="form-group" style="margin:0;">
+                        <label>التاريخ</label>
+                        <input type="date" id="dailyDate" onchange="onDailyDateChange()">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>اليوم</label>
+                        <input type="text" id="dailyDayName" readonly style="background:#eee;font-weight:bold;">
+                    </div>
+                    <div class="form-group" style="margin:0;flex:1;min-width:200px;">
+                        <label>ملاحظات (اختياري)</label>
+                        <input type="text" id="dailyNotes" maxlength="500" placeholder="أي ملاحظات عن هذا اليوم...">
+                    </div>
+                </div>
+
+                <div id="dailySections"></div>
+
+                <div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;">
+                    <button class="btn btn-success" onclick="saveDaily()"><i class="fas fa-save"></i> حفظ / تحديث الإنجاز</button>
+                    <button class="btn btn-secondary" onclick="resetDailyForm()"><i class="fas fa-broom"></i> تفريغ الحقول</button>
+                </div>
+
+                <h4 style="margin-top:28px;"><i class="fas fa-list"></i> سجلات آخر 31 يوماً</h4>
+                <div class="table-container">
+                    <table id="dailyRecentTable">
+                        <thead><tr><th>التاريخ</th><th>اليوم</th><th>إجمالي البطاقات</th><th>إجمالي الميلاد</th><th>إجمالي الوفيات</th><th>القيد الوطني</th><th>إضافية</th><th>حذف</th></tr></thead>
+                        <tbody id="dailyRecentBody"><tr><td colspan="8" style="text-align:center;color:#888;">لا توجد سجلات</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="dailySubReport" style="display:none;">
+                <div style="background:#f8f9fa;padding:15px;border-radius:10px;margin-bottom:18px;display:flex;gap:15px;flex-wrap:wrap;align-items:flex-end;">
+                    <div class="form-group" style="margin:0;">
+                        <label>نوع الفترة</label>
+                        <select id="dailyRangeMode" onchange="onDailyModeChange()">
+                            <option value="month">شهر كامل</option>
+                            <option value="custom">بين تاريخين</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="dailyMonthGroup" style="margin:0;">
+                        <label>اختر الشهر</label>
+                        <input type="month" id="dailyMonth">
+                    </div>
+                    <div class="form-group" id="dailyFromGroup" style="margin:0;display:none;">
+                        <label>من تاريخ</label>
+                        <input type="date" id="dailyFromDate">
+                    </div>
+                    <div class="form-group" id="dailyToGroup" style="margin:0;display:none;">
+                        <label>إلى تاريخ</label>
+                        <input type="date" id="dailyToDate">
+                    </div>
+                    <div class="form-group" id="dailyBranchGroup" style="margin:0;display:none;">
+                        <label>الفرع</label>
+                        <select id="dailyBranchSelect"></select>
+                    </div>
+                    <button class="btn btn-primary" onclick="generateDailyReport()"><i class="fas fa-file-pdf"></i> توليد التقرير وطباعته PDF</button>
+                </div>
+                <p style="color:#666;font-size:14px;"><i class="fas fa-info-circle"></i> سيتم فتح نافذة التقرير بمقاس A4 أفقي جاهزة للطباعة أو الحفظ PDF، وتتضمن ترويسة الجمهورية اليمنية وشعاري الطير والاحوال المدنية.</p>
+            </div>
+        </div>
+
         <div id="notifications" class="tab-content">
             <h3><i class="fas fa-bell"></i> طلبات الإشعارات <span id="notifCount" style="font-size:14px;color:#888;"></span></h3>
             <p style="margin-bottom:20px;color:#666;">📨 هنا تظهر طلبات المواطنين الذين يريدون إشعارهم عند وصول بطاقاتهم. اضغط على زر واتساب لإرسال الإشعار.</p>
@@ -1095,6 +1172,7 @@
             <div class="checkbox-group"><input type="checkbox" id="userCanViewLogs"> <label>صلاحية مشاهدة السجل</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userCanViewUsers"> <label>صلاحية إدارة المستخدمين</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userCanNews"> <label>صلاحية الأخبار والمنشورات</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="userCanDaily"> <label>صلاحية الإنجاز اليومي</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userIsReserveCenter"> <label>صلاحية المركز الرئيسي (إرسال الإشعارات)</label></div>
             <div style="display:flex;gap:12px;margin-top:20px;"><button class="btn btn-success" onclick="saveUser()">حفظ</button><button class="btn btn-danger" onclick="closeUserModal()">إلغاء</button></div>
         </div>
@@ -1118,7 +1196,7 @@
     <script>
 
         const API_URL = '/.netlify/functions';
-        let currentUserId = null, currentUserBranch = null, currentUserRole = null, currentUserCanEdit = false, currentUserCanViewUsers = false, currentUserCanViewLogs = false, currentUserIsCenter = false, currentUserCanNews = false;
+        let currentUserId = null, currentUserBranch = null, currentUserRole = null, currentUserCanEdit = false, currentUserCanViewUsers = false, currentUserCanViewLogs = false, currentUserIsCenter = false, currentUserCanNews = false, currentUserCanDaily = false;
         let currentEditUserId = null, currentPage = 1, totalRecords = 0, isLoading = false, currentStatusFilter = null, isSearchMode = false;
         let currentRequests = [], globalSearchResults = [];
         let allNotifications = [];
@@ -1291,6 +1369,7 @@
             document.getElementById('announceTab').style.display = 'inline-flex';
             document.getElementById('notifCenterBtn').style.display = 'inline-flex';
             document.getElementById('newsTab').style.display = currentUserCanNews ? 'inline-flex' : 'none';
+            document.getElementById('dailyTab').style.display = currentUserCanDaily ? 'inline-flex' : 'none';
 
             const notifTab = document.getElementById('notificationsTab');
             if (currentUserCanEdit) {
@@ -1408,7 +1487,9 @@
                             currentUserCanViewUsers = data.can_view_users === true;
                             currentUserCanViewLogs = data.can_view_logs === true;
                             currentUserIsCenter = data.is_reserve_center === true;
-                            currentUserCanNews = data.can_news === true;
+                currentUserCanNews = data.can_news === true;
+                currentUserCanDaily = data.can_daily === true;
+                            currentUserCanDaily = data.can_daily === true;
                             applyPermissions();
                         }
                     } catch (err) {
@@ -2159,7 +2240,9 @@
                 'إرسال إشعار': '#2980b9',
                 'إضافة منشور': '#16a085',
                 'تعديل منشور': '#f39c12',
-                'حذف منشور': '#e74c3c'
+                'حذف منشور': '#e74c3c',
+                'رفع إنجاز يومي': '#8e44ad',
+                'حذف إنجاز يومي': '#e74c3c'
             };
             return colors[action] || '#7f8c8d';
         }
@@ -2201,7 +2284,7 @@
                         <td>${escapeHtml(u.whatsapp_number || '-----')}</td>
                         <td><span class="status-badge ${u.is_active !== false ? 'status-active' : 'status-inactive'}">${u.is_active !== false ? 'نشط' : 'غير نشط'}</span></td>
                         <td>
-                            <button class="btn btn-warning btn-sm" onclick="editUser(${u.id}, '${escapeHtml(u.username)}', '${escapeHtml(u.branch_name)}', '${escapeHtml(u.role)}', ${u.is_active !== false}, ${u.can_edit === true}, ${u.can_view_logs === true}, ${u.can_view_users === true}, '${escapeHtml(u.admin_phone || '')}', '${escapeHtml(u.tech_phone || '')}', '${escapeHtml(u.whatsapp_number || '')}', ${u.can_news === true}, ${u.is_reserve_center === true})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-warning btn-sm" onclick="editUser(${u.id}, '${escapeHtml(u.username)}', '${escapeHtml(u.branch_name)}', '${escapeHtml(u.role)}', ${u.is_active !== false}, ${u.can_edit === true}, ${u.can_view_logs === true}, ${u.can_view_users === true}, '${escapeHtml(u.admin_phone || '')}', '${escapeHtml(u.tech_phone || '')}', '${escapeHtml(u.whatsapp_number || '')}', ${u.can_news === true}, ${u.can_daily === true}, ${u.is_reserve_center === true})"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
@@ -2287,10 +2370,11 @@
             document.getElementById('userCanViewLogs').checked = false;
             document.getElementById('userCanViewUsers').checked = false;
             document.getElementById('userCanNews').checked = false;
+            document.getElementById('userCanDaily').checked = false;
             document.getElementById('userIsReserveCenter').checked = false;
         }
 
-        function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp, canNews, isReserveCenter) {
+        function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp, canNews, canDaily, isReserveCenter) {
             currentEditUserId = id;
             loadBranchOptions(branch || '');
             document.getElementById('userModalTitle').innerText = 'تعديل مستخدم';
@@ -2305,6 +2389,7 @@
             document.getElementById('userCanViewLogs').checked = canViewLogs === true;
             document.getElementById('userCanViewUsers').checked = canViewUsers === true;
             document.getElementById('userCanNews').checked = canNews === true;
+            document.getElementById('userCanDaily').checked = canDaily === true;
             document.getElementById('userIsReserveCenter').checked = isReserveCenter === true;
             document.getElementById('userModal').style.display = 'flex';
         }
@@ -2329,6 +2414,7 @@
             const canViewLogs = document.getElementById('userCanViewLogs').checked;
             const canViewUsers = document.getElementById('userCanViewUsers').checked;
             const canNews = document.getElementById('userCanNews').checked;
+            const canDaily = document.getElementById('userCanDaily').checked;
             const isReserveCenter = document.getElementById('userIsReserveCenter').checked;
 
             if (!username) { alert('يرجى إدخال اسم المستخدم'); return; }
@@ -2357,6 +2443,7 @@
                         can_view_logs: canViewLogs,
                         can_view_users: canViewUsers,
                         can_news: canNews,
+                        can_daily: canDaily,
                         is_reserve_center: isReserveCenter
                     })
                 });
@@ -3164,6 +3251,388 @@
             }
         }
 
+        // ================= نظام الإنجاز اليومي =================
+        const DAILY_SECTIONS = [
+            { title: 'أولاً: قسم البطاقة الشخصية', items: [['id_new','جديد'],['id_rep','تعديل وتالف'],['id_lost','بدل فاقد'],['id_natreg','قيد وطني']] },
+            { title: 'ثانياً: قسم شهادة الميلاد', items: [['birth','ميلاد'],['late_birth','ميلاد متأخر'],['birth_copy','صورة قيد ميلاد'],['foreign_birth','مواليد أجانب']] },
+            { title: 'ثالثاً: قسم شهادة الوفاة', items: [['death','وفاة'],['death_copy','صورة قيد وفاة']] },
+            { title: 'رابعاً: قسم شهادة قيد وطني (الجديد)', items: [['nat_lt12','أقل من 12 عام'],['nat_12_16','أكبر من 12 وأقل من 16 عام'],['nat_edit','تعديل']] }
+        ];
+        const DAILY_EXTRAS = [['marriage','زواج'],['divorce','طلاق'],['deported','المرحل']];
+        const DAY_NAMES_AR = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+        const MONTH_NAMES_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+        let dailyFormBuilt = false;
+
+        function dailyAuthHeaders() {
+            return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}` };
+        }
+
+        function fmtDMY(iso) {
+            if (!iso) return '';
+            const p = String(iso).slice(0, 10).split('-');
+            return p.length === 3 ? `${parseInt(p[2],10)}-${parseInt(p[1],10)}-${p[0]}` : iso;
+        }
+
+        function switchDailySub(which) {
+            document.getElementById('dailySubUpload').style.display = which === 'upload' ? 'block' : 'none';
+            document.getElementById('dailySubReport').style.display = which === 'report' ? 'block' : 'none';
+            document.getElementById('dailySubBtnUpload').classList.toggle('active', which === 'upload');
+            document.getElementById('dailySubBtnReport').classList.toggle('active', which === 'report');
+        }
+
+        function buildDailyForm() {
+            if (dailyFormBuilt) return;
+            const wrap = document.getElementById('dailySections');
+            let html = '';
+            DAILY_SECTIONS.forEach(sec => {
+                html += `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:14px;margin-bottom:12px;">
+                    <h4 style="margin:0 0 10px;color:#1a5276;border-bottom:2px solid #aed6f1;padding-bottom:6px;">${sec.title}</h4>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;">`;
+                sec.items.forEach(([key, label]) => {
+                    html += `<div style="border:1px dashed #bbb;border-radius:8px;padding:8px;text-align:center;">
+                        <div style="font-weight:bold;font-size:13px;margin-bottom:6px;">${label}</div>
+                        <div style="display:flex;gap:6px;">
+                            <div><div style="font-size:11px;color:#666;">ذكور</div><input type="number" min="0" id="daily_${key}_m" value="0" style="width:70px;"></div>
+                            <div><div style="font-size:11px;color:#666;">إناث</div><input type="number" min="0" id="daily_${key}_f" value="0" style="width:70px;"></div>
+                        </div>
+                    </div>`;
+                });
+                html += '</div></div>';
+            });
+            html += `<div style="background:#fdf2e9;border:1px solid #e59866;border-radius:10px;padding:14px;">
+                <h4 style="margin:0 0 10px;color:#a04000;">خامساً: حالات إضافية</h4>
+                <div style="display:flex;gap:20px;flex-wrap:wrap;">`;
+            DAILY_EXTRAS.forEach(([key, label]) => {
+                html += `<div><div style="font-weight:bold;font-size:13px;margin-bottom:4px;">${label}</div><input type="number" min="0" id="daily_${key}" value="0" style="width:90px;"></div>`;
+            });
+            html += '</div></div>';
+            wrap.innerHTML = html;
+            dailyFormBuilt = true;
+        }
+
+        function onDailyDateChange() {
+            const v = document.getElementById('dailyDate').value;
+            const out = document.getElementById('dailyDayName');
+            if (!v) { out.value = ''; return; }
+            const d = new Date(v + 'T00:00:00');
+            out.value = isNaN(d.getTime()) ? '' : DAY_NAMES_AR[d.getDay()];
+            loadDailyEntryForDate(v);
+        }
+
+        async function loadDailyEntryForDate(dateStr) {
+            try {
+                const res = await fetch(`${API_URL}/daily-list?from=${dateStr}&to=${dateStr}`, { headers: dailyAuthHeaders() });
+                if (!res.ok) return;
+                const data = await res.json();
+                const rec = (data.items || []).find(i => i.entry_date === dateStr);
+                fillDailyForm(rec || null);
+            } catch(e) { /* تجاهل */ }
+        }
+
+        function fillDailyForm(rec) {
+            resetDailyFields();
+            if (!rec) return;
+            const g = k => (rec[k] === null || rec[k] === undefined) ? 0 : rec[k];
+            DAILY_SECTIONS.forEach(sec => sec.items.forEach(([key]) => {
+                document.getElementById(`daily_${key}_m`).value = g(key + '_m');
+                document.getElementById(`daily_${key}_f`).value = g(key + '_f');
+            }));
+            DAILY_EXTRAS.forEach(([key]) => { document.getElementById(`daily_${key}`).value = g(key); });
+            document.getElementById('dailyNotes').value = rec.notes || '';
+        }
+
+        function resetDailyFields() {
+            DAILY_SECTIONS.forEach(sec => sec.items.forEach(([key]) => {
+                document.getElementById(`daily_${key}_m`).value = 0;
+                document.getElementById(`daily_${key}_f`).value = 0;
+            }));
+            DAILY_EXTRAS.forEach(([key]) => { document.getElementById(`daily_${key}`).value = 0; });
+            document.getElementById('dailyNotes').value = '';
+        }
+
+        function resetDailyForm() {
+            resetDailyFields();
+            const t = new Date();
+            document.getElementById('dailyDate').value = t.toISOString().slice(0, 10);
+            onDailyDateChange();
+        }
+
+        async function saveDaily() {
+            const dateStr = document.getElementById('dailyDate').value;
+            if (!dateStr) { alert('يرجى اختيار التاريخ'); return; }
+            const payload = {
+                entry_date: dateStr,
+                day_name: document.getElementById('dailyDayName').value,
+                notes: document.getElementById('dailyNotes').value.trim()
+            };
+            DAILY_SECTIONS.forEach(sec => sec.items.forEach(([key]) => {
+                payload[key + '_m'] = parseInt(document.getElementById(`daily_${key}_m`).value, 10) || 0;
+                payload[key + '_f'] = parseInt(document.getElementById(`daily_${key}_f`).value, 10) || 0;
+            }));
+            DAILY_EXTRAS.forEach(([key]) => {
+                payload[key] = parseInt(document.getElementById(`daily_${key}`).value, 10) || 0;
+            });
+
+            showLoading(true);
+            try {
+                const res = await fetch(`${API_URL}/daily-save`, { method: 'POST', headers: dailyAuthHeaders(), body: JSON.stringify(payload) });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || 'فشل الحفظ');
+                alert('✅ تم حفظ إنجاز يوم ' + payload.day_name + ' بتاريخ ' + fmtDMY(dateStr) + ' وإرساله للمركز الرئيسي');
+                await logActivity('رفع إنجاز يومي', `رفع إنجاز يوم ${payload.day_name} بتاريخ ${fmtDMY(dateStr)}`);
+                await loadDailyRecent();
+            } catch(err) {
+                alert('❌ ' + err.message);
+            }
+            finally { showLoading(false); }
+        }
+
+        function dailyRowTotals(r) {
+            let cards = 0, birth = 0, death = 0, nat = 0, extra = 0;
+            ['id_new','id_rep','id_lost','id_natreg'].forEach(k => { cards += (+r[k+'_m']||0) + (+r[k+'_f']||0); });
+            ['birth','late_birth','birth_copy','foreign_birth'].forEach(k => { birth += (+r[k+'_m']||0) + (+r[k+'_f']||0); });
+            ['death','death_copy'].forEach(k => { death += (+r[k+'_m']||0) + (+r[k+'_f']||0); });
+            ['nat_lt12','nat_12_16','nat_edit'].forEach(k => { nat += (+r[k+'_m']||0) + (+r[k+'_f']||0); });
+            extra = (+r.marriage||0) + (+r.divorce||0) + (+r.deported||0);
+            return { cards, birth, death, nat, extra };
+        }
+
+        async function loadDailyRecent() {
+            const tbody = document.getElementById('dailyRecentBody');
+            try {
+                const t = new Date();
+                const to = t.toISOString().slice(0, 10);
+                const fromD = new Date(t.getTime() - 30 * 86400000);
+                const from = fromD.toISOString().slice(0, 10);
+                const res = await fetch(`${API_URL}/daily-list?from=${from}&to=${to}`, { headers: dailyAuthHeaders() });
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                const items = (data.items || []).slice().reverse();
+                if (!items.length) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888;">لا توجد سجلات</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = items.map(r => {
+                    const tt = dailyRowTotals(r);
+                    return `<tr>
+                        <td>${fmtDMY(r.entry_date)}</td>
+                        <td>${escapeHtml(r.day_name || '')}</td>
+                        <td>${tt.cards}</td><td>${tt.birth}</td><td>${tt.death}</td><td>${tt.nat}</td><td>${tt.extra}</td>
+                        <td><button class="btn btn-danger btn-sm" onclick="deleteDaily(${r.id}, '${escapeHtml(r.day_name || '')}', '${r.entry_date}')"><i class="fas fa-trash"></i></button></td>
+                    </tr>`;
+                }).join('');
+            } catch(e) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888;">تعذر تحميل السجلات</td></tr>';
+            }
+        }
+
+        async function deleteDaily(id, dayName, dateStr) {
+            if (!confirm(`حذف سجل الإنجاز الخاص بيوم ${dayName} (${fmtDMY(dateStr)})؟`)) return;
+            try {
+                const res = await fetch(`${API_URL}/daily-delete?id=${id}`, { method: 'DELETE', headers: dailyAuthHeaders() });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || 'فشل الحذف');
+                await logActivity('حذف إنجاز يومي', `حذف سجل ${fmtDMY(dateStr)}`);
+                await loadDailyRecent();
+                const cur = document.getElementById('dailyDate').value;
+                if (cur === dateStr) resetDailyFields();
+            } catch(err) {
+                alert('❌ ' + err.message);
+            }
+        }
+
+        function onDailyModeChange() {
+            const mode = document.getElementById('dailyRangeMode').value;
+            const isMonth = mode === 'month';
+            document.getElementById('dailyMonthGroup').style.display = isMonth ? 'block' : 'none';
+            document.getElementById('dailyFromGroup').style.display = isMonth ? 'none' : 'block';
+            document.getElementById('dailyToGroup').style.display = isMonth ? 'none' : 'block';
+        }
+
+        async function initDailyTab() {
+            buildDailyForm();
+            const now = new Date();
+            const monthInput = document.getElementById('dailyMonth');
+            if (!monthInput.value) monthInput.value = now.toISOString().slice(0, 7);
+            if (!document.getElementById('dailyDate').value) {
+                document.getElementById('dailyDate').value = now.toISOString().slice(0, 10);
+                onDailyDateChange();
+            }
+            const canAll = currentUserIsCenter || currentUserRole === 'admin';
+            const grp = document.getElementById('dailyBranchGroup');
+            if (canAll && !grp.dataset.loaded) {
+                grp.style.display = 'block';
+                try {
+                    const token = sessionStorage.getItem('admin_token');
+                    const res = await fetch(`${API_URL}/branches-stats`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const list = await res.json();
+                    let opts = '<option value="ALL">جميع الفروع</option>';
+                    (list || []).forEach(b => {
+                        const n = String(b.branch || '').trim();
+                        if (n) opts += `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`;
+                    });
+                    document.getElementById('dailyBranchSelect').innerHTML = opts;
+                    grp.dataset.loaded = '1';
+                } catch(e) { /* تجاهل */ }
+            } else if (!canAll) {
+                grp.style.display = 'none';
+            }
+            await loadDailyRecent();
+        }
+
+        function dailyComputeRange() {
+            const mode = document.getElementById('dailyRangeMode').value;
+            if (mode === 'month') {
+                const mv = document.getElementById('dailyMonth').value;
+                if (!mv) { alert('يرجى اختيار الشهر'); return null; }
+                const [y, m] = mv.split('-').map(Number);
+                const last = new Date(y, m, 0).getDate();
+                return { from: `${mv}-01`, to: `${mv}-${String(last).padStart(2,'0')}`, year: y, monthIdx: m - 1 };
+            }
+            const from = document.getElementById('dailyFromDate').value;
+            const to = document.getElementById('dailyToDate').value;
+            if (!from || !to) { alert('يرجى تحديد تاريخي البداية والنهاية'); return null; }
+            if (from > to) { alert('تاريخ البداية يجب أن يكون قبل النهاية'); return null; }
+            return { from, to, year: null, monthIdx: null };
+        }
+
+        async function generateDailyReport() {
+            const range = dailyComputeRange();
+            if (!range) return;
+            const branchParam = (currentUserIsCenter || currentUserRole === 'admin')
+                ? encodeURIComponent(document.getElementById('dailyBranchSelect').value)
+                : '';
+            showLoading(true);
+            try {
+                let url = `${API_URL}/daily-list?from=${range.from}&to=${range.to}`;
+                if (branchParam) url += `&branch=${branchParam}`;
+                const res = await fetch(url, { headers: dailyAuthHeaders() });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || 'فشل جلب البيانات');
+                if (!(data.items || []).length) throw new Error('لا توجد سجلات إنجاز في هذه الفترة');
+
+                let branchLabel = 'جميع الفروع';
+                if (data.scope === 'branch') branchLabel = data.viewer_branch || currentUserBranch;
+                else if (branchParam && branchParam !== 'ALL') branchLabel = decodeURIComponent(branchParam);
+
+                openDailyPrintWindow(data.items, range, branchLabel);
+            } catch(err) {
+                alert('❌ ' + err.message);
+            }
+            finally { showLoading(false); }
+        }
+
+        function openDailyPrintWindow(items, range, branchLabel) {
+            const genDate = (() => {
+                const t = new Date();
+                return `${t.getDate()}-${t.getMonth()+1}-${t.getFullYear()}`;
+            })();
+            let periodText;
+            if (range.monthIdx !== null) {
+                periodText = `خلال شهر ${MONTH_NAMES_AR[range.monthIdx]} لعام ${range.year}`;
+            } else {
+                periodText = `خلال الفترة من ${fmtDMY(range.from)} إلى ${fmtDMY(range.to)}`;
+            }
+            const title = `الكشف الاحصائي لتذاكر البطاقة الالكترونية المصروفة ${periodText} لفرع ${branchLabel}`;
+            const base = window.location.origin;
+
+            let head1 = `<th rowspan="2" style="border:1px solid #333;padding:2px 4px;font-size:9px;">م</th>
+                <th rowspan="2" style="border:1px solid #333;padding:2px 4px;font-size:9px;">اليوم</th>
+                <th rowspan="2" style="border:1px solid #333;padding:2px 4px;font-size:9px;">التاريخ</th>`;
+            let head2 = '';
+            const colKeys = [];
+            DAILY_SECTIONS.forEach(sec => {
+                head1 += `<th colspan="${sec.items.length * 2}" style="border:1px solid #333;padding:2px 4px;font-size:9px;background:#d6eaf8;">${sec.title}</th>`;
+                sec.items.forEach(([key, label]) => {
+                    head2 += `<th style="border:1px solid #333;padding:2px 4px;font-size:8px;background:#eaf2f8;">${label} ذ</th><th style="border:1px solid #333;padding:2px 4px;font-size:8px;background:#eaf2f8;">${label} ئ</th>`;
+                    colKeys.push(key + '_m', key + '_f');
+                });
+            });
+            head1 += `<th colspan="3" style="border:1px solid #333;padding:2px 4px;font-size:9px;background:#fdebd0;">خامساً: حالات إضافية</th>`;
+            DAILY_EXTRAS.forEach(([key, label]) => {
+                head2 += `<th style="border:1px solid #333;padding:2px 4px;font-size:8px;background:#fef5e7;">${label}</th>`;
+                colKeys.push(key);
+            });
+            head1 += `<th rowspan="2" style="border:1px solid #333;padding:2px 4px;font-size:9px;background:#d5f5e3;">المجموع</th>`;
+
+            const rowsHtml = items.map((r, i) => {
+                const vals = colKeys.map(k => +(r[k] || 0));
+                const total = vals.reduce((a, b) => a + b, 0);
+                return `<tr>
+                    <td style="border:1px solid #333;padding:2px 4px;font-size:9px;text-align:center;">${i + 1}</td>
+                    <td style="border:1px solid #333;padding:2px 4px;font-size:9px;text-align:center;">${escapeHtml(r.day_name || '')}</td>
+                    <td style="border:1px solid #333;padding:2px 4px;font-size:9px;text-align:center;white-space:nowrap;">${fmtDMY(r.entry_date)}</td>
+                    ${vals.map(v => `<td style="border:1px solid #333;padding:2px 4px;font-size:9px;text-align:center;">${v}</td>`).join('')}
+                    <td style="border:1px solid #333;padding:2px 4px;font-size:9px;text-align:center;font-weight:bold;">${total}</td>
+                </tr>`;
+            }).join('');
+
+            const totals = colKeys.map(k => items.reduce((a, r) => a + (+(r[k] || 0)), 0));
+            const grandTotal = totals.reduce((a, b) => a + b, 0);
+
+            const html = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>${escapeHtml(title)}</title>
+<style>
+    @page { size: A4 landscape; margin: 8mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif; color: #111; padding: 10px; }
+    .letterhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; border-bottom: 3px double #1a5276; padding-bottom: 8px; margin-bottom: 10px; }
+    .lh-right { text-align: center; font-weight: bold; font-size: 13px; line-height: 1.9; width: 26%; }
+    .lh-center { text-align: center; width: 34%; }
+    .lh-center img { height: 85px; max-width: 100%; object-fit: contain; }
+    .lh-left { text-align: center; width: 26%; font-size: 11px; line-height: 1.7; }
+    .lh-left img { height: 60px; max-width: 100%; object-fit: contain; margin-bottom: 4px; }
+    .report-title { text-align: center; font-size: 15px; font-weight: bold; color: #1a5276; margin-bottom: 12px; line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; direction: rtl; }
+    thead th { background: #1a5276; color: white; }
+    tbody tr:nth-child(even) { background: #f4f6f7; }
+    tfoot td { background: #eaeded; font-weight: bold; }
+    .print-bar { position: fixed; top: 8px; left: 8px; z-index: 99; }
+    .print-bar button { font-family: inherit; font-size: 14px; padding: 10px 22px; cursor: pointer; background: #1a5276; color: #fff; border: none; border-radius: 6px; }
+    @media print { .print-bar { display: none; } body { padding: 0; } }
+</style>
+</head>
+<body>
+<div class="print-bar"><button onclick="window.print()">🖨 طباعة / حفظ PDF</button></div>
+<div class="letterhead">
+    <div class="lh-right">الجمهورية اليمنية<br>وزارة الداخلية<br>مصلحة الأحوال المدنية والسجل المدني</div>
+    <div class="lh-center"><img src="${base}/image.png" alt="شعار الجمهورية"></div>
+    <div class="lh-left">
+        <img src="${base}/images.png" alt="شعار الأحوال المدنية"><br>
+        <b>تاريخ التوليد:</b> ${genDate}<br>
+        <b>الفرع:</b> ${escapeHtml(branchLabel)}
+    </div>
+</div>
+<div class="report-title">${escapeHtml(title)}</div>
+<table>
+    <thead>
+        <tr>${head1}</tr>
+        <tr>${head2}</tr>
+    </thead>
+    <tbody>${rowsHtml}</tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3" style="border:1px solid #333;padding:3px 4px;font-size:9px;text-align:center;">الإجمالي</td>
+            ${totals.map(v => `<td style="border:1px solid #333;padding:3px 4px;font-size:9px;text-align:center;">${v}</td>`).join('')}
+            <td style="border:1px solid #333;padding:3px 4px;font-size:9px;text-align:center;">${grandTotal}</td>
+        </tr>
+    </tfoot>
+</table>
+</body>
+</html>`;
+
+            const w = window.open('', '_blank');
+            if (!w) { alert('يرجى السماح بالنوافذ المنبثقة لتوليد التقرير'); return; }
+            w.document.open();
+            w.document.write(html);
+            w.document.close();
+            setTimeout(() => { try { w.focus(); w.print(); } catch(e) {} }, 600);
+        }
+        // ================= نهاية نظام الإنجاز اليومي =================
+
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -3188,6 +3657,7 @@
             else if (tabId === 'notifications') { loadNotifications(); }
             else if (tabId === 'announce') { loadAnnounce(); }
             else if (tabId === 'news') { loadNewsAdmin(); }
+            else if (tabId === 'daily') { initDailyTab(); }
         }
 
         window.onclick = function(event) {
