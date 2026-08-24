@@ -974,6 +974,13 @@
             <div id="dailySubReport" style="display:none;">
                 <div style="background:#f8f9fa;padding:15px;border-radius:10px;margin-bottom:18px;display:flex;gap:15px;flex-wrap:wrap;align-items:flex-end;">
                     <div class="form-group" style="margin:0;">
+                        <label>نوع التقرير</label>
+                        <select id="dailyReportType">
+                            <option value="detailed">تفصيلي (يوم بيوم)</option>
+                            <option value="branchSummary">ملخص إجمالي حسب الفرع</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
                         <label>نوع الفترة</label>
                         <select id="dailyRangeMode" onchange="onDailyModeChange()">
                             <option value="month">شهر كامل</option>
@@ -999,7 +1006,7 @@
                     <button class="btn btn-primary" onclick="generateDailyReport()"><i class="fas fa-print"></i> توليد التقرير وطباعته</button>
                     <button class="btn btn-success" onclick="saveDailyPdf()"><i class="fas fa-file-pdf"></i> حفظ إلى PDF</button>
                 </div>
-                <p style="color:#666;font-size:14px;"><i class="fas fa-info-circle"></i> سيتم فتح نافذة التقرير بمقاس A4 أفقي جاهزة للطباعة أو الحفظ PDF، وتتضمن ترويسة الجمهورية اليمنية وشعاري الطير والاحوال المدنية.</p>
+                <p style="color:#666;font-size:14px;"><i class="fas fa-info-circle"></i> التقرير يفتح بمقاس A4 أفقي جاهز للطباعة أو الحفظ PDF. خيار <b>ملخص إجمالي حسب الفرع</b> متاح لمستخدمي فرع المركز الرئيسي فقط ويعرض كل فرع وإجمالي إنجازه خلال الفترة المحددة في تقرير واحد.</p>
             </div>
         </div>
 
@@ -3536,6 +3543,7 @@
 
         async function initDailyTab() {
             buildDailyForm();
+            initDailyReportTypeOptions();
             const now = new Date();
             const monthInput = document.getElementById('dailyMonth');
             if (!monthInput.value) monthInput.value = now.toISOString().slice(0, 7);
@@ -3583,6 +3591,14 @@
 
         function dailyCanSeeAll() {
             return currentUserIsCenter || String(currentUserBranch || '').includes('المركز');
+        }
+
+        function initDailyReportTypeOptions() {
+            const sel = document.getElementById('dailyReportType');
+            if (!sel) return;
+            if (!dailyCanSeeAll()) {
+                [...sel.options].forEach(o => { if (o.value === 'branchSummary') o.remove(); });
+            }
         }
 
         async function generateDailyReport() {
@@ -3641,23 +3657,31 @@
         async function generateDailyReport() {
             const d = await fetchDailyReportData();
             if (!d) return;
-            openDailyPrintWindow(d.items, d.range, d.branchLabel);
+            openDailyPrintWindow(d.items, d.range, d.branchLabel, dailyCurrentMode());
         }
 
         async function saveDailyPdf() {
             const d = await fetchDailyReportData();
             if (!d) return;
-            await downloadDailyPdf(d.items, d.range, d.branchLabel);
+            await downloadDailyPdf(d.items, d.range, d.branchLabel, dailyCurrentMode());
         }
 
-        function dailyBuildTitle(range, branchLabel) {
+        function dailyBuildTitle(range, branchLabel, mode) {
             let periodText;
             if (range.monthIdx !== null) {
                 periodText = `خلال شهر ${MONTH_NAMES_AR[range.monthIdx]} لعام ${range.year}`;
             } else {
                 periodText = `خلال الفترة من ${fmtDMY(range.from)} إلى ${fmtDMY(range.to)}`;
             }
+            if (mode === 'branchSummary') {
+                return `الكشف الإجمالي لإنجاز الفروع ${periodText}`;
+            }
             return `الكشف الاحصائي لتذاكر البطاقة الالكترونية المصروفة ${periodText} لفرع ${branchLabel}`;
+        }
+
+        function dailyCurrentMode() {
+            const sel = document.getElementById('dailyReportType');
+            return (sel && sel.value === 'branchSummary' && dailyCanSeeAll()) ? 'branchSummary' : 'detailed';
         }
 
         function dailyLetterheadHtml(base, genDate, branchLabel) {
@@ -3676,11 +3700,18 @@
             </div>`;
         }
 
-        function dailyTableParts(items) {
+        function dailyTableParts(items, mode) {
+            const isSummary = mode === 'branchSummary';
             const TH = (extra) => `border:1px solid #333;padding:3px 4px;font-size:9px;text-align:center;`;
-            let head1 = `<th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">م</th>
-                <th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">اليوم</th>
-                <th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">التاريخ</th>`;
+            let head1;
+            if (isSummary) {
+                head1 = `<th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">م</th>
+                    <th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">اسم الفرع</th>`;
+            } else {
+                head1 = `<th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">م</th>
+                    <th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">اليوم</th>
+                    <th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">التاريخ</th>`;
+            }
             let head2 = '';
             let head3 = '';
             const colKeys = [];
@@ -3699,17 +3730,38 @@
             });
             head1 += `<th rowspan="3" style="${TH()}background:#196f3d;color:#ffffff;font-weight:bold;">المجموع</th>`;
 
-            const rowsHtml = items.map((r, i) => {
-                const vals = colKeys.map(k => +(r[k] || 0));
-                const total = vals.reduce((a, b) => a + b, 0);
-                return `<tr>
-                    <td style="${TH()}">${i + 1}</td>
-                    <td style="${TH()}">${escapeHtml(r.day_name || '')}</td>
-                    <td style="${TH()}white-space:nowrap;">${fmtDMY(r.entry_date)}</td>
-                    ${vals.map(v => `<td style="${TH()}">${v}</td>`).join('')}
-                    <td style="${TH()}font-weight:bold;">${total}</td>
-                </tr>`;
-            }).join('');
+            let rowsHtml;
+            if (isSummary) {
+                const byBranch = {};
+                items.forEach(r => {
+                    const b = String(r.branch || '').trim() || 'غير محدد';
+                    if (!byBranch[b]) byBranch[b] = {};
+                    colKeys.forEach(k => { byBranch[b][k] = (byBranch[b][k] || 0) + (+(r[k] || 0)); });
+                });
+                const entries = Object.entries(byBranch).sort((a, b) => a[0].localeCompare(b[0], 'ar'));
+                rowsHtml = entries.map(([b, vals], i) => {
+                    const rowVals = colKeys.map(k => vals[k] || 0);
+                    const total = rowVals.reduce((a, c) => a + c, 0);
+                    return `<tr>
+                        <td style="${TH()}">${i + 1}</td>
+                        <td style="${TH()}text-align:right;font-weight:bold;white-space:nowrap;">${escapeHtml(b)}</td>
+                        ${rowVals.map(v => `<td style="${TH()}">${v}</td>`).join('')}
+                        <td style="${TH()}font-weight:bold;">${total}</td>
+                    </tr>`;
+                }).join('');
+            } else {
+                rowsHtml = items.map((r, i) => {
+                    const vals = colKeys.map(k => +(r[k] || 0));
+                    const total = vals.reduce((a, b) => a + b, 0);
+                    return `<tr>
+                        <td style="${TH()}">${i + 1}</td>
+                        <td style="${TH()}">${escapeHtml(r.day_name || '')}</td>
+                        <td style="${TH()}white-space:nowrap;">${fmtDMY(r.entry_date)}</td>
+                        ${vals.map(v => `<td style="${TH()}">${v}</td>`).join('')}
+                        <td style="${TH()}font-weight:bold;">${total}</td>
+                    </tr>`;
+                }).join('');
+            }
 
             const totals = colKeys.map(k => items.reduce((a, r) => a + (+(r[k] || 0)), 0));
             const grandTotal = totals.reduce((a, b) => a + b, 0);
@@ -3724,12 +3776,12 @@
             return { head1, head2, head3, rowsHtml, footHtml, tableOpen };
         }
 
-        function openDailyPrintWindow(items, range, branchLabel) {
+        function openDailyPrintWindow(items, range, branchLabel, mode) {
             const t = new Date();
             const genDate = `${t.getDate()}-${t.getMonth()+1}-${t.getFullYear()}`;
-            const title = dailyBuildTitle(range, branchLabel);
+            const title = dailyBuildTitle(range, branchLabel, mode);
             const base = window.location.origin;
-            const parts = dailyTableParts(items);
+            const parts = dailyTableParts(items, mode);
 
             const html = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -3777,12 +3829,12 @@ ${parts.tableOpen}
             });
         }
 
-        async function downloadDailyPdf(items, range, branchLabel) {
+        async function downloadDailyPdf(items, range, branchLabel, mode) {
             const t = new Date();
             const genDate = `${t.getDate()}-${t.getMonth()+1}-${t.getFullYear()}`;
-            const title = dailyBuildTitle(range, branchLabel);
+            const title = dailyBuildTitle(range, branchLabel, mode);
             const base = window.location.origin;
-            const parts = dailyTableParts(items);
+            const parts = dailyTableParts(items, mode);
 
             let stage = document.getElementById('dailyPdfStage');
             if (!stage) {
@@ -3822,7 +3874,7 @@ ${parts.tableOpen}
                     if (heightLeft > 0) { doc.addPage(); page++; if (page > 30) break; }
                 }
 
-                const safeName = `daily-report-${branchLabel}-${range.from}_${range.to}.pdf`.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '-');
+                const safeName = `daily-report-${mode === 'branchSummary' ? 'summary-all-branches' : branchLabel}-${range.from}_${range.to}.pdf`.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '-');
                 doc.save(safeName);
             } catch(err) {
                 console.error(err);
