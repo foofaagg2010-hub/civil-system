@@ -40,8 +40,10 @@ exports.handler = async (event) => {
         if (!user || user.is_active === false) return { statusCode: 403, headers, body: JSON.stringify({ error: 'الحساب غير نشط' }) };
         if (user.can_daily !== true) return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك بعرض الإنجاز اليومي' }) };
 
-        // عرض كل الفروع: مستخدمو المركز الرئيسي فقط
+        // صلاحيات العرض
         const canSeeAll = user.is_reserve_center === true || String(user.branch_name || '').includes('المركز');
+        const canManageBranches = user.can_manage_branches === true;
+        const allowedList = String(user.allowed_branches || '').split(',').map(s => s.trim()).filter(Boolean);
         const ownBranch = String(user.branch_name || '').trim();
 
         const params = event.queryStringParameters || {};
@@ -50,10 +52,23 @@ exports.handler = async (event) => {
 
         let query = supabase.from('daily_achievements').select('*').order('entry_date', { ascending: true });
 
-        if (!canSeeAll) {
+        if (canSeeAll) {
+            // المركز الرئيسي: وصول كامل مع فلتر اختياري
+            if (params.branch && params.branch !== 'ALL' && params.branch !== 'MY_ALLOWED') {
+                query = query.eq('branch', String(params.branch).replace(/[%,]/g, '').trim());
+            }
+        } else if (canManageBranches && allowedList.length > 0) {
+            // مشرف عدة فروع: يرى الفروع المسموح بها فقط
+            const b = String(params.branch || '').trim();
+            if (b && b !== 'ALL' && b !== 'MY_ALLOWED') {
+                if (allowedList.includes(b)) query = query.eq('branch', b);
+                else return { statusCode: 200, headers, body: JSON.stringify({ items: [], scope: 'managed', viewer_branch: ownBranch }) };
+            } else {
+                query = query.in('branch', allowedList);
+            }
+        } else {
+            // موظف عادي: فرعه فقط
             query = query.eq('branch', ownBranch);
-        } else if (params.branch && params.branch !== 'ALL') {
-            query = query.eq('branch', String(params.branch).replace(/[%,]/g, '').trim());
         }
 
         if (/^\d{4}-\d{2}-\d{2}$/.test(from)) query = query.gte('entry_date', from);
@@ -70,7 +85,7 @@ exports.handler = async (event) => {
             headers,
             body: JSON.stringify({
                 items: data || [],
-                scope: canSeeAll ? 'all' : 'branch',
+                scope: canSeeAll ? 'all' : (canManageBranches ? 'managed' : 'branch'),
                 viewer_branch: ownBranch
             })
         };

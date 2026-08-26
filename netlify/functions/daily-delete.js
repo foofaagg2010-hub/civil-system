@@ -51,7 +51,10 @@ exports.handler = async (event) => {
         if (!rec) return { statusCode: 404, headers, body: JSON.stringify({ error: 'السجل غير موجود' }) };
 
         const isCenter = user.is_reserve_center === true || String(user.branch_name || '').includes('المركز');
-        if (!isCenter && String(rec.branch).trim() !== String(user.branch_name || '').trim()) {
+        const canManageBranches = user.can_manage_branches === true;
+        const allowedList = String(user.allowed_branches || '').split(',').map(s => s.trim()).filter(Boolean);
+        const isAllowed = canManageBranches && allowedList.includes(String(rec.branch).trim());
+        if (!isCenter && !isAllowed && String(rec.branch).trim() !== String(user.branch_name || '').trim()) {
             return { statusCode: 403, headers, body: JSON.stringify({ error: 'يمكنك حذف إنجاز فرعك فقط' }) };
         }
 

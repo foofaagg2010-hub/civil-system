@@ -953,6 +953,7 @@
                     <span>وفيات: <span id="dtDeath">0</span></span>
                     <span>قيد وطني: <span id="dtNat">0</span></span>
                     <span>إضافية: <span id="dtExtra">0</span></span>
+                    <span>مرحل: <span id="dtDeported">0</span></span>
                     <span style="background:#f9e79f;color:#1a5276;padding:2px 12px;border-radius:20px;">الإجمالي: <span id="dtGrand">0</span></span>
                 </div>
 
@@ -965,7 +966,7 @@
                 <h4 style="margin-top:28px;"><i class="fas fa-list"></i> سجلات آخر 31 يوماً</h4>
                 <div class="table-container">
                     <table id="dailyRecentTable">
-                        <thead><tr><th>التاريخ</th><th>اليوم</th><th>إجمالي البطاقات</th><th>إجمالي الميلاد</th><th>إجمالي الوفيات</th><th>القيد الوطني</th><th>إضافية</th><th>حذف</th></tr></thead>
+                        <thead>                        <tr><th>التاريخ</th><th>اليوم</th><th>إجمالي البطاقات</th><th>إجمالي الميلاد</th><th>إجمالي الوفيات</th><th>القيد الوطني</th><th>إضافية</th><th>مرحل</th><th>حذف</th></tr></thead>
                         <tbody id="dailyRecentBody"><tr><td colspan="8" style="text-align:center;color:#888;">لا توجد سجلات</td></tr></tbody>
                     </table>
                 </div>
@@ -1191,6 +1192,8 @@
             <div class="checkbox-group"><input type="checkbox" id="userCanViewUsers"> <label>صلاحية إدارة المستخدمين</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userCanNews"> <label>صلاحية الأخبار والمنشورات</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userCanDaily"> <label>صلاحية الإنجاز اليومي</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="userCanManageBranches" onchange="toggleAllowedBranchesField()"> <label>مشرف عدة فروع (تقارير متعددة)</label></div>
+            <div class="form-group" id="userAllowedBranchesGroup" style="display:none;"><label>الفروع المسموح بها (مفصولة بفاصلة)</label><input type="text" id="userAllowedBranches" placeholder="فرع 1, فرع 2, فرع 3..."></div>
             <div class="checkbox-group"><input type="checkbox" id="userIsReserveCenter"> <label>صلاحية المركز الرئيسي (إرسال الإشعارات)</label></div>
             <div style="display:flex;gap:12px;margin-top:20px;"><button class="btn btn-success" onclick="saveUser()">حفظ</button><button class="btn btn-danger" onclick="closeUserModal()">إلغاء</button></div>
         </div>
@@ -1214,7 +1217,7 @@
     <script>
 
         const API_URL = '/.netlify/functions';
-        let currentUserId = null, currentUserBranch = null, currentUserRole = null, currentUserCanEdit = false, currentUserCanViewUsers = false, currentUserCanViewLogs = false, currentUserIsCenter = false, currentUserCanNews = false, currentUserCanDaily = false;
+        let currentUserId = null, currentUserBranch = null, currentUserRole = null, currentUserCanEdit = false, currentUserCanViewUsers = false, currentUserCanViewLogs = false, currentUserIsCenter = false, currentUserCanNews = false, currentUserCanDaily = false, currentUserCanManageBranches = false, currentUserAllowedBranches = [];
         let currentEditUserId = null, currentPage = 1, totalRecords = 0, isLoading = false, currentStatusFilter = null, isSearchMode = false;
         let currentRequests = [], globalSearchResults = [];
         let allNotifications = [];
@@ -1507,7 +1510,15 @@
                             currentUserIsCenter = data.is_reserve_center === true;
                 currentUserCanNews = data.can_news === true;
                 currentUserCanDaily = data.can_daily === true;
-                            currentUserCanDaily = data.can_daily === true;
+                currentUserCanDaily = data.can_daily === true;
+                currentUserCanManageBranches = data.can_manage_branches === true;
+                currentUserAllowedBranches = String(data.allowed_branches || '').split(',').map(s => s.trim()).filter(Boolean);
+                sessionStorage.setItem('admin_can_manage_branches', currentUserCanManageBranches);
+                sessionStorage.setItem('admin_allowed_branches', data.allowed_branches || '');
+                            currentUserCanManageBranches = data.can_manage_branches === true;
+                            currentUserAllowedBranches = String(data.allowed_branches || '').split(',').map(s => s.trim()).filter(Boolean);
+                            sessionStorage.setItem('admin_can_manage_branches', currentUserCanManageBranches);
+                            sessionStorage.setItem('admin_allowed_branches', data.allowed_branches || '');
                             applyPermissions();
                         }
                     } catch (err) {
@@ -2302,7 +2313,7 @@
                         <td>${escapeHtml(u.whatsapp_number || '-----')}</td>
                         <td><span class="status-badge ${u.is_active !== false ? 'status-active' : 'status-inactive'}">${u.is_active !== false ? 'نشط' : 'غير نشط'}</span></td>
                         <td>
-                            <button class="btn btn-warning btn-sm" onclick="editUser(${u.id}, '${escapeHtml(u.username)}', '${escapeHtml(u.branch_name)}', '${escapeHtml(u.role)}', ${u.is_active !== false}, ${u.can_edit === true}, ${u.can_view_logs === true}, ${u.can_view_users === true}, '${escapeHtml(u.admin_phone || '')}', '${escapeHtml(u.tech_phone || '')}', '${escapeHtml(u.whatsapp_number || '')}', ${u.can_news === true}, ${u.can_daily === true}, ${u.is_reserve_center === true})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-warning btn-sm" onclick="editUser(${u.id}, '${escapeHtml(u.username)}', '${escapeHtml(u.branch_name)}', '${escapeHtml(u.role)}', ${u.is_active !== false}, ${u.can_edit === true}, ${u.can_view_logs === true}, ${u.can_view_users === true}, '${escapeHtml(u.admin_phone || '')}', '${escapeHtml(u.tech_phone || '')}', '${escapeHtml(u.whatsapp_number || '')}', ${u.can_news === true}, ${u.can_daily === true}, ${u.can_manage_branches === true}, '${escapeHtml(u.allowed_branches || '')}', ${u.is_reserve_center === true})"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
@@ -2351,6 +2362,11 @@
             }
         }
 
+        function toggleAllowedBranchesField() {
+            const checked = document.getElementById('userCanManageBranches').checked;
+            document.getElementById('userAllowedBranchesGroup').style.display = checked ? 'block' : 'none';
+        }
+
         function applyUserBranchSelection(desired) {
             const sel = document.getElementById('userBranch');
             const manual = document.getElementById('userBranchManual');
@@ -2389,10 +2405,13 @@
             document.getElementById('userCanViewUsers').checked = false;
             document.getElementById('userCanNews').checked = false;
             document.getElementById('userCanDaily').checked = false;
+            document.getElementById('userCanManageBranches').checked = false;
+            document.getElementById('userAllowedBranches').value = '';
+            document.getElementById('userAllowedBranchesGroup').style.display = 'none';
             document.getElementById('userIsReserveCenter').checked = false;
         }
 
-        function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp, canNews, canDaily, isReserveCenter) {
+        function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp, canNews, canDaily, canManageBranches, allowedBranches, isReserveCenter) {
             currentEditUserId = id;
             loadBranchOptions(branch || '');
             document.getElementById('userModalTitle').innerText = 'تعديل مستخدم';
@@ -2408,6 +2427,9 @@
             document.getElementById('userCanViewUsers').checked = canViewUsers === true;
             document.getElementById('userCanNews').checked = canNews === true;
             document.getElementById('userCanDaily').checked = canDaily === true;
+            document.getElementById('userCanManageBranches').checked = canManageBranches === true;
+            document.getElementById('userAllowedBranches').value = allowedBranches || '';
+            document.getElementById('userAllowedBranchesGroup').style.display = canManageBranches === true ? 'block' : 'none';
             document.getElementById('userIsReserveCenter').checked = isReserveCenter === true;
             document.getElementById('userModal').style.display = 'flex';
         }
@@ -2433,6 +2455,8 @@
             const canViewUsers = document.getElementById('userCanViewUsers').checked;
             const canNews = document.getElementById('userCanNews').checked;
             const canDaily = document.getElementById('userCanDaily').checked;
+            const canManageBranches = document.getElementById('userCanManageBranches').checked;
+            const allowedBranches = document.getElementById('userAllowedBranches').value.trim();
             const isReserveCenter = document.getElementById('userIsReserveCenter').checked;
 
             if (!username) { alert('يرجى إدخال اسم المستخدم'); return; }
@@ -2462,6 +2486,8 @@
                         can_view_users: canViewUsers,
                         can_news: canNews,
                         can_daily: canDaily,
+                        can_manage_branches: canManageBranches,
+                        allowed_branches: allowedBranches,
                         is_reserve_center: isReserveCenter
                     })
                 });
@@ -3276,7 +3302,8 @@
             { title: 'ثالثاً: قسم شهادة الوفاة', items: [['death','وفاة'],['death_copy','صورة قيد وفاة']] },
             { title: 'رابعاً: قسم شهادة قيد وطني (الجديد)', items: [['nat_lt12','أقل من 12 عام'],['nat_12_16','أكبر من 12 وأقل من 16 عام'],['nat_edit','تعديل']] }
         ];
-        const DAILY_EXTRAS = [['marriage','زواج'],['divorce','طلاق'],['deported','المرحل']];
+        const DAILY_EXTRAS = [['marriage','زواج'],['divorce','طلاق']];
+        const DAILY_SINGLE = [['deported','المرحل']];
         const DAY_NAMES_AR = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
         const MONTH_NAMES_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
         let dailyFormBuilt = false;
@@ -3348,6 +3375,16 @@
                 </div>`;
             });
             html += '</div></div>';
+            html += `<div class="dsec" style="border-color:#e6b0aa;">
+                <div class="dsec-head" style="background:linear-gradient(135deg, #943126, #e74c3c);">سادساً: المرحل</div>
+                <div class="dsec-body">`;
+            DAILY_SINGLE.forEach(([key, label]) => {
+                html += `<div class="ditem" style="min-width:120px;">
+                    <div class="ditem-title">${label}</div>
+                    <input type="number" min="0" id="daily_${key}" value="0" style="width:90px;text-align:center;font-size:17px;font-weight:bold;padding:7px 4px;border:1.5px solid #ccd6dd;border-radius:8px;color:#154360;">
+                </div>`;
+            });
+            html += '</div></div>';
             wrap.innerHTML = html;
             const inputs = wrap.querySelectorAll('input[type=number]');
             inputs.forEach(inp => {
@@ -3372,13 +3409,15 @@
             ['birth','late_birth','birth_copy','foreign_birth'].forEach(k => { birth += val(`daily_${k}_m`) + val(`daily_${k}_f`); });
             ['death','death_copy'].forEach(k => { death += val(`daily_${k}_m`) + val(`daily_${k}_f`); });
             ['nat_lt12','nat_12_16','nat_edit'].forEach(k => { nat += val(`daily_${k}_m`) + val(`daily_${k}_f`); });
-            extra = val('daily_marriage') + val('daily_divorce') + val('daily_deported');
+            extra = val('daily_marriage') + val('daily_divorce');
+            const dep = val('daily_deported');
             document.getElementById('dtCards').textContent = cards;
             document.getElementById('dtBirth').textContent = birth;
             document.getElementById('dtDeath').textContent = death;
             document.getElementById('dtNat').textContent = nat;
             document.getElementById('dtExtra').textContent = extra;
-            document.getElementById('dtGrand').textContent = cards + birth + death + nat + extra;
+            document.getElementById('dtDeported').textContent = dep;
+            document.getElementById('dtGrand').textContent = cards + birth + death + nat + extra + dep;
         }
 
         async function copyPreviousDaily() {
@@ -3428,6 +3467,7 @@
                 document.getElementById(`daily_${key}_f`).value = g(key + '_f');
             }));
             DAILY_EXTRAS.forEach(([key]) => { document.getElementById(`daily_${key}`).value = g(key); });
+            DAILY_SINGLE.forEach(([key]) => { document.getElementById(`daily_${key}`).value = g(key); });
             document.getElementById('dailyNotes').value = rec.notes || '';
             updateDailyTotals();
         }
@@ -3438,6 +3478,7 @@
                 document.getElementById(`daily_${key}_f`).value = 0;
             }));
             DAILY_EXTRAS.forEach(([key]) => { document.getElementById(`daily_${key}`).value = 0; });
+            DAILY_SINGLE.forEach(([key]) => { document.getElementById(`daily_${key}`).value = 0; });
             document.getElementById('dailyNotes').value = '';
             updateDailyTotals();
         }
@@ -3464,6 +3505,9 @@
             DAILY_EXTRAS.forEach(([key]) => {
                 payload[key] = parseInt(document.getElementById(`daily_${key}`).value, 10) || 0;
             });
+            DAILY_SINGLE.forEach(([key]) => {
+                payload[key] = parseInt(document.getElementById(`daily_${key}`).value, 10) || 0;
+            });
 
             showLoading(true);
             try {
@@ -3485,8 +3529,9 @@
             ['birth','late_birth','birth_copy','foreign_birth'].forEach(k => { birth += (+r[k+'_m']||0) + (+r[k+'_f']||0); });
             ['death','death_copy'].forEach(k => { death += (+r[k+'_m']||0) + (+r[k+'_f']||0); });
             ['nat_lt12','nat_12_16','nat_edit'].forEach(k => { nat += (+r[k+'_m']||0) + (+r[k+'_f']||0); });
-            extra = (+r.marriage||0) + (+r.divorce||0) + (+r.deported||0);
-            return { cards, birth, death, nat, extra };
+            extra = (+r.marriage||0) + (+r.divorce||0);
+            const dep = (+r.deported||0);
+            return { cards, birth, death, nat, extra, dep };
         }
 
         async function loadDailyRecent() {
@@ -3501,7 +3546,7 @@
                 const data = await res.json();
                 const items = (data.items || []).slice().reverse();
                 if (!items.length) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888;">لا توجد سجلات</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#888;">لا توجد سجلات</td></tr>';
                     return;
                 }
                 tbody.innerHTML = items.map(r => {
@@ -3509,12 +3554,12 @@
                     return `<tr>
                         <td>${fmtDMY(r.entry_date)}</td>
                         <td>${escapeHtml(r.day_name || '')}</td>
-                        <td>${tt.cards}</td><td>${tt.birth}</td><td>${tt.death}</td><td>${tt.nat}</td><td>${tt.extra}</td>
+                        <td>${tt.cards}</td><td>${tt.birth}</td><td>${tt.death}</td><td>${tt.nat}</td><td>${tt.extra}</td><td>${tt.dep}</td>
                         <td><button class="btn btn-danger btn-sm" onclick="deleteDaily(${r.id}, '${escapeHtml(r.day_name || '')}', '${r.entry_date}')"><i class="fas fa-trash"></i></button></td>
                     </tr>`;
                 }).join('');
             } catch(e) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888;">تعذر تحميل السجلات</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#888;">تعذر تحميل السجلات</td></tr>';
             }
         }
 
@@ -3552,22 +3597,14 @@
                 onDailyDateChange();
             }
             const canAll = dailyCanSeeAll();
+            const canManage = dailyCanManageBranches();
             const grp = document.getElementById('dailyBranchGroup');
-            if (canAll && !grp.dataset.loaded) {
+            if ((canAll || canManage) && !grp.dataset.loaded) {
                 grp.style.display = 'block';
-                try {
-                    const token = sessionStorage.getItem('admin_token');
-                    const res = await fetch(`${API_URL}/branches-stats`, { headers: { 'Authorization': `Bearer ${token}` } });
-                    const list = await res.json();
-                    let opts = '<option value="ALL">جميع الفروع</option>';
-                    (list || []).forEach(b => {
-                        const n = String(b.branch || '').trim();
-                        if (n) opts += `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`;
-                    });
-                    document.getElementById('dailyBranchSelect').innerHTML = opts;
-                    grp.dataset.loaded = '1';
-                } catch(e) { /* تجاهل */ }
-            } else if (!canAll) {
+                await populateDailyBranchSelect();
+                grp.dataset.loaded = '1';
+                document.getElementById('dailyReportType').addEventListener('change', populateDailyBranchSelect);
+            } else if (!canAll && !canManage) {
                 grp.style.display = 'none';
             }
             await loadDailyRecent();
@@ -3593,11 +3630,39 @@
             return currentUserIsCenter || String(currentUserBranch || '').includes('المركز');
         }
 
+        function dailyCanManageBranches() {
+            return currentUserCanManageBranches && currentUserAllowedBranches.length > 0;
+        }
+
         function initDailyReportTypeOptions() {
             const sel = document.getElementById('dailyReportType');
             if (!sel) return;
-            if (!dailyCanSeeAll()) {
+            if (!dailyCanSeeAll() && !dailyCanManageBranches()) {
                 [...sel.options].forEach(o => { if (o.value === 'branchSummary') o.remove(); });
+            }
+        }
+
+        async function populateDailyBranchSelect() {
+            const sel = document.getElementById('dailyBranchSelect');
+            if (!sel) return;
+            const canAll = dailyCanSeeAll();
+            const canManage = dailyCanManageBranches();
+            const isSummary = (document.getElementById('dailyReportType') || {}).value === 'branchSummary';
+
+            if (canAll) {
+                try {
+                    const token = sessionStorage.getItem('admin_token');
+                    const res = await fetch(`${API_URL}/branches-stats`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const list = await res.json();
+                    let opts = '<option value="ALL">جميع الفروع</option>';
+                    (list || []).forEach(b => { const n = String(b.branch||'').trim(); if (n) opts += `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`; });
+                    sel.innerHTML = opts;
+                } catch(e) { sel.innerHTML = ''; }
+            } else if (canManage) {
+                let opts = '';
+                if (isSummary) opts += '<option value="MY_ALLOWED">جميع الفروع المسموح بها</option>';
+                currentUserAllowedBranches.forEach(b => { opts += `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`; });
+                sel.innerHTML = opts;
             }
         }
 
@@ -3630,9 +3695,16 @@
         async function fetchDailyReportData() {
             const range = dailyComputeRange();
             if (!range) return null;
-            const branchParam = dailyCanSeeAll()
-                ? encodeURIComponent(document.getElementById('dailyBranchSelect').value)
-                : '';
+            const canAll = dailyCanSeeAll();
+            const canManage = dailyCanManageBranches();
+            const branchSel = document.getElementById('dailyBranchSelect');
+            let branchParam = '';
+            if (canAll) {
+                branchParam = encodeURIComponent(branchSel ? branchSel.value : 'ALL');
+            } else if (canManage) {
+                const bv = branchSel ? branchSel.value : '';
+                branchParam = encodeURIComponent(bv || 'MY_ALLOWED');
+            }
             showLoading(true);
             try {
                 let url = `${API_URL}/daily-list?from=${range.from}&to=${range.to}`;
@@ -3644,7 +3716,8 @@
 
                 let branchLabel = 'جميع الفروع';
                 if (data.scope === 'branch') branchLabel = data.viewer_branch || currentUserBranch;
-                else if (branchParam && branchParam !== 'ALL') branchLabel = decodeURIComponent(branchParam);
+                else if (branchParam && branchParam !== 'ALL' && branchParam !== 'MY_ALLOWED') branchLabel = decodeURIComponent(branchParam);
+                else if (branchParam === 'MY_ALLOWED') branchLabel = 'الفروع المسموح بها';
 
                 return { items: data.items, range, branchLabel };
             } catch(err) {
@@ -3681,18 +3754,19 @@
 
         function dailyCurrentMode() {
             const sel = document.getElementById('dailyReportType');
-            return (sel && sel.value === 'branchSummary' && dailyCanSeeAll()) ? 'branchSummary' : 'detailed';
+            const allowed = dailyCanSeeAll() || dailyCanManageBranches();
+            return (sel && sel.value === 'branchSummary' && allowed) ? 'branchSummary' : 'detailed';
         }
 
         function dailyLetterheadHtml(base, genDate, branchLabel) {
             return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:3px double #1a5276;padding-bottom:8px;margin-bottom:10px;">
-                <div style="text-align:center;font-weight:bold;font-size:13px;line-height:1.9;width:26%;direction:rtl;">
+                <div style="text-align:center;font-weight:bold;font-size:15px;line-height:1.9;width:26%;direction:rtl;">
                     الجمهورية اليمنية<br>وزارة الداخلية<br>مصلحة الأحوال المدنية والسجل المدني
                 </div>
                 <div style="text-align:center;width:34%;">
                     <img src="${base}/image.png" alt="شعار الجمهورية" style="height:85px;max-width:100%;object-fit:contain;" crossorigin="anonymous">
                 </div>
-                <div style="text-align:center;width:26%;font-size:11px;line-height:1.7;direction:rtl;">
+                <div style="text-align:center;width:26%;font-size:13px;line-height:1.7;direction:rtl;">
                     <img src="${base}/images.png" alt="شعار الأحوال المدنية" style="height:60px;max-width:100%;object-fit:contain;margin-bottom:4px;" crossorigin="anonymous"><br>
                     <b>تاريخ التوليد:</b> ${genDate}<br>
                     <b>الفرع:</b> ${escapeHtml(branchLabel)}
@@ -3702,33 +3776,35 @@
 
         function dailyTableParts(items, mode) {
             const isSummary = mode === 'branchSummary';
-            const TH = (extra) => `border:1px solid #333;padding:3px 4px;font-size:9px;text-align:center;`;
+            const TH = (extra) => `border:1px solid #333;padding:4px 5px;font-size:10px;text-align:center;`;
             let head1;
             if (isSummary) {
-                head1 = `<th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">م</th>
-                    <th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">اسم الفرع</th>`;
+                head1 = `<th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;font-size:11px;">م</th>
+                    <th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;font-size:11px;">اسم الفرع</th>`;
             } else {
-                head1 = `<th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">م</th>
-                    <th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">اليوم</th>
-                    <th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;">التاريخ</th>`;
+                head1 = `<th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;font-size:11px;">م</th>
+                    <th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;font-size:11px;">اليوم</th>
+                    <th rowspan="3" style="${TH()}background:#154360;color:#ffffff;font-weight:bold;font-size:11px;">التاريخ</th>`;
             }
             let head2 = '';
             let head3 = '';
             const colKeys = [];
             DAILY_SECTIONS.forEach(sec => {
-                head1 += `<th colspan="${sec.items.length * 2}" style="${TH()}background:#1a5276;color:#ffffff;font-weight:bold;">${sec.title}</th>`;
+                head1 += `<th colspan="${sec.items.length * 2}" style="${TH()}background:#1a5276;color:#ffffff;font-weight:bold;font-size:12px;">${sec.title}</th>`;
                 sec.items.forEach(([key, label]) => {
-                    head2 += `<th colspan="2" style="${TH()}background:#2471a3;color:#ffffff;font-weight:bold;">${label}</th>`;
+                    head2 += `<th colspan="2" style="${TH()}background:#2471a3;color:#ffffff;font-weight:bold;font-size:11px;">${label}</th>`;
                     head3 += `<th style="${TH()}background:#5497c6;color:#ffffff;font-weight:bold;">ذكور</th><th style="${TH()}background:#5497c6;color:#ffffff;font-weight:bold;">إناث</th>`;
                     colKeys.push(key + '_m', key + '_f');
                 });
             });
-            head1 += `<th colspan="3" style="${TH()}background:#b9770e;color:#ffffff;font-weight:bold;">خامساً: حالات إضافية</th>`;
+            head1 += `<th colspan="2" style="${TH()}background:#b9770e;color:#ffffff;font-weight:bold;font-size:12px;">خامساً: حالات إضافية</th>`;
             DAILY_EXTRAS.forEach(([key, label]) => {
-                head2 += `<th rowspan="2" style="${TH()}background:#ca6f1e;color:#ffffff;font-weight:bold;">${label}</th>`;
+                head2 += `<th rowspan="2" style="${TH()}background:#ca6f1e;color:#ffffff;font-weight:bold;font-size:11px;">${label}</th>`;
                 colKeys.push(key);
             });
-            head1 += `<th rowspan="3" style="${TH()}background:#196f3d;color:#ffffff;font-weight:bold;">المجموع</th>`;
+            head2 += `<th rowspan="2" style="${TH()}background:#943126;color:#ffffff;font-weight:bold;font-size:11px;">المرحل</th>`;
+            colKeys.push('deported');
+            head1 += `<th rowspan="3" style="${TH()}background:#196f3d;color:#ffffff;font-weight:bold;font-size:12px;">المجموع</th>`;
 
             let rowsHtml;
             if (isSummary) {
@@ -3785,15 +3861,15 @@
             const parts = dailyTableParts(items, mode);
 
             const html = `<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" style="print-color-adjust:exact;-webkit-print-color-adjust:exact;">
 <head>
 <meta charset="UTF-8">
 <title>${escapeHtml(title)}</title>
 <style>
     @page { size: A4 landscape; margin: 8mm; }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
     html, body { direction: rtl !important; }
-    body { font-family: 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif; color: #111; padding: 10px; direction: rtl; }
+    body { font-family: 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif; color: #111; padding: 10px; direction: rtl; font-size: 13px; }
     table { direction: rtl !important; unicode-bidi: isolate; }
     .print-bar { position: fixed; top: 8px; left: 8px; z-index: 99; direction: ltr; }
     .print-bar button { font-family: inherit; font-size: 14px; padding: 10px 22px; cursor: pointer; background: #1a5276; color: #fff; border: none; border-radius: 6px; }
@@ -3803,7 +3879,7 @@
 <body>
 <div class="print-bar"><button onclick="window.print()">🖨 طباعة / حفظ PDF</button></div>
 ${dailyLetterheadHtml(base, genDate, branchLabel)}
-<div style="text-align:center;font-size:15px;font-weight:bold;color:#1a5276;margin-bottom:12px;line-height:1.6;direction:rtl;">${escapeHtml(title)}</div>
+<div style="text-align:center;font-size:18px;font-weight:bold;color:#1a5276;margin-bottom:12px;line-height:1.6;direction:rtl;">${escapeHtml(title)}</div>
 ${parts.tableOpen}
     <thead><tr>${parts.head1}</tr><tr>${parts.head2}</tr><tr>${parts.head3}</tr></thead>
     <tbody>${parts.rowsHtml}</tbody>
@@ -3856,8 +3932,8 @@ ${parts.tableOpen}
 
             showLoading(true);
             try {
-                if (!window.html2canvas) await loadScriptGlobal('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-                if (!window.jspdf) await loadScriptGlobal('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                if (!window.html2canvas) await loadScriptGlobal('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
+                if (!window.jspdf) await loadScriptGlobal('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
 
                 const target = stage.firstElementChild;
                 const canvas = await window.html2canvas(target, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });

@@ -3,8 +3,10 @@
 -- نفذ هذا الملف كاملاً في Supabase SQL Editor
 -- ============================================================
 
--- 1) صلاحية جديدة: الإنجاز اليومي
+-- 1) صلاحيات الإنجاز اليومي
 ALTER TABLE users ADD COLUMN IF NOT EXISTS can_daily BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS can_manage_branches BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS allowed_branches TEXT DEFAULT '';
 
 -- 2) جدول الإنجاز اليومي (سجل واحد لكل فرع لكل يوم - إعادة الرفع تحديث)
 CREATE TABLE IF NOT EXISTS daily_achievements (
