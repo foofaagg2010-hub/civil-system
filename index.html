@@ -629,6 +629,7 @@
         .service-card:nth-child(1) .card-icon { background: linear-gradient(135deg, var(--secondary), var(--secondary-dark)); }
         .service-card:nth-child(2) .card-icon { background: linear-gradient(135deg, var(--green), var(--green-dark)); }
         .service-card:nth-child(3) .card-icon { background: linear-gradient(135deg, var(--gold), #A8862E); }
+        .service-card:nth-child(4) .card-icon { background: linear-gradient(135deg, #8E44AD, #6C3483); }
 
         .service-card h3 { font-size: 1.2rem; margin-bottom: 8px; color: var(--primary); font-weight: 800; }
         .service-card p { color: var(--muted); line-height: 1.7; margin-bottom: 16px; font-size: 0.9rem; }
@@ -905,6 +906,24 @@
 
         .notify-modal-body input:focus { border-color: var(--secondary); outline: none; background: var(--card); box-shadow: 0 0 0 4px rgba(37,99,235,0.12); }
 
+        .notify-modal-body select,
+        .notify-modal-body textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-family: inherit;
+            transition: var(--tr);
+            min-height: 48px;
+            background: #F8FAFC;
+            color: var(--primary);
+        }
+
+        .notify-modal-body select:focus,
+        .notify-modal-body textarea:focus { border-color: var(--secondary); outline: none; background: var(--card); box-shadow: 0 0 0 4px rgba(37,99,235,0.12); }
+        .notify-modal-body textarea { resize: vertical; min-height: 110px; }
+
         .notify-modal-footer { display: flex; gap: 10px; margin-top: 12px; }
         .notify-modal-footer button { flex: 1; padding: 14px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-size: 15px; transition: var(--tr); min-height: 48px; font-family: inherit; }
         .btn-confirm { background: var(--secondary); color: white; }
@@ -1008,6 +1027,12 @@
                 <p>تابع آخر الأخبار والإعلانات والمنشورات الرسمية الخاصة بالمصلحة</p>
                 <span class="card-btn">عرض الأخبار <i class="fas fa-newspaper"></i></span>
             </a>
+            <a class="service-card" href="javascript:void(0)" onclick="openFeedbackModal()" role="button" tabindex="0">
+                <div class="card-icon"><i class="fas fa-comments"></i></div>
+                <h3>المقترحات والشكاوى</h3>
+                <p>أرسل اقتراحك أو شكواك إلى الفرع المختص وسنعمل على معالجتها بأسرع وقت</p>
+                <span class="card-btn">إرسال مشاركة <i class="fas fa-paper-plane"></i></span>
+            </a>
         </div>
 
         <div class="contact-section">
@@ -1091,6 +1116,46 @@
                 <div class="notify-modal-footer">
                     <button class="btn-cancel" onclick="closeNotifyModal()">إلغاء</button>
                     <button class="btn-confirm" onclick="saveNotification()"><i class="fas fa-check"></i> تأكيد</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="feedbackModal" class="notify-modal">
+        <div class="notify-modal-content">
+            <div class="notify-modal-header">
+                <h3><i class="fas fa-comments"></i> المقترحات والشكاوى</h3>
+                <button class="notify-modal-close" onclick="closeFeedbackModal()">&times;</button>
+            </div>
+            <div class="notify-modal-body">
+                <p>📝 اختر نوع المشاركة والفرع المعني، ثم اكتب محتواها وسنتواصل معك عند الحاجة.</p>
+                <div class="form-group">
+                    <label><i class="fas fa-tag"></i> النوع</label>
+                    <select id="feedbackType">
+                        <option value="شكوى">شكوى</option>
+                        <option value="اقتراح">اقتراح</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-building"></i> الفرع المعني</label>
+                    <select id="feedbackBranch">
+                        <option value="">-- اختر الفرع --</option>
+                        <option value="عام">عام (لا يخص فرعاً واحداً)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-phone"></i> رقم الهاتف للتواصل</label>
+                    <input type="tel" id="feedbackPhone" placeholder="مثال: 771234567" dir="ltr" pattern="[0-9]*" inputmode="numeric" maxlength="12">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-align-right"></i> محتوى الشكوى أو المقترح</label>
+                    <textarea id="feedbackContent" maxlength="2000" placeholder="اكتب هنا تفاصيل الشكوى أو المقترح..."></textarea>
+                </div>
+                <div class="error-msg" id="feedbackError">⚠️ يرجى تعبئة جميع الحقول بشكل صحيح</div>
+                <div class="success-msg" id="feedbackSuccess">✅ تم إرسال مشاركتك بنجاح! شكراً لتواصلك معنا.</div>
+                <div class="notify-modal-footer">
+                    <button class="btn-cancel" onclick="closeFeedbackModal()">إلغاء</button>
+                    <button class="btn-confirm" onclick="submitFeedback()"><i class="fas fa-paper-plane"></i> إرسال</button>
                 </div>
             </div>
         </div>
@@ -1564,6 +1629,99 @@
             <i class="far fa-calendar-alt"></i>
             ${today.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
         `;
+
+        function openFeedbackModal() {
+            document.getElementById('feedbackModal').classList.add('active');
+            document.getElementById('feedbackType').value = 'شكوى';
+            document.getElementById('feedbackBranch').value = '';
+            document.getElementById('feedbackPhone').value = '';
+            document.getElementById('feedbackContent').value = '';
+            document.getElementById('feedbackError').style.display = 'none';
+            document.getElementById('feedbackSuccess').style.display = 'none';
+            populateFeedbackBranches();
+        }
+
+        function closeFeedbackModal() { document.getElementById('feedbackModal').classList.remove('active'); }
+
+        document.getElementById('feedbackModal').addEventListener('click', function(e) {
+            if (e.target === this) closeFeedbackModal();
+        });
+
+        document.getElementById('feedbackPhone').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        function populateFeedbackBranches() {
+            const select = document.getElementById('feedbackBranch');
+            const current = select.value;
+            select.innerHTML = '<option value="">-- اختر الفرع --</option><option value="عام">عام (لا يخص فرعاً واحداً)</option>';
+            const seen = { 'عام': true };
+            (branchesData || []).forEach(b => {
+                const name = String(b.branch_name || b.username || '').trim();
+                if (name && !seen[name]) {
+                    seen[name] = true;
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    select.appendChild(option);
+                }
+            });
+            if (current) select.value = current;
+        }
+
+        async function submitFeedback() {
+            const type = document.getElementById('feedbackType').value;
+            const branch = document.getElementById('feedbackBranch').value;
+            const phone = document.getElementById('feedbackPhone').value.trim();
+            const content = document.getElementById('feedbackContent').value.trim();
+            const errorDiv = document.getElementById('feedbackError');
+            const successDiv = document.getElementById('feedbackSuccess');
+
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            if (!branch) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '⚠️ يرجى اختيار الفرع المعني (أو عام)';
+                return;
+            }
+
+            const validatedPhone = validatePhone(phone);
+            if (!validatedPhone) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '⚠️ يرجى إدخال رقم هاتف صحيح (مثال: 771234567)';
+                return;
+            }
+
+            if (content.length < 10) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '⚠️ يرجى كتابة المحتوى (10 أحرف على الأقل)';
+                return;
+            }
+
+            try {
+                const response = await fetch('/.netlify/functions/feedback-submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: type, branch: branch, phone: phone, content: content })
+                });
+
+                const result = await response.json().catch(() => ({}));
+
+                if (response.ok && result.success) {
+                    successDiv.style.display = 'block';
+                    document.getElementById('feedbackPhone').value = '';
+                    document.getElementById('feedbackContent').value = '';
+                    setTimeout(() => closeFeedbackModal(), 2500);
+                } else {
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = '⚠️ ' + (result.error || 'حدث خطأ في الإرسال');
+                }
+            } catch (err) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '⚠️ حدث خطأ في الاتصال. يرجى المحاولة لاحقاً';
+            }
+        }
 
         loadBranches();
     </script>

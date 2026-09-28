@@ -97,6 +97,7 @@ exports.handler = async (event) => {
                 can_view_users: user.can_view_users || false,
                 can_news: user.can_news || false,
                 can_daily: user.can_daily || false,
+                can_feedback: user.can_feedback || false,
                 can_manage_branches: user.can_manage_branches || false,
                 allowed_branches: user.allowed_branches || '',
                 is_reserve_center: user.is_reserve_center || false,

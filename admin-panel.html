@@ -733,6 +733,9 @@
             <button class="tab-btn" onclick="showTab('daily')" id="dailyTab" style="display:none;">
                 <i class="fas fa-clipboard-check"></i> الإنجاز اليومي
             </button>
+            <button class="tab-btn" onclick="showTab('feedback')" id="feedbackTab" style="display:none;">
+                <i class="fas fa-comments"></i> الشكاوى والمقترحات <span id="feedbackTabBadge" class="notification-count" style="display:none;">0</span>
+            </button>
             <button class="tab-btn" onclick="showTab('notifications')" id="notificationsTab" style="display:none;">
                 <i class="fas fa-bell"></i> طلبات الإشعارات <span id="notifBadge" class="notification-count" style="display:none;">0</span>
             </button>
@@ -1011,6 +1014,51 @@
             </div>
         </div>
 
+        <div id="feedback" class="tab-content">
+            <h3><i class="fas fa-comments"></i> الشكاوى والمقترحات <span id="feedbackCount" style="font-size:14px;color:#888;"></span></h3>
+            <p style="margin-bottom:20px;color:#666;">💬 هنا تظهر الشكاوى والمقترحات المرسلة من المواطنين عبر الصفحة الرئيسية. يمكنك تغيير حالة كل سجل أو حذفه أو تصدير الكل إلى PDF.</p>
+
+            <div class="notif-filter-buttons">
+                <button class="notif-filter-btn active" id="fbFilterAll" onclick="filterFeedback('all')">
+                    <i class="fas fa-list"></i> الكل <span class="notif-filter-count" id="fbCountAll">0</span>
+                </button>
+                <button class="notif-filter-btn" id="fbFilterComplaint" onclick="filterFeedback('شكوى')">
+                    <i class="fas fa-exclamation-circle"></i> شكاوى <span class="notif-filter-count" id="fbCountComplaint">0</span>
+                </button>
+                <button class="notif-filter-btn" id="fbFilterSuggest" onclick="filterFeedback('اقتراح')">
+                    <i class="fas fa-lightbulb"></i> مقترحات <span class="notif-filter-count" id="fbCountSuggest">0</span>
+                </button>
+                <button class="notif-filter-btn" id="fbFilterNew" onclick="filterFeedback('new')">
+                    <i class="fas fa-star"></i> جديدة <span class="notif-filter-count" id="fbCountNew">0</span>
+                </button>
+            </div>
+
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:15px;">
+                <button class="btn btn-success" onclick="exportFeedbackPDF()"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
+                <button class="btn btn-secondary" onclick="loadFeedback()"><i class="fas fa-sync"></i> تحديث</button>
+            </div>
+
+            <div class="table-container">
+                <table class="notification-table" id="feedbackTable">
+                    <thead>
+                        <tr>
+                            <th>م</th>
+                            <th>النوع</th>
+                            <th>الفرع</th>
+                            <th>الهاتف</th>
+                            <th>المحتوى</th>
+                            <th>الحالة</th>
+                            <th>التاريخ</th>
+                            <th>إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feedbackBody">
+                        <tr><td colspan="8" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div id="notifications" class="tab-content">
             <h3><i class="fas fa-bell"></i> طلبات الإشعارات <span id="notifCount" style="font-size:14px;color:#888;"></span></h3>
             <p style="margin-bottom:20px;color:#666;">📨 هنا تظهر طلبات المواطنين الذين يريدون إشعارهم عند وصول بطاقاتهم. اضغط على زر واتساب لإرسال الإشعار.</p>
@@ -1192,6 +1240,7 @@
             <div class="checkbox-group"><input type="checkbox" id="userCanViewUsers"> <label>صلاحية إدارة المستخدمين</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userCanNews"> <label>صلاحية الأخبار والمنشورات</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userCanDaily"> <label>صلاحية الإنجاز اليومي</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="userCanFeedback"> <label>صلاحية الشكاوى والمقترحات</label></div>
             <div class="checkbox-group"><input type="checkbox" id="userCanManageBranches" onchange="toggleAllowedBranchesField()"> <label>مشرف عدة فروع (تقارير متعددة)</label></div>
             <div class="form-group" id="userAllowedBranchesGroup" style="display:none;"><label>الفروع المسموح بها (مفصولة بفاصلة)</label><input type="text" id="userAllowedBranches" placeholder="فرع 1, فرع 2, فرع 3..."></div>
             <div class="checkbox-group"><input type="checkbox" id="userIsReserveCenter"> <label>صلاحية المركز الرئيسي (إرسال الإشعارات)</label></div>
@@ -1217,7 +1266,7 @@
     <script>
 
         const API_URL = '/.netlify/functions';
-        let currentUserId = null, currentUserBranch = null, currentUserRole = null, currentUserCanEdit = false, currentUserCanViewUsers = false, currentUserCanViewLogs = false, currentUserIsCenter = false, currentUserCanNews = false, currentUserCanDaily = false, currentUserCanManageBranches = false, currentUserAllowedBranches = [];
+        let currentUserId = null, currentUserBranch = null, currentUserRole = null, currentUserCanEdit = false, currentUserCanViewUsers = false, currentUserCanViewLogs = false, currentUserIsCenter = false, currentUserCanNews = false, currentUserCanDaily = false, currentUserCanFeedback = false, currentUserCanManageBranches = false, currentUserAllowedBranches = [];
         let currentEditUserId = null, currentPage = 1, totalRecords = 0, isLoading = false, currentStatusFilter = null, isSearchMode = false;
         let currentRequests = [], globalSearchResults = [];
         let allNotifications = [];
@@ -1391,6 +1440,7 @@
             document.getElementById('notifCenterBtn').style.display = 'inline-flex';
             document.getElementById('newsTab').style.display = currentUserCanNews ? 'inline-flex' : 'none';
             document.getElementById('dailyTab').style.display = currentUserCanDaily ? 'inline-flex' : 'none';
+            document.getElementById('feedbackTab').style.display = currentUserCanFeedback ? 'inline-flex' : 'none';
 
             const notifTab = document.getElementById('notificationsTab');
             if (currentUserCanEdit) {
@@ -1509,6 +1559,7 @@
                             currentUserCanViewLogs = data.can_view_logs === true;
                             currentUserIsCenter = data.is_reserve_center === true;
                 currentUserCanNews = data.can_news === true;
+                currentUserCanFeedback = data.can_feedback === true;
                 currentUserCanDaily = data.can_daily === true;
                 currentUserCanDaily = data.can_daily === true;
                 currentUserCanManageBranches = data.can_manage_branches === true;
@@ -1551,6 +1602,7 @@
                 currentUserCanViewLogs = data.can_view_logs === true;
                 currentUserIsCenter = data.is_reserve_center === true;
                 currentUserCanNews = data.can_news === true;
+                currentUserCanFeedback = data.can_feedback === true;
 
                 sessionStorage.setItem('admin_branch', currentUserBranch);
                 sessionStorage.setItem('admin_username', data.username);
@@ -2271,7 +2323,9 @@
                 'تعديل منشور': '#f39c12',
                 'حذف منشور': '#e74c3c',
                 'رفع إنجاز يومي': '#8e44ad',
-                'حذف إنجاز يومي': '#e74c3c'
+                'حذف إنجاز يومي': '#e74c3c',
+                'تحديث شكوى/مقترح': '#2980b9',
+                'حذف شكوى/مقترح': '#e74c3c'
             };
             return colors[action] || '#7f8c8d';
         }
@@ -2313,7 +2367,7 @@
                         <td>${escapeHtml(u.whatsapp_number || '-----')}</td>
                         <td><span class="status-badge ${u.is_active !== false ? 'status-active' : 'status-inactive'}">${u.is_active !== false ? 'نشط' : 'غير نشط'}</span></td>
                         <td>
-                            <button class="btn btn-warning btn-sm" onclick="editUser(${u.id}, '${escapeHtml(u.username)}', '${escapeHtml(u.branch_name)}', '${escapeHtml(u.role)}', ${u.is_active !== false}, ${u.can_edit === true}, ${u.can_view_logs === true}, ${u.can_view_users === true}, '${escapeHtml(u.admin_phone || '')}', '${escapeHtml(u.tech_phone || '')}', '${escapeHtml(u.whatsapp_number || '')}', ${u.can_news === true}, ${u.can_daily === true}, ${u.can_manage_branches === true}, '${escapeHtml(u.allowed_branches || '')}', ${u.is_reserve_center === true})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-warning btn-sm" onclick="editUser(${u.id}, '${escapeHtml(u.username)}', '${escapeHtml(u.branch_name)}', '${escapeHtml(u.role)}', ${u.is_active !== false}, ${u.can_edit === true}, ${u.can_view_logs === true}, ${u.can_view_users === true}, '${escapeHtml(u.admin_phone || '')}', '${escapeHtml(u.tech_phone || '')}', '${escapeHtml(u.whatsapp_number || '')}', ${u.can_news === true}, ${u.can_daily === true}, ${u.can_feedback === true}, ${u.can_manage_branches === true}, '${escapeHtml(u.allowed_branches || '')}', ${u.is_reserve_center === true})"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
@@ -2405,13 +2459,14 @@
             document.getElementById('userCanViewUsers').checked = false;
             document.getElementById('userCanNews').checked = false;
             document.getElementById('userCanDaily').checked = false;
+            document.getElementById('userCanFeedback').checked = false;
             document.getElementById('userCanManageBranches').checked = false;
             document.getElementById('userAllowedBranches').value = '';
             document.getElementById('userAllowedBranchesGroup').style.display = 'none';
             document.getElementById('userIsReserveCenter').checked = false;
         }
 
-        function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp, canNews, canDaily, canManageBranches, allowedBranches, isReserveCenter) {
+        function editUser(id, username, branch, role, isActive, canEdit, canViewLogs, canViewUsers, adminPhone, techPhone, whatsapp, canNews, canDaily, canFeedback, canManageBranches, allowedBranches, isReserveCenter) {
             currentEditUserId = id;
             loadBranchOptions(branch || '');
             document.getElementById('userModalTitle').innerText = 'تعديل مستخدم';
@@ -2427,6 +2482,7 @@
             document.getElementById('userCanViewUsers').checked = canViewUsers === true;
             document.getElementById('userCanNews').checked = canNews === true;
             document.getElementById('userCanDaily').checked = canDaily === true;
+            document.getElementById('userCanFeedback').checked = canFeedback === true;
             document.getElementById('userCanManageBranches').checked = canManageBranches === true;
             document.getElementById('userAllowedBranches').value = allowedBranches || '';
             document.getElementById('userAllowedBranchesGroup').style.display = canManageBranches === true ? 'block' : 'none';
@@ -2455,6 +2511,7 @@
             const canViewUsers = document.getElementById('userCanViewUsers').checked;
             const canNews = document.getElementById('userCanNews').checked;
             const canDaily = document.getElementById('userCanDaily').checked;
+            const canFeedback = document.getElementById('userCanFeedback').checked;
             const canManageBranches = document.getElementById('userCanManageBranches').checked;
             const allowedBranches = document.getElementById('userAllowedBranches').value.trim();
             const isReserveCenter = document.getElementById('userIsReserveCenter').checked;
@@ -2486,6 +2543,7 @@
                         can_view_users: canViewUsers,
                         can_news: canNews,
                         can_daily: canDaily,
+                        can_feedback: canFeedback,
                         can_manage_branches: canManageBranches,
                         allowed_branches: allowedBranches,
                         is_reserve_center: isReserveCenter
@@ -3962,6 +4020,216 @@ ${parts.tableOpen}
         }
         // ================= نهاية نظام الإنجاز اليومي =================
 
+        // ================= نظام الشكاوى والمقترحات =================
+        let allFeedback = [];
+        let feedbackFilter = 'all';
+
+        function feedbackAuthHeaders() {
+            return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}` };
+        }
+
+        function fmtFeedbackDate(iso) {
+            if (!iso) return '';
+            try {
+                const d = new Date(iso);
+                if (isNaN(d.getTime())) return String(iso).slice(0, 10);
+                return `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear()}`;
+            } catch (e) { return ''; }
+        }
+
+        function feedbackStatusBadge(s) {
+            const colors = { 'جديدة': '#e74c3c', 'قيد المراجعة': '#f39c12', 'تمت المعالجة': '#27ae60' };
+            return `<span style="display:inline-block;padding:4px 12px;border-radius:20px;background:${colors[s] || '#7f8c8d'};color:white;font-size:12px;">${escapeHtml(s || '')}</span>`;
+        }
+
+        function feedbackTypeBadge(t) {
+            const isComplaint = t === 'شكوى';
+            return `<span style="display:inline-block;padding:4px 12px;border-radius:20px;background:${isComplaint ? '#c0392b' : '#2980b9'};color:white;font-size:12px;">${escapeHtml(t || '')}</span>`;
+        }
+
+        async function loadFeedback() {
+            if (!currentUserCanFeedback) return;
+            const tbody = document.getElementById('feedbackBody');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>';
+            try {
+                const res = await fetch(`${API_URL}/feedback-manage`, { headers: feedbackAuthHeaders() });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || 'فشل الجلب');
+                allFeedback = data.items || [];
+                renderFeedback();
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#e74c3c;">❌ ${escapeHtml(err.message)}</td></tr>`;
+            }
+        }
+
+        function filterFeedback(f) {
+            feedbackFilter = f;
+            ['fbFilterAll', 'fbFilterComplaint', 'fbFilterSuggest', 'fbFilterNew'].forEach(id => {
+                document.getElementById(id).classList.remove('active');
+            });
+            const map = { all: 'fbFilterAll', 'شكوى': 'fbFilterComplaint', 'اقتراح': 'fbFilterSuggest', new: 'fbFilterNew' };
+            document.getElementById(map[f]).classList.add('active');
+            renderFeedback();
+        }
+
+        function renderFeedback() {
+            const tbody = document.getElementById('feedbackBody');
+            let items = allFeedback;
+            if (feedbackFilter === 'شكوى' || feedbackFilter === 'اقتراح') {
+                items = items.filter(r => r.type === feedbackFilter);
+            } else if (feedbackFilter === 'new') {
+                items = items.filter(r => r.status === 'جديدة');
+            }
+
+            document.getElementById('feedbackCount').innerText = `(${allFeedback.length})`;
+            document.getElementById('fbCountAll').innerText = allFeedback.length;
+            document.getElementById('fbCountComplaint').innerText = allFeedback.filter(r => r.type === 'شكوى').length;
+            document.getElementById('fbCountSuggest').innerText = allFeedback.filter(r => r.type === 'اقتراح').length;
+            document.getElementById('fbCountNew').innerText = allFeedback.filter(r => r.status === 'جديدة').length;
+
+            const newCount = allFeedback.filter(r => r.status === 'جديدة').length;
+            const badge = document.getElementById('feedbackTabBadge');
+            badge.textContent = newCount;
+            badge.style.display = newCount > 0 ? 'inline-block' : 'none';
+
+            if (!items.length) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888;">لا توجد سجلات</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = items.map((r, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${feedbackTypeBadge(r.type)}</td>
+                    <td>${escapeHtml(r.branch || '')}</td>
+                    <td dir="ltr" style="white-space:nowrap;">${escapeHtml(r.phone || '')}</td>
+                    <td style="max-width:280px;white-space:pre-wrap;word-break:break-word;">${escapeHtml(r.content || '')}</td>
+                    <td>${feedbackStatusBadge(r.status)}
+                        <div style="margin-top:6px;">
+                            <select onchange="updateFeedbackStatus(${r.id}, this.value)" style="font-size:12px;padding:4px 6px;border-radius:6px;">
+                                <option value="">تغيير...</option>
+                                <option value="جديدة">جديدة</option>
+                                <option value="قيد المراجعة">قيد المراجعة</option>
+                                <option value="تمت المعالجة">تمت المعالجة</option>
+                            </select>
+                        </div>
+                    </td>
+                    <td style="white-space:nowrap;">${fmtFeedbackDate(r.created_at)}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteFeedback(${r.id})"><i class="fas fa-trash"></i></button></td>
+                </tr>`).join('');
+        }
+
+        async function updateFeedbackStatus(id, status) {
+            if (!status) return;
+            try {
+                const res = await fetch(`${API_URL}/feedback-manage`, {
+                    method: 'PUT',
+                    headers: feedbackAuthHeaders(),
+                    body: JSON.stringify({ id: id, status: status })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || 'فشل التحديث');
+                await logActivity('تحديث شكوى/مقترح', `تحديث السجل رقم ${id} إلى: ${status}`);
+                await loadFeedback();
+            } catch (err) {
+                alert('❌ ' + err.message);
+            }
+        }
+
+        async function deleteFeedback(id) {
+            if (!confirm('حذف هذا السجل نهائياً؟')) return;
+            try {
+                const res = await fetch(`${API_URL}/feedback-manage?id=${id}`, {
+                    method: 'DELETE',
+                    headers: feedbackAuthHeaders()
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || 'فشل الحذف');
+                await logActivity('حذف شكوى/مقترح', `حذف السجل رقم ${id}`);
+                await loadFeedback();
+            } catch (err) {
+                alert('❌ ' + err.message);
+            }
+        }
+
+        function exportFeedbackPDF() {
+            let items = allFeedback;
+            if (feedbackFilter === 'شكوى' || feedbackFilter === 'اقتراح') {
+                items = items.filter(r => r.type === feedbackFilter);
+            } else if (feedbackFilter === 'new') {
+                items = items.filter(r => r.status === 'جديدة');
+            }
+            if (!items.length) { alert('لا توجد سجلات للتصدير'); return; }
+
+            const t = new Date();
+            const genDate = `${t.getDate()}-${t.getMonth() + 1}-${t.getFullYear()}`;
+            const base = window.location.origin;
+            const C = 'border:1px solid #333;padding:5px 6px;font-size:12px;text-align:center;';
+
+            const rows = items.map((r, i) => `
+                <tr>
+                    <td style="${C}">${i + 1}</td>
+                    <td style="${C}">${escapeHtml(r.type || '')}</td>
+                    <td style="${C}">${escapeHtml(r.branch || '')}</td>
+                    <td dir="ltr" style="${C}white-space:nowrap;">${escapeHtml(r.phone || '')}</td>
+                    <td style="${C}text-align:right;white-space:pre-wrap;word-break:break-word;">${escapeHtml(r.content || '')}</td>
+                    <td style="${C}">${escapeHtml(r.status || '')}</td>
+                    <td style="${C}white-space:nowrap;">${fmtFeedbackDate(r.created_at)}</td>
+                </tr>`).join('');
+
+            const html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl" style="print-color-adjust:exact;-webkit-print-color-adjust:exact;">
+<head>
+<meta charset="UTF-8">
+<title>كشف الشكاوى والمقترحات</title>
+<style>
+    @page { size: A4 portrait; margin: 10mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { font-family: 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif; color: #111; padding: 10px; direction: rtl; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; direction: rtl; }
+    thead th { background: #1a5276; color: #ffffff; }
+    tbody tr:nth-child(even) { background: #f4f6f7; }
+    .print-bar { position: fixed; top: 8px; left: 8px; z-index: 99; }
+    .print-bar button { font-family: inherit; font-size: 14px; padding: 10px 22px; cursor: pointer; background: #1a5276; color: #fff; border: none; border-radius: 6px; }
+    @media print { .print-bar { display: none; } body { padding: 0; } }
+</style>
+</head>
+<body>
+<div class="print-bar"><button onclick="window.print()">🖨 طباعة / حفظ PDF</button></div>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:3px double #1a5276;padding-bottom:8px;margin-bottom:10px;">
+    <div style="text-align:center;font-weight:bold;font-size:15px;line-height:1.9;width:26%;">الجمهورية اليمنية<br>وزارة الداخلية<br>مصلحة الأحوال المدنية والسجل المدني</div>
+    <div style="text-align:center;width:34%;"><img src="${base}/image.png" alt="شعار الجمهورية" style="height:85px;max-width:100%;object-fit:contain;"></div>
+    <div style="text-align:center;width:26%;font-size:13px;line-height:1.7;">
+        <img src="${base}/images.png" alt="شعار الأحوال المدنية" style="height:60px;max-width:100%;object-fit:contain;margin-bottom:4px;"><br>
+        <b>تاريخ التوليد:</b> ${genDate}<br>
+        <b>الفرع:</b> ${escapeHtml(currentUserBranch || '')}
+    </div>
+</div>
+<div style="text-align:center;font-size:18px;font-weight:bold;color:#1a5276;margin-bottom:12px;">كشف الشكاوى والمقترحات الواردة</div>
+<table>
+    <thead><tr>
+        <th style="${C}">م</th>
+        <th style="${C}">النوع</th>
+        <th style="${C}">الفرع</th>
+        <th style="${C}">الهاتف</th>
+        <th style="${C}">المحتوى</th>
+        <th style="${C}">الحالة</th>
+        <th style="${C}">التاريخ</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+</table>
+</body>
+</html>`;
+
+            const w = window.open('', '_blank');
+            if (!w) { alert('يرجى السماح بالنوافذ المنبثقة للتصدير'); return; }
+            w.document.open();
+            w.document.write(html);
+            w.document.close();
+            setTimeout(() => { try { w.focus(); w.print(); } catch (e) {} }, 600);
+        }
+        // ================= نهاية نظام الشكاوى والمقترحات =================
+
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -3987,6 +4255,7 @@ ${parts.tableOpen}
             else if (tabId === 'announce') { loadAnnounce(); }
             else if (tabId === 'news') { loadNewsAdmin(); }
             else if (tabId === 'daily') { initDailyTab(); }
+            else if (tabId === 'feedback') { loadFeedback(); }
         }
 
         window.onclick = function(event) {
