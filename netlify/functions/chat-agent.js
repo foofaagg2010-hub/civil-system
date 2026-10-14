@@ -31,6 +31,16 @@ const SYSTEM_PROMPT = `أنت مساعد رسمي في موقع مصلحة ال�
   تمت الطباعة (بانتظار الوصول للفرع)، تم التسليم (الحضور للاستلام)، مرفوض (مراجعة الفرع)، ملغاة (مراجعة الفرع).
 - التواصل: مدير فرع ردفان 777062437 - الدعم الفني 771277759.
 
+الأحكام القانونية الأساسية (قانون 23 لسنة 1991 ولائحته 220 لسنة 1999):
+- الميلاد خلال 60 يوماً؛ الوفاة خلال 72 ساعة؛ عقود الزواج والطلاق خلال 15 يوماً.
+- البطاقة الشخصية إلزامية من سن 16؛ صالحة 10 سنوات (والدفتر العائلي 10 سنوات مع تجديد كل 5).
+- الإبلاغ عن فقد/تلف البطاقة خلال أسبوع.
+- الرقم الوطني فريد ودائم لا يتكرر ولا يمنح لغير صاحبه.
+- تصحيح القيود لا يكون إلا بحكم قضائي نهائي (عدا المهنة/المؤهل بالمستندات).
+- القيد في الموطن الأصلي أو الإقامة الدائمة فقط.
+- السجلات حجة رسمية؛ صور القيود لصاحبها وأصوله وفروعه وأزواجه ومن له مصلحة.
+- عقوبات تصل للحبس 3 سنوات لمن يقدم أقوالاً كاذبة أو مستندات غير صحيحة أو يحصل على أكثر من بطاقة.
+
 قواعد صارمة: لا تخترع رسوماً أو مواعيد. لا تطلب بيانات شخصية ولا أرقام طلبات. لا تعد بنتائج.
 لا تساعد في التزوير. عند الشكوى اشرح طريقة الإرسال فقط. عند نقص المعلومة وجّه للفرع أو واتساب الدعم.`;
 
@@ -59,7 +69,7 @@ exports.handler = async (event) => {
     }
 
     if (!process.env.GEMINI_API_KEY) {
-        return { statusCode: 503, headers, body: JSON.stringify({ offline: true }) };
+        return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: 'no_key' }) };
     }
 
     let body;
@@ -96,12 +106,18 @@ exports.handler = async (event) => {
         );
         clearTimeout(timeoutId);
 
-        if (response.status === 429 || response.status === 402 || response.status === 403) {
-            return { statusCode: 503, headers, body: JSON.stringify({ offline: true }) };
+        if (response.status === 429) {
+            return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: 'quota' }) };
+        }
+        if (response.status === 402 || response.status === 403) {
+            return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: 'forbidden' }) };
+        }
+        if (response.status === 404) {
+            return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: 'bad_model' }) };
         }
         if (!response.ok) {
             console.error('chat-agent gemini error:', response.status);
-            return { statusCode: 503, headers, body: JSON.stringify({ offline: true }) };
+            return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: 'upstream_' + response.status }) };
         }
 
         const data = await response.json();
@@ -122,6 +138,7 @@ exports.handler = async (event) => {
 
     } catch (error) {
         console.error('chat-agent error:', error.message);
-        return { statusCode: 503, headers, body: JSON.stringify({ offline: true }) };
+        const reason = error.name === 'AbortError' ? 'timeout' : 'network';
+        return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: reason }) };
     }
 };
