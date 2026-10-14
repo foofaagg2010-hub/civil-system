@@ -841,8 +841,9 @@
 
         .chat-fab {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 88px;
+            right: auto;
+            left: 20px;
             z-index: 1200;
             width: 56px;
             height: 56px;
@@ -866,13 +867,17 @@
         .chat-window {
             display: none;
             position: fixed;
-            bottom: 88px;
-            right: 16px;
+            bottom: 156px;
+            right: auto;
+            left: 16px;
             z-index: 1200;
             width: calc(100% - 32px);
             max-width: 380px;
             height: 520px;
-            max-height: calc(100vh - 120px);
+            height: min(520px, calc(100vh - 180px));
+            height: min(520px, calc(100dvh - 180px));
+            max-height: calc(100vh - 180px);
+            max-height: calc(100dvh - 180px);
             background: var(--card);
             border-radius: var(--radius);
             box-shadow: var(--shadow-lg);
@@ -1094,6 +1099,8 @@
             .cards-grid { grid-template-columns: repeat(2, 1fr); gap: 18px; }
             .info-section { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 20px 24px; }
             .whatsapp-fab { bottom: 28px; left: 28px; }
+            .chat-fab { bottom: 96px; left: 28px; }
+            .chat-window { left: 28px; bottom: 164px; }
             .footer { padding-bottom: 40px; }
         }
 
@@ -1251,7 +1258,7 @@
             <button class="chat-chip" onclick="sendChatChip(this)">كيف أقدم شكوى؟</button>
         </div>
         <div class="chat-input-row">
-            <input type="text" id="chatInput" placeholder="اكتب سؤالك هنا..." maxlength="500" autocomplete="off" onkeypress="if(event.key==='Enter')sendChat()">
+            <input type="text" id="chatInput" placeholder="اكتب سؤالك هنا..." maxlength="500" autocomplete="off" enterkeyhint="send" onkeypress="if(event.key==='Enter')sendChat()">
             <button class="chat-send" id="chatSendBtn" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
@@ -1908,6 +1915,32 @@
                 chatOpened = true;
                 chatAddMsg('أهلاً بك في إدارة الأحوال المدنية - ردفان 👋\nاسألني عن معاملات البطاقة الذكية وشهادات الميلاد والوفاة والقيد الوطني، أو اختر سؤالاً جاهزاً بالأسفل.', 'bot');
             }
+            if (win.classList.contains('open')) adjustChatView();
+        }
+
+        function adjustChatView() {
+            const win = document.getElementById('chatWindow');
+            if (!win.classList.contains('open')) return;
+            if (window.visualViewport) {
+                const vv = window.visualViewport;
+                const kb = Math.max(0, window.innerHeight - vv.height);
+                win.style.bottom = (kb > 60 ? kb + 12 : '') + '';
+                if (kb <= 60) win.style.bottom = '';
+                const box = document.getElementById('chatMsgs');
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', adjustChatView);
+        }
+
+        document.getElementById('chatInput').addEventListener('focus', function() {
+            setTimeout(() => {
+                adjustChatView();
+                this.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }, 300);
+        });
         }
 
         function chatAddMsg(text, who) {
