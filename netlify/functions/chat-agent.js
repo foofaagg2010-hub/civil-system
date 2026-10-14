@@ -1,6 +1,11 @@
 const { checkRateLimit } = require('./shared/rate-limit');
 
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const MODEL_CANDIDATES = [
+    process.env.GEMINI_MODEL,
+    'gemini-3.8-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-2.5-flash'
+].filter((m, i, a) => m && a.indexOf(m) === i);
 
 const SYSTEM_PROMPT = `أنت مساعد رسمي في موقع مصلحة الأحوال المدنية والسجل المدني - فرع لحج ردفان (اليمن).
 ترد بالعربية الفصحى المبسطة فقط، بأسلوب مهذب ومختصر: خلاصة أولاً ثم خطوات مرقمة عند الحاجة.
@@ -88,57 +93,73 @@ exports.handler = async (event) => {
         .map(h => ({ role: h.role, parts: [{ text: sanitize(h.text).slice(0, 500) }] }));
     contents.push({ role: 'user', parts: [{ text: message }] });
 
+    const payload = JSON.stringify({
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: contents,
+        generationConfig: { maxOutputTokens: 800, temperature: 0.4 }
+    });
+
     try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 25000);
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                signal: controller.signal,
-                body: JSON.stringify({
-                    system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-                    contents: contents,
-                    generationConfig: { maxOutputTokens: 800, temperature: 0.4 }
-                })
+        let lastReason = 'network';
+        for (const model of MODEL_CANDIDATES) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 9000);
+            let response;
+            try {
+                response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        signal: controller.signal,
+                        body: payload
+                    }
+                );
+            } catch (e) {
+                clearTimeout(timeoutId);
+                lastReason = e.name === 'AbortError' ? 'timeout' : 'network';
+                continue;
             }
-        );
-        clearTimeout(timeoutId);
+            clearTimeout(timeoutId);
 
-        if (response.status === 429) {
-            return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: 'quota' }) };
-        }
-        if (response.status === 402 || response.status === 403) {
-            return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: 'forbidden' }) };
-        }
-        if (response.status === 404) {
-            return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: 'bad_model' }) };
-        }
-        if (!response.ok) {
-            console.error('chat-agent gemini error:', response.status);
-            return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: 'upstream_' + response.status }) };
+            if (response.status === 404) {
+                lastReason = 'bad_model';
+                continue;
+            }
+            if (response.status === 429) {
+                lastReason = 'quota';
+                continue;
+            }
+            if (response.status === 402 || response.status === 403) {
+                return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: 'forbidden' }) };
+            }
+            if (!response.ok) {
+                console.error('chat-agent gemini error:', model, response.status);
+                lastReason = 'upstream_' + response.status;
+                continue;
+            }
+
+            const data = await response.json();
+            const reply = (data.candidates?.[0]?.content?.parts || [])
+                .map(p => p.text || '')
+                .join('')
+                .trim();
+
+            if (!reply) {
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({ reply: 'عذراً، لم أتمكن من الإجابة حالياً. يمكنك التواصل مع الفرع عبر واتساب للمساعدة.' })
+                };
+            }
+
+            return { statusCode: 200, headers, body: JSON.stringify({ reply: reply.slice(0, 2000) }) };
         }
 
-        const data = await response.json();
-        const reply = (data.candidates?.[0]?.content?.parts || [])
-            .map(p => p.text || '')
-            .join('')
-            .trim();
-
-        if (!reply) {
-            return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify({ reply: 'عذراً، لم أتمكن من الإجابة حالياً. يمكنك التواصل مع الفرع عبر واتساب للمساعدة.' })
-            };
-        }
-
-        return { statusCode: 200, headers, body: JSON.stringify({ reply: reply.slice(0, 2000) }) };
+        return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: lastReason }) };
 
     } catch (error) {
         console.error('chat-agent error:', error.message);
-        const reason = error.name === 'AbortError' ? 'timeout' : 'network';
-        return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: reason }) };
+        return { statusCode: 503, headers, body: JSON.stringify({ offline: true, reason: 'network' }) };
     }
 };
